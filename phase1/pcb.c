@@ -45,22 +45,22 @@ void insertProcQ(struct list_head *head, pcb_t *p) {
 }
 
 pcb_t *headProcQ(struct list_head *head) {
-    return list_next(head);
+    return container_of(list_next(head), pcb_t, p_list);
 }
 
 pcb_t *removeProcQ(struct list_head *head) {
     if(list_empty(head)) return NULL;
     else {
-        head = head->next;
-        list_del(head->prev);
-        return head;
+        pcb_PTR tmp = container_of(list_next(head), pcb_t, p_list);
+        list_del(list_next(head));
+        return tmp;
     }
 }
 
 pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
     struct list_head* pos;
     list_for_each(pos, head) {
-        if (pos == p) {
+        if (pos == &p->p_list) {
             list_del(pos);
             return p;
         }
@@ -78,7 +78,22 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
 }
 
 pcb_t *removeChild(pcb_t *p) {
+	if(emptyChild(p)) return NULL;
+	else{
+		pcb_PTR child = container_of(&p->p_child, pcb_t, p_list);
+		list_del(&p->p_child);
+		return child;
+	}
 }
 
 pcb_t *outChild(pcb_t *p) {
+	if( p->p_parent==NULL ) return NULL;
+	else{
+		if(&p->p_parent->p_child == &p->p_sib){
+			//bisogna spostare p_child al prossimo figlio
+			p->p_parent->p_child = *list_next(&p->p_sib);
+		}
+		list_del(&p->p_sib);
+		return p;
+	}
 }
