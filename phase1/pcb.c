@@ -24,7 +24,7 @@ pcb_t *allocPcb() {
         INIT_LIST_HEAD(&tmp->p_child);
 		INIT_LIST_HEAD(&tmp->p_sib);
 		//tmp->p_s = ???;
-        tmp->p_time = NULL;
+        tmp->p_time = 0;
         INIT_LIST_HEAD (&tmp->msg_inbox);
         tmp->p_supportStruct = NULL;
         tmp->p_pid = next_pid++;
@@ -69,9 +69,12 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
 }
 
 int emptyChild(pcb_t *p) {
+	return list_empty( &p->p_child );
 }
 
 void insertChild(pcb_t *prnt, pcb_t *p) {
+	p->p_parent = prnt;
+	list_add(&p->p_list, &prnt->p_child);
 }
 
 pcb_t *removeChild(pcb_t *p) {
