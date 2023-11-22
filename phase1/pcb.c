@@ -5,7 +5,9 @@ LIST_HEAD(pcbFree_h);
 static int next_pid = 1;
 
 void initPcbs() {
-    for(int i=0; i<MAXPROC; i++) list_add_tail(&pcbTable[i].p_list, &pcbFree_h);
+    for(int i=0; i<MAXPROC; i++) {
+		list_add(&pcbTable[i].p_list, &pcbFree_h);
+	}
 }
 
 void freePcb(pcb_t *p) {
@@ -15,17 +17,17 @@ void freePcb(pcb_t *p) {
 pcb_t *allocPcb() {
     if(list_empty(&pcbFree_h)) return NULL;
     else {
-        pcb_PTR tmp = container_of(&pcbFree_h, pcb_t, p_list);
-        list_del(&pcbFree_h);
+        pcb_PTR tmp = container_of(pcbFree_h.next, pcb_t, p_list);
+        list_del(pcbFree_h.next);
         INIT_LIST_HEAD (&tmp->p_list);
         tmp->p_parent = NULL;
         INIT_LIST_HEAD(&tmp->p_child);
-        INIT_LIST_HEAD (&tmp->p_parent);
+        tmp->p_parent = NULL;
         tmp->p_time = NULL;
         INIT_LIST_HEAD (&tmp->msg_inbox);
         tmp->p_supportStruct = NULL;
         tmp->p_pid = 0;
-        return &tmp;
+        return tmp;
     }
 }
 
@@ -34,7 +36,7 @@ void mkEmptyProcQ(struct list_head *head) {
 }
 
 int emptyProcQ(struct list_head *head) {
-    return list_empty(&head);
+    return list_empty(head);
 }
 
 void insertProcQ(struct list_head *head, pcb_t *p) {
