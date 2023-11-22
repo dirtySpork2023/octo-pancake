@@ -49,10 +49,10 @@ pcb_t *headProcQ(struct list_head *head) {
 }
 
 pcb_t *removeProcQ(struct list_head *head) {
-    if(list_empty(head)) return NULL;
+    if(list_empty(head->next)) return NULL;
     else {
-        pcb_PTR tmp = container_of(head->next, pcb_t, p_list);
-        list_del(head);
+        pcb_PTR tmp = head->next;
+        list_del(head->next);
         return tmp;
     }
 }
