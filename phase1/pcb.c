@@ -37,11 +37,11 @@ void mkEmptyProcQ(struct list_head *head) {
 }
 
 int emptyProcQ(struct list_head *head) {
-    return list_empty(head);
+    list_empty(head);
 }
 
 void insertProcQ(struct list_head *head, pcb_t *p) {
-    list_add_tail(p, head);
+    list_add_tail(&p->p_list, head);
 }
 
 pcb_t *headProcQ(struct list_head *head) {
@@ -51,7 +51,7 @@ pcb_t *headProcQ(struct list_head *head) {
 pcb_t *removeProcQ(struct list_head *head) {
     if(list_empty(head)) return NULL;
     else {
-        pcb_PTR tmp = head;
+        pcb_PTR tmp = container_of(head->next, pcb_t, p_list);
         list_del(head);
         return tmp;
     }
