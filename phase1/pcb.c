@@ -13,8 +13,20 @@ void freePcb(pcb_t *p) {
 }
 
 pcb_t *allocPcb() {
-    if(!list_empty()) return NULL;
-    else 
+    if(list_empty(*pcbFree_h)) return NULL;
+    else {
+        pcb_t tmp = pcbFree_h;
+        list_del(*pcbFree_h);
+        tmp.p_list = NULL;
+        tmp.p_parent = NULL;
+        tmp.p_child = NULL;
+        tmp.p_sib = NULL;
+        tmp.p_time = NULL;
+        tmp.msg_inbox = NULL;
+        tmp.p_supportStruct = NULL;
+        tmp.p_pid = 0;
+        return tmp;
+    }
 }
 
 void mkEmptyProcQ(struct list_head *head) {
