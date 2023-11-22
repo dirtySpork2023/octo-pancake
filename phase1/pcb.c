@@ -15,7 +15,7 @@ void freePcb(pcb_t *p) {
 pcb_t *allocPcb() {
     if(list_empty(&pcbFree_h)) return NULL;
     else {
-        pcb_PTR tmp = &pcbFree_h;
+        pcb_PTR tmp = container_of(&pcbFree_h, pcb_t, p_list);
         list_del(&pcbFree_h);
         tmp->p_list = NULL;
         tmp->p_parent = NULL;
