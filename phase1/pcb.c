@@ -9,7 +9,7 @@ void initPcbs() {
 }
 
 void freePcb(pcb_t *p) {
-    list_add_tail(p, &pcbFree_h);
+    list_add_tail(&p->p_list, &pcbFree_h);
 }
 
 pcb_t *allocPcb() {
