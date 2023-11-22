@@ -9,22 +9,22 @@ void initPcbs() {
 }
 
 void freePcb(pcb_t *p) {
-    list_add_tail(p, *pcbFree_h);
+    list_add_tail(&p->p_list, &pcbFree_h);
 }
 
 pcb_t *allocPcb() {
-    if(list_empty(*pcbFree_h)) return NULL;
+    if(list_empty(&pcbFree_h)) return NULL;
     else {
-        pcb_t tmp = pcbFree_h;
-        list_del(*pcbFree_h);
-        tmp.p_list = NULL;
-        tmp.p_parent = NULL;
-        tmp.p_child = NULL;
-        tmp.p_sib = NULL;
-        tmp.p_time = NULL;
-        tmp.msg_inbox = NULL;
-        tmp.p_supportStruct = NULL;
-        tmp.p_pid = 0;
+        pcb_PTR tmp = &pcbFree_h;
+        list_del(&pcbFree_h);
+        tmp->p_list = NULL;
+        tmp->p_parent = NULL;
+        tmp->p_child = NULL;
+        tmp->p_sib = NULL;
+        tmp->p_time = NULL;
+        tmp->msg_inbox = NULL;
+        tmp->p_supportStruct = NULL;
+        tmp->p_pid = 0;
         return tmp;
     }
 }
