@@ -22,11 +22,12 @@ pcb_t *allocPcb() {
         INIT_LIST_HEAD (&tmp->p_list);
         tmp->p_parent = NULL;
         INIT_LIST_HEAD(&tmp->p_child);
-        tmp->p_parent = NULL;
+		INIT_LIST_HEAD(&tmp->p_sib);
+		//tmp->p_s = ???;
         tmp->p_time = NULL;
         INIT_LIST_HEAD (&tmp->msg_inbox);
         tmp->p_supportStruct = NULL;
-        tmp->p_pid = 0;
+        tmp->p_pid = next_pid++;
         return tmp;
     }
 }
