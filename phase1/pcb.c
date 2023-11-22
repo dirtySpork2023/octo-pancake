@@ -25,7 +25,7 @@ pcb_t *allocPcb() {
         INIT_LIST_HEAD (&tmp->msg_inbox);
         tmp->p_supportStruct = NULL;
         tmp->p_pid = 0;
-        return &tmp;
+        return tmp;
     }
 }
 
@@ -34,19 +34,28 @@ void mkEmptyProcQ(struct list_head *head) {
 }
 
 int emptyProcQ(struct list_head *head) {
-    return list_empty(&head);
+    return list_empty(head);
 }
 
 void insertProcQ(struct list_head *head, pcb_t *p) {
+    list_add_tail(p, head);
 }
 
 pcb_t *headProcQ(struct list_head *head) {
+    return list_next(head);
 }
 
 pcb_t *removeProcQ(struct list_head *head) {
+    if(list_empty(head)) return NULL;
+    else {
+        pcb_PTR tmp = head;
+        list_del(head);
+        return tmp;
+    }
 }
 
 pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
+    
 }
 
 int emptyChild(pcb_t *p) {
