@@ -74,14 +74,14 @@ int emptyChild(pcb_t *p) {
 
 void insertChild(pcb_t *prnt, pcb_t *p) {
 	p->p_parent = prnt;
-	list_add(&p->p_list, &prnt->p_child);
+	list_add_tail(&p->p_sib, &prnt->p_child);
 }
 
 pcb_t *removeChild(pcb_t *p) {
 	if(emptyChild(p)) return NULL;
 	else{
-		pcb_PTR child = container_of(&p->p_child, pcb_t, p_list);
-		list_del(&p->p_child);
+		pcb_PTR child = container_of(p->p_child.next, pcb_t, p_sib);
+		list_del(p->p_child.next); // list_del(&child->p_sib);
 		return child;
 	}
 }
@@ -89,10 +89,7 @@ pcb_t *removeChild(pcb_t *p) {
 pcb_t *outChild(pcb_t *p) {
 	if( p->p_parent==NULL ) return NULL;
 	else{
-		if(&p->p_parent->p_child == &p->p_sib){
-			//bisogna spostare p_child al prossimo figlio
-			p->p_parent->p_child = *list_next(&p->p_sib);
-		}
+        p->p_parent = NULL;
 		list_del(&p->p_sib);
 		return p;
 	}
