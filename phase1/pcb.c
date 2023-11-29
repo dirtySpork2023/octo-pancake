@@ -58,10 +58,10 @@ pcb_t *removeProcQ(struct list_head *head) {
 }
 
 pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
-    struct list_head* pos;
-    list_for_each(pos, head) {
-        if (pos == &p->p_list) {
-            list_del(pos);
+    struct list_head* i;
+    list_for_each(i, head) {
+        if (i == &p->p_list) {
+            list_del(i);
             return p;
         }
     } 

@@ -19,4 +19,10 @@ allocMsg ok
 freed 15 entries   
 Inserting...   
 inserted 10 elements   
-emptyMessageQ: unexpected TRUE
+headMessage ok   
+popMessage with NULL pcb ok   
+pushMessage ok   
+insertMessage ok   
+popMessage with pcb ok   
+messages queue module ok      
+So long, and thanks for all the fish
