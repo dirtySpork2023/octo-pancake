@@ -43,11 +43,22 @@ void pushMessage(struct list_head *head, msg_t *m) {
 
 msg_t *popMessage(struct list_head *head, pcb_t *p_ptr) {
     if(list_empty(head)) return NULL;
-    if(p_ptr == NULL) return head->next;
-    //...
+    if(p_ptr == NULL){
+        msg_PTR tmp = container_of(head->next, msg_t, m_list);
+        list_del(head->next);
+        return tmp;
+    }
+    msg_PTR i;
+    list_for_each_entry(i, head, m_list){
+        if(i->m_sender == p_ptr){
+            list_del(&i->m_list);
+            return(i);
+        }
+    }
     return NULL;
 }
 
 msg_t *headMessage(struct list_head *head) {
-    return container_of(list_next(head), msg_t, m_list);
+    if(list_empty(head)) return NULL;
+    else return container_of(head->next, msg_t, m_list);
 }
