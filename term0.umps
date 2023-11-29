@@ -20,4 +20,3 @@ freed 15 entries
 Inserting...   
 inserted 10 elements   
 emptyMessageQ: unexpected TRUE
-kernel panic()
