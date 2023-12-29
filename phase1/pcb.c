@@ -4,16 +4,19 @@ static pcb_t pcbTable[MAXPROC];
 LIST_HEAD(pcbFree_h);
 static int next_pid = 1;
 
+// crea la lista di pcb
 void initPcbs() {
     for(int i=0; i<MAXPROC; i++) {
 		list_add(&pcbTable[i].p_list, &pcbFree_h);
 	}
 }
 
+// aggiunge p alla lista pcbFree
 void freePcb(pcb_t *p) {
     list_add_tail(&p->p_list, &pcbFree_h);
 }
 
+// ritorna un pcb dalla lista pcbFree resettando tutti i suoi campi
 pcb_t *allocPcb() {
     if(list_empty(&pcbFree_h)) return NULL;
     else {
@@ -50,10 +53,12 @@ void insertProcQ(struct list_head *head, pcb_t *p) {
     list_add_tail(&p->p_list, head);
 }
 
+// ritorna il pcb in testa senza rimuoverlo
 pcb_t *headProcQ(struct list_head *head) {
     return container_of(list_next(head), pcb_t, p_list);
 }
 
+// ritorna il pcb in testa togliendolo dalla lista
 pcb_t *removeProcQ(struct list_head *head) {
     if(list_empty(head)) return NULL;
     else {
@@ -63,6 +68,7 @@ pcb_t *removeProcQ(struct list_head *head) {
     }
 }
 
+// rimuove p dalla lista head
 pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
     struct list_head* i;
     list_for_each(i, head) {
@@ -74,6 +80,8 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
     return NULL;
 }
 
+// p_child è l'elemento sentinella della lista di p_sib
+
 int emptyChild(pcb_t *p) {
 	return list_empty( &p->p_child );
 }
@@ -83,15 +91,17 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
 	list_add_tail(&p->p_sib, &prnt->p_child);
 }
 
+// ritorna il figlio in testa togliendolo dalla lista
 pcb_t *removeChild(pcb_t *p) {
 	if(emptyChild(p)) return NULL;
 	else{
 		pcb_PTR child = container_of(p->p_child.next, pcb_t, p_sib);
-		list_del(p->p_child.next); // list_del(&child->p_sib);
+		list_del(p->p_child.next);
 		return child;
 	}
 }
 
+// rimuove p dalla lista di siblings
 pcb_t *outChild(pcb_t *p) {
 	if( p->p_parent==NULL ) return NULL;
 	else{

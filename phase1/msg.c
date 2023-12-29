@@ -3,16 +3,19 @@
 static msg_t msgTable[MAXMESSAGES];
 LIST_HEAD(msgFree_h);
 
+// crea la lista di msg
 void initMsgs() {
     for(int i=0; i<MAXPROC; i++) {
 		list_add(&msgTable[i].m_list, &msgFree_h);
 	}
 }
 
+// aggiunge m alla lista msgFree
 void freeMsg(msg_t *m) {
     list_add_tail(&m->m_list, &msgFree_h);
 }
 
+// ritorna un msg dalla lista msgFree resettando tutti i suoi campi
 msg_t *allocMsg() {
     if(list_empty(&msgFree_h)) return NULL;
     else {
@@ -41,6 +44,8 @@ void pushMessage(struct list_head *head, msg_t *m) {
     list_add(&m->m_list, head);
 }
 
+// ritorna il messaggio mandato da p_ptr
+// se p_ptr è NULL ritorna il primo
 msg_t *popMessage(struct list_head *head, pcb_t *p_ptr) {
     if(list_empty(head)) return NULL;
     if(p_ptr == NULL){
@@ -58,6 +63,7 @@ msg_t *popMessage(struct list_head *head, pcb_t *p_ptr) {
     return NULL;
 }
 
+// ritorna il msg in testa senza toglierlo dalla lista
 msg_t *headMessage(struct list_head *head) {
     if(list_empty(head)) return NULL;
     else return container_of(head->next, msg_t, m_list);
