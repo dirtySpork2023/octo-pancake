@@ -26,9 +26,11 @@ pcb_t *allocPcb() {
         tmp->p_parent = NULL;
         INIT_LIST_HEAD(&tmp->p_child);
 	    INIT_LIST_HEAD(&tmp->p_sib);
+        // p_s risulta non inizializzato ?
         tmp->p_s.cause = 0;
         tmp->p_s.entry_hi = 0;
-        for(int i = 0; i < STATE_GPR_LEN; i++) tmp->p_s.gpr[i] = 0;
+        for(int i = 0; i < STATE_GPR_LEN; i++)
+            tmp->p_s.gpr[i] = 0;
         tmp->p_s.hi = 0;
         tmp->p_s.lo = 0;
         tmp->p_s.pc_epc = 0;
@@ -46,6 +48,7 @@ void mkEmptyProcQ(struct list_head *head) {
 }
 
 int emptyProcQ(struct list_head *head) {
+    // questa funzione risulta senza return ?
     return list_empty(head);
 }
 
