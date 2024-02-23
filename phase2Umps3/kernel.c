@@ -4,7 +4,7 @@
 int main(){
 	// inizializzazione
 
-	while(true){
+	while(1){
 		// scheduler
 	}
 
