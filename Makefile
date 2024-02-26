@@ -28,6 +28,10 @@ LDFLAGS = -G 0 -nostdlib -T $(UMPS3_DATA_DIR)/umpscore.ldscript
 # Add the location of crt*.S to the search path
 VPATH = $(UMPS3_DATA_DIR)
 
+# Object files
+PHASE1 = ./phase1/pcb.o ./phase1/msg.o
+PHASE2 = ./phase2Umps3/main.o ./phase2Umps3/scheduler.o ./phase2Umps3/exceptions.o ./phase2Umps3/interrupts.o ./phase2Umps3/ssi.o
+
 .PHONY : all clean
 
 all : kernel.core.umps
@@ -35,11 +39,11 @@ all : kernel.core.umps
 kernel.core.umps : kernel
 	umps3-elf2umps -k $<
 
-kernel : ./phase1/p1test.o ./phase1/msg.o ./phase1/pcb.o crtso.o libumps.o
+kernel : $(PHASE1) $(PHASE2) ./phase2Umps3/p2test.o crtso.o libumps.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 clean :
-	-rm -f *.o ./phase1/*.o kernel kernel.*.umps
+	-rm -f *.o ./phase1/*.o ./phase2Umps3/*.o kernel kernel.*.umps
 
 # Pattern rule for assembly modules
 %.o : %.S

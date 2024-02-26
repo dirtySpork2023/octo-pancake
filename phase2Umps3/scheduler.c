@@ -1,20 +1,7 @@
 #include "./headers/scheduler.h"
 
-/* to be replaced in phase 3 */
-void uTLB_RefillHandler(){
-	setENTRYHI(0x80000000);
-	setENTRYLO(0x00000000);
-	TLBWR();
-	LDST((state_t*) 0x0FFFF000);
-}
-
-/* handles all exceptions, not TLB-Refill events */
-void exceptionHandler(){
-	/* the processor state at the time of the exception will
-have been stored at the start of the BIOS Data Page */
-	// TODO
-}
-
+/* assuming old process was saved
+sets currentProcess to another PCB*/
 void scheduler(){
 	if(emptyProcQ(readyQueue)){
 		/*	HALT execution: if there are no more processes to run
@@ -24,11 +11,13 @@ void scheduler(){
 		if(processCount == 1) /* TODO and the SSI is the only process in the system */
 			HALT(); /* HALT BIOS service/instruction */
 		if(processCount > 0 && softBlockCount > 0){
-			unsigned int tmpStatus = getSTATUS();
+			currentProcess = NULL;
+			unsigned int waitStatus = getSTATUS();
 			/* enable all interrupts and disable PLT */
-			tmpStatus &= !IMON;
-			tmpStatus &= !IEPON;
-			tmpStatus &= !TEBITON;
+			waitStatus &= !IMON;
+			waitStatus &= !IEPON;
+			waitStatus &= !TEBITON;
+			setSTATUS(waitStatus);
 			WAIT(); /* enter a Wait State */
 		}
 		if(processCount > 0 && softBlockCount == 0)

@@ -71,10 +71,23 @@ pcb_t *removeProcQ(struct list_head *head) {
 
 // rimuove p dalla lista head
 pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
+    if(p == NULL) return NULL;
     struct list_head* i;
     list_for_each(i, head) {
         if (i == &p->p_list) {
             list_del(i);
+            return p;
+        }
+    } 
+    return NULL;
+}
+
+// cerca p nella lista head senza rimuoverlo
+pcb_t *searchProcQ(struct list_head *head, pcb_t *p) {
+    if(p == NULL) return NULL;
+    struct list_head* i;
+    list_for_each(i, head) {
+        if (i == &p->p_list) {
             return p;
         }
     } 
@@ -110,4 +123,16 @@ pcb_t *outChild(pcb_t *p) {
 		list_del(&p->p_sib);
 		return p;
 	}
+}
+
+/* copies every word of the processor state from source to destination */
+void copyState(state_t *src, state_t *dst){
+    dst->entry_hi = src->entry_hi;
+	dst->cause = src->cause;
+	dst->status = src->status;
+	dst->pc_epc = src->pc_epc;
+	for(int i=0; i<STATE_GPR_LEN; i++)
+		dst->gpr[i] = src->gpr[i];
+	dst->hi = src->hi;
+	dst->lo = src->lo;
 }
