@@ -2,6 +2,7 @@
     "files.associations": {
         "pcb.h": "c",
         "const.h": "c",
-        "types.h": "c"
+        "types.h": "c",
+        "libumps.h": "c"
     }
 }

@@ -1,6 +1,7 @@
-//#include <libumps> 
+//#include <umps/libumps.h>
 #include "headers/const.h"
 #include "phase1/pcb.c"
+#include "phase2Umps3/p2test.c"
 
 // to be replaced in phase 3
 void uTLB_RefillHandler() {
@@ -22,9 +23,10 @@ int main(){
 	// started processes, in the “blocked” state due to an I/O or timer request.
 	int softBlockCount;
 	pcb_PTR currentProcess;
-	// TODO tail pointer to queue of PCBs in ready state
+	// tail pointer to queue of PCBs in ready state
+	struct list_head *readyQueue;
 	// TODO blocked PCBs
-
+	
 	passupvector_t *passupvector = PASSUPVECTOR;
 	passupvector->tlb_refill_handler = (memaddr)uTLB_RefillHandler;
 	passupvector->tlb_refill_stackPtr = KERNELSTACK;
@@ -33,15 +35,30 @@ int main(){
 
 	initPcbs();
 	initMsgs();
+	processCount = 0;
+	softBlockCount = 0;
+	currentProcess = NULL;
+	mkEmptyProcQ(readyQueue);
+	
+	LDIT(PSECOND);
 
-	// TODO
-	//processCount = 
-	//softBlockCount =
-	//currentProcess =
-	// init queues
+	pcb_PTR pcb1 = allocPcb();
+	insertProcQ(readyQueue, pcb1);
+	processCount++;
+	pcb1->p_s.status = STATUSINIT;
+	pcb1->p_s.pc_epc = (memaddr) test; // function in p2test.c or defined as extern ?
+	pcb1->p_s.reg_t9 = (memaddr) test;
+	// TODO stack pointer = RAMTOP
+	// ? LDST()
+	// ? LDCXT (,pcb1->p_s.status, pcb1->p_s.pc_epc);
 
-	while(1){
-		// scheduler ?
-	}
+	pcb_PTR pcb2 = allocPcb();
+	insertProcQ(readyQueue, pcb2);
+	processCount++;
+	pcb1->p_s.status = STATUSINIT;
+	pcb1->p_s.pc_epc = (memaddr) test; // function in p2test.c or defined as extern ?
+	pcb1->p_s.reg_t9 = (memaddr) test;
+	// TODO stack pointer = RAMTOP - (2 * FRAMESIZE)
 
+	// scheduler();
 }
