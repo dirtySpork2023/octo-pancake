@@ -65,7 +65,6 @@
 #define IMON        0x0000FF00
 #define TEBITON     0x08000000
 #define DISABLEINTS 0xFFFFFFFE
-#define STATUSINIT	0x00FF0010
 
 /* Cause register constants */
 #define GETEXECCODE    0x0000007C

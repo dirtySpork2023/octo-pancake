@@ -3,6 +3,7 @@
         "pcb.h": "c",
         "const.h": "c",
         "types.h": "c",
-        "libumps.h": "c"
+        "libumps.h": "c",
+        "*.gitignore": "c"
     }
 }

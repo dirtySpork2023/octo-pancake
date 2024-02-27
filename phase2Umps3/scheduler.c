@@ -17,7 +17,6 @@ void scheduler(){
 	currentProcess = removeProcQ(readyQueue);
 	/* load round-robin timeslice into Processor's Local Timer */
 	setTIMER(TIMESLICE);
-	/* Perform a Load Processor State (LDST) on the processor state stored in PCB of the Current
-Process (p_s). */
+	/* load the processor state of the current process */
 	LDST(&currentProcess->p_s);
 }
