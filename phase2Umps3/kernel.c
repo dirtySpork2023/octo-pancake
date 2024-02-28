@@ -1,4 +1,16 @@
-#include "./headers/kernel.h"
+#include "../../headers/const.h"
+#include "../../headers/types.h"
+#include "phase1/pcb.c"
+#include "p2test.c"
+#include "scheduler.c"
+
+/* started, but not yet terminated processes */
+int processCount;
+/* started processes, in the “blocked” state due to an I/O or timer request. */
+int softBlockCount;
+pcb_PTR currentProcess;
+struct list_head *readyQueue; // tail pointer
+// TODO blocked PCBs queue
 
 int main(){
 	passupvector_t *passupvector = PASSUPVECTOR;
@@ -13,6 +25,7 @@ int main(){
 	softBlockCount = 0;
 	currentProcess = NULL;
 	mkEmptyProcQ(readyQueue);
+	/* load System-wide Interval Timer with 100 milliseconds */
 	LDIT(PSECOND);
 
 	// first test process
@@ -21,6 +34,7 @@ int main(){
 	processCount++;
 	pcb1->p_s.status &= !IEPON; // interrupt enabled (== interrupt mask disabled)
 	pcb1->p_s.status &= !USERPON; // user mode disabled
+	//pcb1->p_s.status   TEBITON; // local timer ?
 	pcb1->p_s.pc_epc = (memaddr) test;
 	pcb1->p_s.reg_t9 = (memaddr) test;
 	RAMTOP(pcb1->p_s.reg_sp); // stack pointer = RAMTOP
@@ -31,7 +45,6 @@ int main(){
 	processCount++;
 	pcb1->p_s.status &= !IEPON; // interrupt enabled (== interrupt mask disabled)
 	pcb1->p_s.status &= !USERPON; // user mode disabled
-	//pcb1->p_s.status   TEBITON; // local timer ?
 	pcb1->p_s.pc_epc = (memaddr) test;
 	pcb1->p_s.reg_t9 = (memaddr) test;
 	RAMTOP(pcb1->p_s.reg_sp); // stack pointer = RAMTOP
