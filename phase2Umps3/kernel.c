@@ -32,9 +32,10 @@ int main(){
 	pcb_PTR pcb1 = allocPcb();
 	insertProcQ(readyQueue, pcb1);
 	processCount++;
+	pcb1->p_s.status &= !IMON;
 	pcb1->p_s.status &= !IEPON; // interrupt enabled (== interrupt mask disabled)
 	pcb1->p_s.status &= !USERPON; // user mode disabled
-	//pcb1->p_s.status   TEBITON; // local timer ?
+	pcb1->p_s.status |= TEBITON; // local timer on
 	pcb1->p_s.pc_epc = (memaddr) test;
 	pcb1->p_s.reg_t9 = (memaddr) test;
 	RAMTOP(pcb1->p_s.reg_sp); // stack pointer = RAMTOP
@@ -43,12 +44,14 @@ int main(){
 	pcb_PTR pcb2 = allocPcb();
 	insertProcQ(readyQueue, pcb2);
 	processCount++;
-	pcb1->p_s.status &= !IEPON; // interrupt enabled (== interrupt mask disabled)
-	pcb1->p_s.status &= !USERPON; // user mode disabled
-	pcb1->p_s.pc_epc = (memaddr) test;
-	pcb1->p_s.reg_t9 = (memaddr) test;
-	RAMTOP(pcb1->p_s.reg_sp); // stack pointer = RAMTOP
-	pcb1->p_s.reg_sp -= 2*FRAMESIZE;
+	pcb2->p_s.status &= !IMON;
+	pcb2->p_s.status &= !IEPON; // interrupt enabled (== interrupt mask disabled)
+	pcb2->p_s.status &= !USERPON; // user mode disabled
+	pcb2->p_s.status |= TEBITON; // local timer on
+	pcb2->p_s.pc_epc = (memaddr) test;
+	pcb2->p_s.reg_t9 = (memaddr) test;
+	RAMTOP(pcb2->p_s.reg_sp); // stack pointer = RAMTOP
+	pcb2->p_s.reg_sp -= 2*FRAMESIZE;
 
 	scheduler();
 }

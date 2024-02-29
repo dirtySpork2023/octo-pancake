@@ -8,7 +8,7 @@ void uTLB_RefillHandler(){
 	LDST((state_t*) 0x0FFFF000);
 }
 
-/* handles all other exceptions, not TLB-Refill events */
+/* handles all exceptions, not TLB-Refill events */
 void exceptionHandler(){
 	/* the processor state at the time of the exception will
 have been stored at the start of the BIOS Data Page */
@@ -19,14 +19,20 @@ void scheduler(){
 	if(emptyProcQ(readyQueue)){
 		/*	HALT execution: if there are no more processes to run
 			WAIT for an I/O operation to complete: which will unblock a PCB and populate the Ready Queue
-			PANIC: halt execution in the presence of deadlock
-			
-			If the Process Count is 1 and the SSI is the only process in
-the system, invoke the HALT BIOS service/instruction
-			If the Process Count > 0 and the Soft-block Count > 0 enter
-a Wait State
-			If the Process Count > 0 and the Soft-block Count is 0 invoke
-the PANIC BIOS service/instruction*/
+			PANIC: halt execution in the presence of deadlock */
+	
+		if(processCount == 1) /* TODO and the SSI is the only process in the system */
+			HALT(); /* HALT BIOS service/instruction */
+		if(processCount > 0 && softBlockCount > 0){
+			unsigned int tmpStatus = getSTATUS();
+			/* enable all interrupts and disable PLT */
+			tmpStatus &= !IMON;
+			tmpStatus &= !IEPON;
+			tmpStatus &= !TEBITON;
+			WAIT(); /* enter a Wait State */
+		}
+		if(processCount > 0 && softBlockCount == 0)
+			PANIC(); /* PANIC BIOS service/instruction*/
 	}
 
 	currentProcess = removeProcQ(readyQueue);
