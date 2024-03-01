@@ -35,9 +35,9 @@ int main(){
 	initMsgs();
 
 	// TODO
-	//processCount = 
-	//softBlockCount =
-	//currentProcess =
+	// processCount = 
+	// softBlockCount =
+	// currentProcess =
 	// init queues
 
 	while(1){
