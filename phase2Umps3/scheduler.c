@@ -8,11 +8,67 @@ void uTLB_RefillHandler(){
 	LDST((state_t*) 0x0FFFF000);
 }
 
+void interruptHandler(int cause){
+	if(cause & LOCALTIMERINT){
+		/*	Copy the processor state at the time of the exception (located at the start of the BIOS Data
+			Page [Section 3.2.2-pops]) into the Current Process’s PCB (p_s).12*/
+		currentProcess->p_s.cause = getCAUSE();
+		currentProcess->p_s.entry_hi = getENTRYHI();
+		currentProcess->p_s.pc_epc = getEPC();
+		currentProcess->p_s.status = getSTATUS();
+		//TODO save other registers
+		insertProcQ(readyQueue, currentProcess);
+		scheduler();
+	}
+	if(cause & TIMERINTERRUPT){
+		
+	}
+	if(cause & DISKINTERRUPT){
+		
+	}
+	if(cause & FLASHINTERRUPT){
+		
+	}
+	if(cause & PRINTINTERRUPT){
+		
+	}
+	if(cause & TERMINTERRUPT){
+
+	}
+}
+
 /* handles all exceptions, not TLB-Refill events */
-void exceptionHandler(){
+void exceptionHandler(void){
 	/* the processor state at the time of the exception will
 have been stored at the start of the BIOS Data Page */
-	// TODO
+	/* processor already set to kernel mode and disabled interrupts*/
+	unsigned int cause = getCAUSE();
+	unsigned int excCode = (cause & GETEXECCODE)/4;
+	
+	switch((cause & GETEXECCODE)/4){
+		case IOINTERRUPTS:
+			interruptHandler(cause);
+			break;
+		case TLBINVLDL:
+
+			break;
+		case TLBINVLDS:
+
+			break;
+		case SYSEXCEPTION:
+
+			break;
+		case BREAKEXCEPTION:
+
+			break;
+		case PRIVINSTR:
+
+			break;
+		default:
+			break;
+	}
+
+	
 }
 
 void scheduler(){

@@ -1,8 +1,8 @@
-#include "../../headers/const.h"
-#include "../../headers/types.h"
-#include "phase1/pcb.c"
+#include "../headers/const.h"
+#include "../headers/types.h"
+#include "../phase1/pcb.c"
 #include "p2test.c"
-#include "scheduler.c"
+#include "scheduler.h"
 
 /* started, but not yet terminated processes */
 int processCount;

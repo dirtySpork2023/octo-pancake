@@ -3,7 +3,7 @@
 
 #include "../../headers/const.h"
 #include "../../headers/types.h"
-#include "kernel.c"
+#include "../main.c"
 #include <umps/libumps.h>
 
 void uTLB_RefillHandler();
