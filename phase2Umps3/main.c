@@ -9,7 +9,9 @@
 int processCount;
 /*	counter of processes in the "blocked" state due to an I/O or timer request. */
 int softBlockCount;
+/*	pointer to process in running state, NULL when kernel is in WAIT() */
 pcb_PTR currentProcess;
+
 /* READY PCBS */
 struct list_head *readyQueue; // tail pointer
 
