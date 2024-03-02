@@ -9,19 +9,37 @@ void uTLB_RefillHandler(){
 }
 
 void interruptHandler(int cause){
+	/* interrupt line 0 ignored */
 	if(cause & LOCALTIMERINT){
-		/*	Copy the processor state at the time of the exception (located at the start of the BIOS Data
-			Page [Section 3.2.2-pops]) into the Current Process’s PCB (p_s).12*/
-		currentProcess->p_s.cause = getCAUSE();
-		currentProcess->p_s.entry_hi = getENTRYHI();
-		currentProcess->p_s.pc_epc = getEPC();
-		currentProcess->p_s.status = getSTATUS();
-		//TODO save other registers
+		/*	timer will be reset in scheduler() */
+		/*	save processor state to ready queue */
+		state_t *dataPage = BIOSDATAPAGE;
+		currentProcess->p_s.entry_hi = dataPage->entry_hi;
+		currentProcess->p_s.cause = dataPage->cause;
+		currentProcess->p_s.status = dataPage->status;
+		currentProcess->p_s.pc_epc = dataPage->pc_epc;
+		for(int i=0; i<29; i++)
+			currentProcess->p_s.gpr[i] = dataPage->gpr[i];
+		currentProcess->p_s.hi = dataPage->hi;
+		currentProcess->p_s.lo = dataPage->lo;
 		insertProcQ(readyQueue, currentProcess);
 		scheduler();
 	}
 	if(cause & TIMERINTERRUPT){
-		
+		/* re-set Interval Timer with 100 milliseconds */
+		LDIT(PSECOND);
+		/*	unlock all pcbs in pseudoClockQueue */
+		while(!emptyProcQ(pseudoClockQueue)){
+			softBlockCount--;
+			insertProcQ(readyQueue, removeProcQ(pseudoClockQueue));
+		}
+		if(currentProcess != NULL){
+			// only if there was a process running before the interrupt
+			// load processor state stored at address BIOSDATAPAGE
+			LDST(BIOSDATAPAGE);
+		}else{
+			scheduler();
+		}
 	}
 	if(cause & DISKINTERRUPT){
 		
@@ -29,6 +47,7 @@ void interruptHandler(int cause){
 	if(cause & FLASHINTERRUPT){
 		
 	}
+	/* interrupt line 5 ignored */
 	if(cause & PRINTINTERRUPT){
 		
 	}
@@ -43,9 +62,10 @@ void exceptionHandler(void){
 have been stored at the start of the BIOS Data Page */
 	/* processor already set to kernel mode and disabled interrupts*/
 	unsigned int cause = getCAUSE();
-	unsigned int excCode = (cause & GETEXECCODE)/4;
+	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
 	
-	switch((cause & GETEXECCODE)/4){
+	/* "break" command will not be executed if kernel works properly */
+	switch(excCode){
 		case IOINTERRUPTS:
 			interruptHandler(cause);
 			break;
@@ -80,11 +100,13 @@ void scheduler(){
 		if(processCount == 1) /* TODO and the SSI is the only process in the system */
 			HALT(); /* HALT BIOS service/instruction */
 		if(processCount > 0 && softBlockCount > 0){
-			unsigned int tmpStatus = getSTATUS();
+			currentProcess = NULL;
+			unsigned int waitStatus = getSTATUS();
 			/* enable all interrupts and disable PLT */
-			tmpStatus &= !IMON;
-			tmpStatus &= !IEPON;
-			tmpStatus &= !TEBITON;
+			waitStatus &= !IMON;
+			waitStatus &= !IEPON;
+			waitStatus &= !TEBITON;
+			setSTATUS(waitStatus);
 			WAIT(); /* enter a Wait State */
 		}
 		if(processCount > 0 && softBlockCount == 0)

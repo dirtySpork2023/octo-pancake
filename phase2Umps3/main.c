@@ -4,13 +4,21 @@
 #include "p2test.c"
 #include "scheduler.h"
 
-/* started, but not yet terminated processes */
+/*	counter of all started but not yet terminated processes
+	includes processes in "running", "ready" AND "blocked" state */
 int processCount;
-/* started processes, in the “blocked” state due to an I/O or timer request. */
+/*	counter of processes in the "blocked" state due to an I/O or timer request. */
 int softBlockCount;
 pcb_PTR currentProcess;
+/* READY PCBS */
 struct list_head *readyQueue; // tail pointer
-// TODO blocked PCBs queue
+
+/* BLOCKED PCBS */
+/*	processes enter this queue when they request a WaitForClock service to the SSI
+	they get resumed with the system-wide interval timer's interrupt */
+struct list_head *pseudoClockQueue;
+
+// TODO other blocked PCBs queues ?
 
 int main(){
 	passupvector_t *passupvector = PASSUPVECTOR;
@@ -25,6 +33,7 @@ int main(){
 	softBlockCount = 0;
 	currentProcess = NULL;
 	mkEmptyProcQ(readyQueue);
+	mkEmptyProcQ(pseudoClockQueue);
 	/* load System-wide Interval Timer with 100 milliseconds */
 	LDIT(PSECOND);
 
