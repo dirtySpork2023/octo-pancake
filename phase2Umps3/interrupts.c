@@ -6,16 +6,7 @@ void interruptHandler(int cause){
 
 	if(cause & LOCALTIMERINT){
 		/*	timer will be reset in scheduler() */
-		/*	save processor state to ready queue */
-		state_t *dataPage = BIOSDATAPAGE;
-		currentProcess->p_s.entry_hi = dataPage->entry_hi;
-		currentProcess->p_s.cause = dataPage->cause;
-		currentProcess->p_s.status = dataPage->status;
-		currentProcess->p_s.pc_epc = dataPage->pc_epc;
-		for(int i=0; i<29; i++)
-			currentProcess->p_s.gpr[i] = dataPage->gpr[i];
-		currentProcess->p_s.hi = dataPage->hi;
-		currentProcess->p_s.lo = dataPage->lo;
+		copyState(BIOSDATAPAGE, &current_process->p_s);
 		insertProcQ(readyQueue, currentProcess);
 		scheduler();
 	}

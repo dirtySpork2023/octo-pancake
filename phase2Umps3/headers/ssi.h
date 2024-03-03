@@ -7,4 +7,7 @@
 #include "../../phase1/pcb.c"
 #include "../main.c"
 
+void initSSI();
+void systemServiceInterface();
+
 #endif

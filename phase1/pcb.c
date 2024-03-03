@@ -111,3 +111,15 @@ pcb_t *outChild(pcb_t *p) {
 		return p;
 	}
 }
+
+/* copies every word of the processor state from source to destination */
+void copyState(state_t *src, state_t *dst){
+    dst->entry_hi = src->entry_hi;
+	dst->cause = src->cause;
+	dst->status = src->status;
+	dst->pc_epc = src->pc_epc;
+	for(int i=0; i<STATE_GPR_LEN; i++)
+		dst->gpr[i] = src->gpr[i];
+	dst->hi = src->hi;
+	dst->lo = src->lo;
+}

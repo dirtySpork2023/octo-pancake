@@ -1,8 +1,10 @@
 #include "../headers/const.h"
 #include "../headers/types.h"
 #include "../phase1/pcb.c"
-#include "headers/scheduler.h"
-#include "headers/exceptions.h"
+#include "scheduler.c"
+#include "exceptions.c"
+#include "interrupts.c"
+#include "ssi.c"
 #include "p2test.c"
 
 /*	counter of all started but not yet terminated processes
@@ -17,11 +19,13 @@ pcb_PTR currentProcess;
 struct list_head *readyQueue; // tail pointer
 
 /* BLOCKED PCBS */
-/*	processes enter this queue when they request a WaitForClock service to the SSI
-	they get resumed with the system-wide interval timer's interrupt */
+/*	processes that requested WaitForClock service to the SSI
+	resumed by: system-wide interval timer's interrupt */
 struct list_head *pseudoClockQueue;
-
-// TODO other blocked PCBs queues ?
+/*	processes waiting for a message to be received
+	resumed by: new message directed to them */
+struct list_head *receiveMessageQueue;
+// TODO more queues for blocked PCB's may be added
 
 int main(){
 	passupvector_t *passupvector = PASSUPVECTOR;
@@ -37,33 +41,34 @@ int main(){
 	currentProcess = NULL;
 	mkEmptyProcQ(readyQueue);
 	mkEmptyProcQ(pseudoClockQueue);
+	mkEmptyProcQ(receiveMessageQueue);
 	/* load System-wide Interval Timer with 100 milliseconds */
 	LDIT(PSECOND);
 
 	// first test process
-	pcb_PTR pcb1 = allocPcb();
-	insertProcQ(readyQueue, pcb1);
+	pcb_PTR pcbSSI = allocPcb();
+	insertProcQ(readyQueue, pcbSSI);
 	processCount++;
-	pcb1->p_s.status &= !IMON;
-	pcb1->p_s.status &= !IEPON; // interrupt enabled (== interrupt mask disabled)
-	pcb1->p_s.status &= !USERPON; // user mode disabled
-	pcb1->p_s.status |= TEBITON; // local timer on
-	pcb1->p_s.pc_epc = (memaddr) test;
-	pcb1->p_s.reg_t9 = (memaddr) test;
-	RAMTOP(pcb1->p_s.reg_sp); // stack pointer = RAMTOP
+	pcbSSI->p_s.status &= !IMON;
+	pcbSSI->p_s.status &= !IEPON; // interrupt enabled (== interrupt mask disabled)
+	pcbSSI->p_s.status &= !USERPON; // user mode disabled
+	pcbSSI->p_s.status |= TEBITON; // local timer on
+	pcbSSI->p_s.pc_epc = (memaddr) initSSI;
+	pcbSSI->p_s.reg_t9 = (memaddr) initSSI;
+	RAMTOP(pcbSSI->p_s.reg_sp); // stack pointer = RAMTOP
 
 	// second test process
-	pcb_PTR pcb2 = allocPcb();
-	insertProcQ(readyQueue, pcb2);
+	pcb_PTR root = allocPcb();
+	insertProcQ(readyQueue, root);
 	processCount++;
-	pcb2->p_s.status &= !IMON;
-	pcb2->p_s.status &= !IEPON; // interrupt enabled (== interrupt mask disabled)
-	pcb2->p_s.status &= !USERPON; // user mode disabled
-	pcb2->p_s.status |= TEBITON; // local timer on
-	pcb2->p_s.pc_epc = (memaddr) test;
-	pcb2->p_s.reg_t9 = (memaddr) test;
-	RAMTOP(pcb2->p_s.reg_sp); // stack pointer = RAMTOP
-	pcb2->p_s.reg_sp -= 2*FRAMESIZE; // TODO quanto spazio alloca il processo test ???
+	root->p_s.status &= !IMON;
+	root->p_s.status &= !IEPON; // interrupt enabled (== interrupt mask disabled)
+	root->p_s.status &= !USERPON; // user mode disabled
+	root->p_s.status |= TEBITON; // local timer on
+	root->p_s.pc_epc = (memaddr) test;
+	root->p_s.reg_t9 = (memaddr) test;
+	RAMTOP(root->p_s.reg_sp); // stack pointer = RAMTOP
+	root->p_s.reg_sp -= 2*FRAMESIZE; // TODO quanto spazio alloca il processo test ???
 
 	scheduler();
 }

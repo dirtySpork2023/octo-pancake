@@ -8,7 +8,57 @@ void uTLB_RefillHandler(){
 	LDST((state_t*) 0x0FFFF000);
 }
 
-/* handles all exceptions, not TLB-Refill events */
+void syscallHandler(void){
+	//int userModeOn = currentProcess->p_s.status & USERPON
+	/* information saved in registers:
+	currentProcess->p_s.reg_a0 _a1 _a2 _a3 */
+
+	/* assuming syscall will be successful */
+	currentProcess->p_s.reg_v0 = 0;
+
+	switch(currentProcess->p_s.reg_a0){
+		case SENDMESSAGE:
+			if(currentProcess->p_s.status & USERPON == 0){
+				/*	PROGRAM TRAP EXCEPTION
+					syscall only available in kernel mode */
+			}
+			pcb_PTR dest = currentProcess->p_s.reg_a1;
+				//TODO
+				msg_PTR msg = allocMsg();
+			msg->m_payload = currentProcess->p_s.reg_a2;
+				//TODO
+		case RECEIVEMESSAGE:
+			if(currentProcess->p_s.status & USERPON == 0){
+				/*	PROGRAM TRAP EXCEPTION
+					syscall only available in kernel mode */
+			}
+			//TODO
+		case CREATEPROCESS:
+			pcb_PTR newChild = allocPcb();
+			if(newChild == NULL){
+				// no free PCBs available
+				currentProcess->p_s.reg_v0 = -1;
+			}else{
+				copyState(currentProcess->p_s.reg_a1, &newChild->p_s);
+				//copySupportStruct(currentProcess->p_s.reg_a2, &newChild->p_supportStruct);
+				
+			}//TODO
+		case TERMPROCESS:
+			//TODO
+		case DOIO:
+			//TODO
+		case GETTIME:
+			//TODO
+		case CLOCKWAIT:
+			//TODO
+		case GETSUPPORTPTR:
+			//TODO
+		case GETPROCESSID:
+			//TODO
+	}
+}
+
+/* redirects exceptions to the correct handler */
 void exceptionHandler(void){
 	/* the processor state at the time of the exception will
 have been stored at the start of the BIOS Data Page */
@@ -16,28 +66,19 @@ have been stored at the start of the BIOS Data Page */
 	unsigned int cause = getCAUSE();
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
 	
-	/* "break" command will not be executed if kernel works properly */
 	switch(excCode){
 		case IOINTERRUPTS:
 			interruptHandler(cause);
-			break;
 		case TLBINVLDL:
-
-			break;
+			//TODO
 		case TLBINVLDS:
-
-			break;
+			//TODO
 		case SYSEXCEPTION:
-
-			break;
+			syscallHandler();
 		case BREAKEXCEPTION:
-
-			break;
+			//TODO
 		case PRIVINSTR:
-
-			break;
-		default:
-			break;
+			//TODO
 	}
 
 	
