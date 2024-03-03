@@ -1,5 +1,5 @@
-#ifndef SCHEDULER_H_INCLUDED
-#define SCHEDULER_H_INCLUDED
+#ifndef INTERRUPTS_H_INCLUDED
+#define INTERRUPTS_H_INCLUDED
 
 #include <umps/libumps.h>
 #include "../../headers/const.h"
@@ -7,6 +7,6 @@
 #include "../../phase1/pcb.c"
 #include "../main.c"
 
-void scheduler(void);
+void interruptHandler(int cause);
 
 #endif

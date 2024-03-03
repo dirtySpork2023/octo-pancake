@@ -1,8 +1,9 @@
 #include "../headers/const.h"
 #include "../headers/types.h"
 #include "../phase1/pcb.c"
+#include "headers/scheduler.h"
+#include "headers/exceptions.h"
 #include "p2test.c"
-#include "scheduler.h"
 
 /*	counter of all started but not yet terminated processes
 	includes processes in "running", "ready" AND "blocked" state */
@@ -62,7 +63,7 @@ int main(){
 	pcb2->p_s.pc_epc = (memaddr) test;
 	pcb2->p_s.reg_t9 = (memaddr) test;
 	RAMTOP(pcb2->p_s.reg_sp); // stack pointer = RAMTOP
-	pcb2->p_s.reg_sp -= 2*FRAMESIZE;
+	pcb2->p_s.reg_sp -= 2*FRAMESIZE; // TODO quanto spazio alloca il processo test ???
 
 	scheduler();
 }

@@ -15,6 +15,9 @@
  *          Modified by Luca Bassi, Gabriele Genovese on November 30, 2023
  */
 
+#ifndef TEST
+#define TEST
+
 #include "../headers/const.h"
 #include "../headers/types.h"
 #include <umps/libumps.h>
@@ -308,7 +311,7 @@ void test()
     else
         print_term0("p1 knows p2 ended\n");
 
-    /* create p3 */
+    /* create p3phase1 */
     p3_pcb = create_process(&p3state);
     p3pid = p3_pcb->p_pid;
 
@@ -925,3 +928,5 @@ void hp_p2()
     print_term0("ERROR: hp_p2 didn't die!\n");
     PANIC();
 }
+
+#endif
