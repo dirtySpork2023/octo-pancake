@@ -8,8 +8,25 @@ void uTLB_RefillHandler(){
 	LDST((state_t*) 0x0FFFF000);
 }
 
+/* redirects exceptions to the correct handler */
+void exceptionHandler(void){
+	/* the processor state at the time of the exception will
+	have been stored at the start of the BIOS Data Page */
+	/* processor already set to kernel mode and disabled interrupts*/
+	unsigned int cause = getCAUSE();
+	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
+
+	if(excCode == IOINTERRUPTS)
+		interruptHandler(cause);
+	if(excCode == SYSEXCEPTION)
+		syscallHandler();
+	if(excCode <= 3)
+		{}//TLB exception handler, codes 1-3
+	if(excCode <= 12)
+		programTrapHandler(); // codes 4-7, 9-12
+}
+
 void syscallHandler(void){
-	//int userModeOn = currentProcess->p_s.status & USERPON
 	/* information saved in registers:
 	currentProcess->p_s.reg_a0 _a1 _a2 _a3 */
 
@@ -19,20 +36,18 @@ void syscallHandler(void){
 	switch(currentProcess->p_s.reg_a0){
 		case SENDMESSAGE:
 			if(currentProcess->p_s.status & USERPON == 0){
-				/*	PROGRAM TRAP EXCEPTION
-					syscall only available in kernel mode */
+				/* reserved instruction PRIVINSTR
+				syscall only available in kernel mode */
+				programTrapHandler();
 			}
-			pcb_PTR dest = currentProcess->p_s.reg_a1;
-				//TODO
-				msg_PTR msg = allocMsg();
-			msg->m_payload = currentProcess->p_s.reg_a2;
-				//TODO
+			sendMessage();
 		case RECEIVEMESSAGE:
 			if(currentProcess->p_s.status & USERPON == 0){
-				/*	PROGRAM TRAP EXCEPTION
-					syscall only available in kernel mode */
+				/* reserved instruction PRIVINSTR
+				syscall only available in kernel mode */
+				programTrapHandler();
 			}
-			//TODO
+			receiveMessage();
 		case CREATEPROCESS:
 			pcb_PTR newChild = allocPcb();
 			if(newChild == NULL){
@@ -58,28 +73,22 @@ void syscallHandler(void){
 	}
 }
 
-/* redirects exceptions to the correct handler */
-void exceptionHandler(void){
-	/* the processor state at the time of the exception will
-have been stored at the start of the BIOS Data Page */
-	/* processor already set to kernel mode and disabled interrupts*/
-	unsigned int cause = getCAUSE();
-	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
-	
-	switch(excCode){
-		case IOINTERRUPTS:
-			interruptHandler(cause);
-		case TLBINVLDL:
-			//TODO
-		case TLBINVLDS:
-			//TODO
-		case SYSEXCEPTION:
-			syscallHandler();
-		case BREAKEXCEPTION:
-			//TODO
-		case PRIVINSTR:
-			//TODO
-	}
+/* SYS1 */
+void sendMessage(void){
+	pcb_PTR dest = currentProcess->p_s.reg_a1;
 
-	
+	msg_PTR msg = allocMsg();
+	msg->m_payload = currentProcess->p_s.reg_a2;
+	//TODO
+}
+
+/* SYS2 */
+void receiveMessage(void){
+	//TODO
+	//receiveMessageQueue already created
+}
+
+void programTrapHandler(){
+	/*	The Nucleus Program Trap exception handler should perform a standard Pass
+		Up or Die operation using the GENERALEXCEPT index value. */
 }

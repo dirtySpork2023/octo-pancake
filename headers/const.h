@@ -83,7 +83,6 @@
 #define PRIVINSTR      10
 #define CAUSESHIFT     2
 
-
 /* EntryLO register (NDVG) constants */
 #define DIRTYON  0x00000400
 #define VALIDON  0x00000200
