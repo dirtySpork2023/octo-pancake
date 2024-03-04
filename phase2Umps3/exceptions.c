@@ -38,6 +38,7 @@ void syscallHandler(void){
 				programTrapHandler();
 			}
 			sendMessage();
+			break;
 		case RECEIVEMESSAGE:
 			if(currentProcess->p_s.status & USERPON == 0){
 				/* reserved instruction PRIVINSTR
@@ -45,8 +46,10 @@ void syscallHandler(void){
 				programTrapHandler();
 			}
 			receiveMessage();
+			break;
 		case CREATEPROCESS:
 			createProcess();
+			break;
 		case TERMPROCESS:
 			//TODO
 		case DOIO:
@@ -62,19 +65,39 @@ void syscallHandler(void){
 	}
 }
 
-/* SYS1 */
+/* SYS1
+SYSCALL(SENDMESSAGE, (unsigned int)destination, (unsigned int)payload, 0);
+*/
 void sendMessage(void){
 	pcb_PTR dest = currentProcess->p_s.reg_a1;
 
 	msg_PTR msg = allocMsg();
+	msg->m_sender = currentProcess;
 	msg->m_payload = currentProcess->p_s.reg_a2;
-	//TODO
+
+	if(searchProcQ(&pcbFree_h, dest) == dest){
+		currentProcess->p_s.reg_v0 = DEST_NOT_EXIST;
+	}else{
+		if(searchProcQ(receiveMessageQueue, dest) == dest)
+			insertProcQ(readyQueue, outProcQ(receiveMessageQueue, dest));
+		pushMessage(&dest->msg_inbox, msg);
+	}
 }
 
-/* SYS2 */
+/* SYS2
+SYSCALL(RECEIVEMESSAGE, (unsigned int)sender, (unsigned int)payload, 0);
+receive can be blocking
+*/
 void receiveMessage(void){
-	//TODO
-	// (receiveMessageQueue already created)
+	pcb_PTR sender = currentProcess->p_s.reg_a1;
+	msg_PTR msg = popMessage(&currentProcess->msg_inbox, sender);
+	if(msg == NULL){
+		insertProcQ(readyQueue, currentProcess);
+		currentProcess = NULL;
+	}else{
+		*currentProcess->p_s.reg_a2 = msg->m_payload; // TODO
+	}
+
 }
 
 void createProcess(void){

@@ -369,7 +369,7 @@ void test()
     /* start p7 */
     p7_pcb = create_process(&p7state);
     SYSCALL(SENDMESSAGE, (unsigned int)p7_pcb, START, 0);
-RESVINSTR
+    
     /* start p8 */
     p8_pcb = create_process(&p8state);
     SYSCALL(SENDMESSAGE, (unsigned int)p8_pcb, START, 0);

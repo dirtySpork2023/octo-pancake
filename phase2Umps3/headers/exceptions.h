@@ -9,7 +9,11 @@
 #include "../main.c"
 
 void uTLB_RefillHandler();
-void syscallHandler(void);
 void exceptionHandler(void);
+void syscallHandler(void);
+
+void receiveMessage(void);
+void sendMessage(void);
+void createProcess(void);
 
 #endif

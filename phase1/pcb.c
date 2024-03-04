@@ -81,6 +81,17 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
     return NULL;
 }
 
+// cerca p nella lista head senza rimuoverlo
+pcb_t *searchProcQ(struct list_head *head, pcb_t *p) {
+    struct list_head* i;
+    list_for_each(i, head) {
+        if (i == &p->p_list) {
+            return p;
+        }
+    } 
+    return NULL;
+}
+
 // p_child è l'elemento sentinella della lista di p_sib
 
 int emptyChild(pcb_t *p) {
