@@ -20,18 +20,15 @@ void exceptionHandler(void){
 		interruptHandler(cause);
 	if(excCode == SYSEXCEPTION)
 		syscallHandler();
-	if(excCode <= 3)
-		{}//TLB exception handler, codes 1-3
-	if(excCode <= 12)
-		programTrapHandler(); // codes 4-7, 9-12
+	if(excCode <= 3) // codes 1-3
+		{}//TLB exception handler, 
+	if(excCode <= 12) // codes 4-7, 9-12
+		programTrapHandler(); 
 }
 
 void syscallHandler(void){
 	/* information saved in registers:
-	currentProcess->p_s.reg_a0 _a1 _a2 _a3 */
-
-	/* assuming syscall will be successful */
-	currentProcess->p_s.reg_v0 = 0;
+	currentProcess->p_s.reg_a0 reg_a1 reg_a2 reg_a3 */
 
 	switch(currentProcess->p_s.reg_a0){
 		case SENDMESSAGE:
@@ -49,15 +46,7 @@ void syscallHandler(void){
 			}
 			receiveMessage();
 		case CREATEPROCESS:
-			pcb_PTR newChild = allocPcb();
-			if(newChild == NULL){
-				// no free PCBs available
-				currentProcess->p_s.reg_v0 = -1;
-			}else{
-				copyState(currentProcess->p_s.reg_a1, &newChild->p_s);
-				//copySupportStruct(currentProcess->p_s.reg_a2, &newChild->p_supportStruct);
-				
-			}//TODO
+			createProcess();
 		case TERMPROCESS:
 			//TODO
 		case DOIO:
@@ -85,7 +74,19 @@ void sendMessage(void){
 /* SYS2 */
 void receiveMessage(void){
 	//TODO
-	//receiveMessageQueue already created
+	// (receiveMessageQueue already created)
+}
+
+void createProcess(void){
+	pcb_PTR newChild = allocPcb();
+	if(newChild == NULL){
+		/* no free PCBs available */
+		currentProcess->p_s.reg_v0 = -1;
+	}else{
+		currentProcess->p_s.reg_v0 = 0;
+		copyState(currentProcess->p_s.reg_a1, &newChild->p_s);
+		//copySupportStruct(currentProcess->p_s.reg_a2, &newChild->p_supportStruct);
+	}
 }
 
 void programTrapHandler(){
