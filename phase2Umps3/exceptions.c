@@ -63,6 +63,10 @@ void syscallHandler(void){
 		case GETPROCESSID:
 			//TODO
 	}
+
+	state_t *savedState = BIOSDATAPAGE;
+	savedState->pc_epc += WORDLEN;
+	LDST(savedState);
 }
 
 /* SYS1
@@ -72,6 +76,8 @@ void sendMessage(void){
 	pcb_PTR dest = currentProcess->p_s.reg_a1;
 
 	msg_PTR msg = allocMsg();
+	if(msg == NULL)
+		currentProcess->p_s.reg_v0 = MSGNOGOOD;
 	msg->m_sender = currentProcess;
 	msg->m_payload = currentProcess->p_s.reg_a2;
 
@@ -81,6 +87,7 @@ void sendMessage(void){
 		if(searchProcQ(receiveMessageQueue, dest) == dest)
 			insertProcQ(readyQueue, outProcQ(receiveMessageQueue, dest));
 		pushMessage(&dest->msg_inbox, msg);
+		currentProcess->p_s.reg_v0 = 0;
 	}
 }
 
@@ -90,14 +97,20 @@ receive can be blocking
 */
 void receiveMessage(void){
 	pcb_PTR sender = currentProcess->p_s.reg_a1;
+
+	/* assuming ANYSENDER == NULL */
 	msg_PTR msg = popMessage(&currentProcess->msg_inbox, sender);
 	if(msg == NULL){
-		insertProcQ(readyQueue, currentProcess);
-		currentProcess = NULL;
+		copyState(BIOSDATAPAGE, &currentProcess->p_s);
+		//currentProcess->p_time += accumulated cpu time??
+		insertProcQ(receiveMessageQueue, currentProcess);
+		scheduler();
+		/* does work with specific sender
+		because PC is not updated when call is blocking */
 	}else{
-		*currentProcess->p_s.reg_a2 = msg->m_payload; // TODO
+		*&currentProcess->p_s.reg_a2 = msg->m_payload;
+		currentProcess->p_s.reg_v0 = 0;
 	}
-
 }
 
 void createProcess(void){

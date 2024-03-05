@@ -1,5 +1,7 @@
 #include "./headers/scheduler.h"
 
+/* assuming old process was saved
+sets currentProcess to another PCB*/
 void scheduler(){
 	if(emptyProcQ(readyQueue)){
 		/*	HALT execution: if there are no more processes to run
