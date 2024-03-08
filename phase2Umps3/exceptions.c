@@ -55,6 +55,8 @@ void syscallHandler(void){
 SYSCALL(SENDMESSAGE, (unsigned int)destination, (unsigned int)payload, 0);
 */
 int sendMessage(pcb_PTR dest, unsigned int payload){
+	if(dest == SSIADDRESS) dest = SSI;
+
 	msg_PTR msg = allocMsg();
 	if(msg == NULL) return MSGNOGOOD;
 	msg->m_sender = currentProcess;

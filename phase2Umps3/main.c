@@ -7,13 +7,15 @@
 #include "ssi.c"
 #include "p2test.c"
 
-/*	counter of all started but not yet terminated processes
+/* counter of all started but not yet terminated processes
 	includes processes in "running", "ready" AND "blocked" state */
 int processCount;
-/*	counter of processes in the "blocked" state due to an I/O or timer request. */
+/* counter of processes in the "blocked" state due to an I/O or timer request. */
 int softBlockCount;
-/*	pointer to process in running state, NULL when kernel is in WAIT() */
+/* pointer to process in running state, NULL when kernel is in WAIT() */
 pcb_PTR currentProcess;
+/* pointer to SSI process */
+pcb_PTR SSI;
 
 /* READY PCBS */
 struct list_head *readyQueue; // tail pointer
@@ -25,7 +27,7 @@ struct list_head *pseudoClockQueue;
 /*	processes waiting for a message to be received
 	resumed by: new message directed to them */
 struct list_head *receiveMessageQueue;
-// TODO more queues for blocked PCB's may be added
+// TODO I/O queues ?
 
 int main(){
 	passupvector_t *passupvector = PASSUPVECTOR;
@@ -46,16 +48,16 @@ int main(){
 	LDIT(PSECOND);
 
 	// first test process
-	pcb_PTR pcbSSI = allocPcb();
-	insertProcQ(readyQueue, pcbSSI);
+	SSI = allocPcb();
+	insertProcQ(readyQueue, SSI);
 	processCount++;
-	pcbSSI->p_s.status &= !IMON;
-	pcbSSI->p_s.status &= !IEPON; // interrupt enabled (== interrupt mask disabled)
-	pcbSSI->p_s.status &= !USERPON; // user mode disabled
-	pcbSSI->p_s.status |= TEBITON; // local timer on
-	pcbSSI->p_s.pc_epc = (memaddr) initSSI;
-	pcbSSI->p_s.reg_t9 = (memaddr) initSSI;
-	RAMTOP(pcbSSI->p_s.reg_sp); // stack pointer = RAMTOP
+	SSI->p_s.status &= !IMON;
+	SSI->p_s.status &= !IEPON; // interrupt enabled (== interrupt mask disabled)
+	SSI->p_s.status &= !USERPON; // user mode disabled
+	SSI->p_s.status |= TEBITON; // local timer on
+	SSI->p_s.pc_epc = (memaddr) initSSI;
+	SSI->p_s.reg_t9 = (memaddr) initSSI;
+	RAMTOP(SSI->p_s.reg_sp); // stack pointer = RAMTOP
 
 	// second test process
 	pcb_PTR root = allocPcb();

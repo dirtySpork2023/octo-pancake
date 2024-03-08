@@ -11,7 +11,7 @@ void initSSI();
 void systemServiceInterface();
 
 void createProcess(ssi_create_process_PTR, pcb_PTR);
-void killProcess(pcb_PTR);
+void killProcess(pcb_PTR, pcb_PTR);
 void doIO(ssi_do_io_PTR);
 void getTime(pcb_PTR);
 void waitForClock(pcb_PTR);

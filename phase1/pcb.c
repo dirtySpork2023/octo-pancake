@@ -71,6 +71,7 @@ pcb_t *removeProcQ(struct list_head *head) {
 
 // rimuove p dalla lista head
 pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
+    if(p == NULL) return NULL;
     struct list_head* i;
     list_for_each(i, head) {
         if (i == &p->p_list) {
@@ -83,6 +84,7 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
 
 // cerca p nella lista head senza rimuoverlo
 pcb_t *searchProcQ(struct list_head *head, pcb_t *p) {
+    if(p == NULL) return NULL;
     struct list_head* i;
     list_for_each(i, head) {
         if (i == &p->p_list) {
