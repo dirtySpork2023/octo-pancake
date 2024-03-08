@@ -68,7 +68,7 @@ int main(){
 	root->p_s.pc_epc = (memaddr) test;
 	root->p_s.reg_t9 = (memaddr) test;
 	RAMTOP(root->p_s.reg_sp); // stack pointer = RAMTOP
-	root->p_s.reg_sp -= 2*FRAMESIZE; // TODO quanto spazio alloca il processo test ???
+	root->p_s.reg_sp -= 2*FRAMESIZE; // TODO ???
 
 	scheduler();
 }

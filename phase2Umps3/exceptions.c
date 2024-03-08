@@ -30,38 +30,20 @@ void syscallHandler(void){
 	/* information saved in registers:
 	currentProcess->p_s.reg_a0 reg_a1 reg_a2 reg_a3 */
 
-	switch(currentProcess->p_s.reg_a0){
-		case SENDMESSAGE:
+	if(currentProcess->p_s.reg_a0 == SENDMESSAGE){
 			if(currentProcess->p_s.status & USERPON == 0){
 				/* reserved instruction PRIVINSTR
 				syscall only available in kernel mode */
 				programTrapHandler();
 			}
-			sendMessage();
-			break;
-		case RECEIVEMESSAGE:
+			currentProcess->p_s.reg_v0 = sendMessage(currentProcess->p_s.reg_a1, currentProcess->p_s.reg_a2);
+	}else if(currentProcess->p_s.reg_a0 == RECEIVEMESSAGE){
 			if(currentProcess->p_s.status & USERPON == 0){
 				/* reserved instruction PRIVINSTR
 				syscall only available in kernel mode */
 				programTrapHandler();
 			}
-			receiveMessage();
-			break;
-		case CREATEPROCESS:
-			createProcess();
-			break;
-		case TERMPROCESS:
-			//TODO
-		case DOIO:
-			//TODO
-		case GETTIME:
-			//TODO
-		case CLOCKWAIT:
-			//TODO
-		case GETSUPPORTPTR:
-			//TODO
-		case GETPROCESSID:
-			//TODO
+			currentProcess->p_s.reg_v0 = receiveMessage(currentProcess->p_s.reg_a1, currentProcess->p_s.reg_a2);
 	}
 
 	state_t *savedState = BIOSDATAPAGE;
@@ -69,36 +51,30 @@ void syscallHandler(void){
 	LDST(savedState);
 }
 
-/* SYS1
+/*
 SYSCALL(SENDMESSAGE, (unsigned int)destination, (unsigned int)payload, 0);
 */
-void sendMessage(void){
-	pcb_PTR dest = currentProcess->p_s.reg_a1;
-
+int sendMessage(pcb_PTR dest, unsigned int payload){
 	msg_PTR msg = allocMsg();
-	if(msg == NULL)
-		currentProcess->p_s.reg_v0 = MSGNOGOOD;
+	if(msg == NULL) return MSGNOGOOD;
 	msg->m_sender = currentProcess;
-	msg->m_payload = currentProcess->p_s.reg_a2;
+	msg->m_payload = payload;
 
 	if(searchProcQ(&pcbFree_h, dest) == dest){
-		currentProcess->p_s.reg_v0 = DEST_NOT_EXIST;
+		return DEST_NOT_EXIST;
 	}else{
 		if(searchProcQ(receiveMessageQueue, dest) == dest)
 			insertProcQ(readyQueue, outProcQ(receiveMessageQueue, dest));
 		pushMessage(&dest->msg_inbox, msg);
-		currentProcess->p_s.reg_v0 = 0;
+		return 0;
 	}
 }
 
-/* SYS2
+/*
 SYSCALL(RECEIVEMESSAGE, (unsigned int)sender, (unsigned int)payload, 0);
-receive can be blocking
 */
-void receiveMessage(void){
-	pcb_PTR sender = currentProcess->p_s.reg_a1;
-
-	/* assuming ANYSENDER == NULL */
+int receiveMessage(pcb_PTR sender, unsigned int payload){
+	/* assuming ANYMESSAGE == NULL */
 	msg_PTR msg = popMessage(&currentProcess->msg_inbox, sender);
 	if(msg == NULL){
 		copyState(BIOSDATAPAGE, &currentProcess->p_s);
@@ -108,20 +84,8 @@ void receiveMessage(void){
 		/* does work with specific sender
 		because PC is not updated when call is blocking */
 	}else{
-		*&currentProcess->p_s.reg_a2 = msg->m_payload;
-		currentProcess->p_s.reg_v0 = 0;
-	}
-}
-
-void createProcess(void){
-	pcb_PTR newChild = allocPcb();
-	if(newChild == NULL){
-		/* no free PCBs available */
-		currentProcess->p_s.reg_v0 = -1;
-	}else{
-		currentProcess->p_s.reg_v0 = 0;
-		copyState(currentProcess->p_s.reg_a1, &newChild->p_s);
-		//copySupportStruct(currentProcess->p_s.reg_a2, &newChild->p_supportStruct);
+		*&payload = msg->m_payload;
+		return msg->m_sender;
 	}
 }
 
