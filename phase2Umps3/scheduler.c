@@ -1,5 +1,10 @@
 #include "./headers/scheduler.h"
 
+extern int processCount;
+extern int softBlockCount;
+extern pcb_PTR currentProcess;
+extern struct list_head *readyQueue;
+
 /* assuming old process was saved
 sets currentProcess to another PCB*/
 void scheduler(){

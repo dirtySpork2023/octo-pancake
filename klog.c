@@ -4,6 +4,8 @@
  * @brief Small library that implements a circular log buffer. When properly traced (with ASCII representation),
  *          `klog_buffer` displays a series of printed lines.
 */
+#ifndef KLOG
+#define KLOG
 
 #define KLOG_LINES     64     // Number of lines in the buffer. Adjustable, only limited by available memory
 #define KLOG_LINE_SIZE 42     // Length of a single line in characters
@@ -17,6 +19,8 @@ unsigned int klog_line_index                         = 0;       // Index of the 
 unsigned int klog_char_index                         = 0;       // Index of the current character in the line
 char         klog_buffer[KLOG_LINES][KLOG_LINE_SIZE] = {0};     // Actual buffer, to be traced in uMPS3
 
+
+void breakPoint(void){}
 
 // Print str to klog
 void klog_print(char *str) {
@@ -86,3 +90,5 @@ static void next_line(void) {
         klog_buffer[klog_line_index][i] = ' ';
     }
 }
+
+#endif

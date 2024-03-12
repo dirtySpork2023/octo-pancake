@@ -195,6 +195,6 @@
 /* Inizio indirizzo di device registers */
 #define START_DEVREG		0x10000054
 
-#define SSIADDRESS NULL
+#define SSIADDRESS 0xFFFFFFFF
 
 #endif

@@ -1,7 +1,13 @@
 #include "./headers/exceptions.h"
 
+extern struct list_head pcbFree_h;
+extern pcb_PTR currentProcess;
+extern pcb_PTR SSI;
+extern struct list_head *readyQueue;
+extern struct list_head *receiveMessageQueue;
+
 /* to be replaced in phase 3 */
-void uTLB_RefillHandler(){
+void uTLB_RefillHandler(void){
 	setENTRYHI(0x80000000);
 	setENTRYLO(0x00000000);
 	TLBWR();
@@ -23,7 +29,10 @@ void exceptionHandler(void){
 	if(excCode <= 3) // codes 1-3
 		{}//TLB exception handler, 
 	if(excCode <= 12) // codes 4-7, 9-12
-		programTrapHandler(); 
+		programTrapHandler();
+	
+	klog_print("exeption not handled\n");
+	breakPoint();
 }
 
 void syscallHandler(void){
@@ -46,7 +55,7 @@ void syscallHandler(void){
 			currentProcess->p_s.reg_v0 = receiveMessage(currentProcess->p_s.reg_a1, currentProcess->p_s.reg_a2);
 	}
 
-	state_t *savedState = BIOSDATAPAGE;
+	state_t *savedState = (state_t *)BIOSDATAPAGE;
 	savedState->pc_epc += WORDLEN;
 	LDST(savedState);
 }
@@ -80,11 +89,11 @@ int receiveMessage(pcb_PTR sender, unsigned int payload){
 	msg_PTR msg = popMessage(&currentProcess->msg_inbox, sender);
 	if(msg == NULL){
 		copyState(BIOSDATAPAGE, &currentProcess->p_s);
-		//currentProcess->p_time += accumulated cpu time??
+		// TODO currentProcess->p_time += accumulated cpu time??
 		insertProcQ(receiveMessageQueue, currentProcess);
 		scheduler();
-		/* does work with specific sender
-		because PC is not updated when call is blocking */
+		return 0; // for compiler
+		/* does work with specific sender */
 	}else{
 		*&payload = msg->m_payload;
 		return msg->m_sender;

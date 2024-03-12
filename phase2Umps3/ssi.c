@@ -1,6 +1,8 @@
 #include "./headers/ssi.h"
 
-void initSSI(){
+extern struct list_head *pseudoClockQueue;
+
+void initSSI(void){
 	// TODO make SSI available for other processes to send messages
 	systemServiceInterface();
 }
@@ -26,6 +28,9 @@ void systemServiceInterface(){
 				getSupportStruct(sender);
 			case GETPROCESSID:
 				getPID(sender);
+			default:
+				klog_print("SSI call invalid\n");
+				breakPoint();
 		}
 	}
 }
@@ -43,15 +48,15 @@ void createProcess(ssi_create_process_PTR arg, pcb_PTR sender){
 	}
 }
 
-void killProcess(pcb_PTR dead, pcb_PTR sender){
-	if(dead == NULL) dead = sender;
+void killProcess(pcb_PTR doomed, pcb_PTR sender){
+	if(doomed == NULL) doomed = sender;
 	
-	while(!emptyChild(dead)){
-		killProcess(removeChild(dead));
+	while(!emptyChild(doomed)){
+		killProcess(removeChild(doomed), NULL);
 	}
 	
-	outChild(dead);
-	freePcb(dead);
+	outChild(doomed);
+	freePcb(doomed);
 }
 
 void doIO(ssi_do_io_PTR arg){

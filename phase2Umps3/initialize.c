@@ -1,11 +1,13 @@
 #include "../headers/const.h"
 #include "../headers/types.h"
-#include "../phase1/pcb.c"
-#include "scheduler.c"
-#include "exceptions.c"
-#include "interrupts.c"
-#include "ssi.c"
-#include "p2test.c"
+#include "../phase1/headers/pcb.h"
+#include "headers/scheduler.h"
+#include "headers/exceptions.h"
+#include "headers/interrupts.h"
+#include "headers/ssi.h"
+
+#define FRAMESIZE 1024
+extern void test();
 
 /* counter of all started but not yet terminated processes
 	includes processes in "running", "ready" AND "blocked" state */
@@ -30,7 +32,7 @@ struct list_head *receiveMessageQueue;
 // TODO I/O queues ?
 
 int main(){
-	passupvector_t *passupvector = PASSUPVECTOR;
+	passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;
 	passupvector->tlb_refill_handler = (memaddr)uTLB_RefillHandler;
 	passupvector->tlb_refill_stackPtr = KERNELSTACK;
 	passupvector->exception_handler = (memaddr)exceptionHandler;
@@ -73,4 +75,5 @@ int main(){
 	root->p_s.reg_sp -= 2*FRAMESIZE; // TODO ???
 
 	scheduler();
+	return 0;
 }

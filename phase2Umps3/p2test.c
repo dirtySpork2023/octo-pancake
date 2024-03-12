@@ -79,9 +79,14 @@ memaddr *p5MemLocation = 0; /* To cause a p5 trap */
 void p2(), p3(), p4(), p5(), p5a(), p5b(), p6(), p7(), p5mm(), p5sys(), p5gen(), p5mm(), p8root(), child1();
 void child2(), p8(), p8leaf1(), p8leaf2(), p8leaf3(), p8leaf4(), p9(), p10(), hp_p1(), hp_p2();
 
-extern pcb_t *ssi_pcb;
-extern pcb_t *current_process;
-extern int process_count;
+extern pcb_PTR SSI;
+extern pcb_PTR currentProcess;
+extern int processCount;
+
+pcb_t *ssi_pcb;
+pcb_t *current_process;
+int process_count;
+
 pcb_PTR test_pcb, print_pcb, p2_pcb, p3_pcb, p4_pcb_v1, p4_pcb_v2, p5_pcb, p6_pcb, p7_pcb, p8_pcb, p8root_pcb,
     child1_pcb, child2_pcb, gchild1_pcb, gchild2_pcb, gchild3_pcb, gchild4_pcb, p9_pcb, p10_pcb;
 
@@ -178,6 +183,11 @@ pcb_t *create_process(state_t *s)
 /*********************************************************************/
 void test()
 {
+    /*  */
+    ssi_pcb = SSI;
+    current_process = currentProcess;
+    process_count = processCount;
+
     test_pcb = current_process;
 
     // test send and receive
