@@ -1,8 +1,8 @@
 #include "./headers/exceptions.h"
 
 extern struct list_head pcbFree_h;
-extern pcb_PTR currentProcess;
-extern pcb_PTR SSI;
+extern pcb_PTR current_process;
+extern pcb_PTR ssi_pcb;
 extern struct list_head *readyQueue;
 extern struct list_head *receiveMessageQueue;
 
@@ -37,22 +37,22 @@ void exceptionHandler(void){
 
 void syscallHandler(void){
 	/* information saved in registers:
-	currentProcess->p_s.reg_a0 reg_a1 reg_a2 reg_a3 */
+	current_process->p_s.reg_a0 reg_a1 reg_a2 reg_a3 */
 
-	if(currentProcess->p_s.reg_a0 == SENDMESSAGE){
-			if(currentProcess->p_s.status & USERPON == 0){
+	if(current_process->p_s.reg_a0 == SENDMESSAGE){
+			if(current_process->p_s.status & USERPON == 0){
 				/* reserved instruction PRIVINSTR
 				syscall only available in kernel mode */
 				programTrapHandler();
 			}
-			currentProcess->p_s.reg_v0 = sendMessage(currentProcess->p_s.reg_a1, currentProcess->p_s.reg_a2);
-	}else if(currentProcess->p_s.reg_a0 == RECEIVEMESSAGE){
-			if(currentProcess->p_s.status & USERPON == 0){
+			current_process->p_s.reg_v0 = sendMessage(current_process->p_s.reg_a1, current_process->p_s.reg_a2);
+	}else if(current_process->p_s.reg_a0 == RECEIVEMESSAGE){
+			if(current_process->p_s.status & USERPON == 0){
 				/* reserved instruction PRIVINSTR
 				syscall only available in kernel mode */
 				programTrapHandler();
 			}
-			currentProcess->p_s.reg_v0 = receiveMessage(currentProcess->p_s.reg_a1, currentProcess->p_s.reg_a2);
+			current_process->p_s.reg_v0 = receiveMessage(current_process->p_s.reg_a1, current_process->p_s.reg_a2);
 	}
 
 	state_t *savedState = (state_t *)BIOSDATAPAGE;
@@ -64,11 +64,11 @@ void syscallHandler(void){
 SYSCALL(SENDMESSAGE, (unsigned int)destination, (unsigned int)payload, 0);
 */
 int sendMessage(pcb_PTR dest, unsigned int payload){
-	if(dest == SSIADDRESS) dest = SSI;
+	if(dest == SSIADDRESS) dest = ssi_pcb;
 
 	msg_PTR msg = allocMsg();
 	if(msg == NULL) return MSGNOGOOD;
-	msg->m_sender = currentProcess;
+	msg->m_sender = current_process;
 	msg->m_payload = payload;
 
 	if(searchProcQ(&pcbFree_h, dest) == dest){
@@ -86,11 +86,11 @@ SYSCALL(RECEIVEMESSAGE, (unsigned int)sender, (unsigned int)payload, 0);
 */
 int receiveMessage(pcb_PTR sender, unsigned int payload){
 	/* assuming ANYMESSAGE == NULL */
-	msg_PTR msg = popMessage(&currentProcess->msg_inbox, sender);
+	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);
 	if(msg == NULL){
-		copyState(BIOSDATAPAGE, &currentProcess->p_s);
-		// TODO currentProcess->p_time += accumulated cpu time??
-		insertProcQ(receiveMessageQueue, currentProcess);
+		copyState(BIOSDATAPAGE, &current_process->p_s);
+		// TODO current_process->p_time += accumulated cpu time??
+		insertProcQ(receiveMessageQueue, current_process);
 		scheduler();
 		return 0; // for compiler
 		/* does work with specific sender */
