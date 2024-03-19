@@ -6,7 +6,6 @@
 #include "headers/interrupts.h"
 #include "headers/ssi.h"
 
-#define FRAMESIZE 1024
 extern void test();
 
 /* counter of all started but not yet terminated processes
@@ -71,8 +70,8 @@ int main(){
 	root->p_s.status |= TEBITON; // local timer on
 	root->p_s.pc_epc = (memaddr) test;
 	root->p_s.reg_t9 = (memaddr) test;
-	RAMTOP(root->p_s.reg_sp); // stack pointer = RAMTOP
-	root->p_s.reg_sp -= 2*FRAMESIZE; // TODO ???
+	RAMTOP(root->p_s.reg_sp); // stack pointer = RAMTOP - 2*PAGESIZE
+	root->p_s.reg_sp -= 2*PAGESIZE;
 
 	scheduler();
 	return 0;
