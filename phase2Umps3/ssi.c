@@ -2,7 +2,7 @@
 
 extern struct list_head *pseudoClockQueue;
 
-void initSSI(void){
+void initSSI(){
 	// TODO make SSI available for other processes to send messages
 	systemServiceInterface();
 }

@@ -9,13 +9,11 @@ extern struct list_head *readyQueue;
 sets currentProcess to another PCB*/
 void scheduler(){
 	if(emptyProcQ(readyQueue)){
-		/*	HALT execution: if there are no more processes to run
-			WAIT for an I/O operation to complete: which will unblock a PCB and populate the Ready Queue
-			PANIC: halt execution in the presence of deadlock */
-	
-		if(process_count == 1) /* TODO and the SSI is the only process in the system */
+		if(process_count == 1)
+			/* the SSI is the only process in the system */
 			HALT(); /* HALT BIOS service/instruction */
 		if(process_count > 0 && softBlockCount > 0){
+			/* all pcbs are waiting for an I/O operation to complete */
 			current_process = NULL;
 			unsigned int waitStatus = getSTATUS();
 			/* enable all interrupts and disable PLT */
@@ -26,6 +24,7 @@ void scheduler(){
 			WAIT(); /* enter a Wait State */
 		}
 		if(process_count > 0 && softBlockCount == 0)
+			/* deadlock */
 			PANIC(); /* PANIC BIOS service/instruction*/
 	}
 

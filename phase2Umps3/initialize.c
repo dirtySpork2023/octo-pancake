@@ -6,7 +6,6 @@
 #include "headers/interrupts.h"
 #include "headers/ssi.h"
 
-#define FRAMESIZE 1024
 extern void test();
 
 /* counter of all started but not yet terminated processes
@@ -49,30 +48,30 @@ int main(){
 	/* load System-wide Interval Timer with 100 milliseconds */
 	LDIT(PSECOND);
 
-	// first test process
+	// first process
 	ssi_pcb = allocPcb();
 	insertProcQ(readyQueue, ssi_pcb);
 	process_count++;
-	ssi_pcb->p_s.status &= !IMON;
-	ssi_pcb->p_s.status &= !IEPON; // interrupt enabled (== interrupt mask disabled)
+	//ssi_pcb->p_s.status &= !IMON;
+	ssi_pcb->p_s.status &= !IEPON; // interrupt enabled ==> interrupt mask disabled
 	ssi_pcb->p_s.status &= !USERPON; // user mode disabled
 	ssi_pcb->p_s.status |= TEBITON; // local timer on
 	ssi_pcb->p_s.pc_epc = (memaddr) initSSI;
 	ssi_pcb->p_s.reg_t9 = (memaddr) initSSI;
 	RAMTOP(ssi_pcb->p_s.reg_sp); // stack pointer = RAMTOP
 
-	// second test process
+	// second process
 	pcb_PTR root = allocPcb();
 	insertProcQ(readyQueue, root);
 	process_count++;
-	root->p_s.status &= !IMON;
-	root->p_s.status &= !IEPON; // interrupt enabled (== interrupt mask disabled)
+	//root->p_s.status &= !IMON;
+	root->p_s.status &= !IEPON; // interrupt enabled ==> interrupt mask disabled
 	root->p_s.status &= !USERPON; // user mode disabled
 	root->p_s.status |= TEBITON; // local timer on
 	root->p_s.pc_epc = (memaddr) test;
 	root->p_s.reg_t9 = (memaddr) test;
-	RAMTOP(root->p_s.reg_sp); // stack pointer = RAMTOP
-	root->p_s.reg_sp -= 2*FRAMESIZE; // TODO ???
+	RAMTOP(root->p_s.reg_sp); // stack pointer = RAMTOP - 2*PAGESIZE
+	root->p_s.reg_sp -= 2*PAGESIZE;
 
 	scheduler();
 	return 0;
