@@ -9,14 +9,14 @@ void interruptHandler(int cause){
 
 	/* timer interrupts */
 
-	if(cause & LOCALTIMERINT){
+	if(cause & LOCALTIMERINT) {
 		/*	timer will be reset in scheduler() */
 		copyState((state_t *)BIOSDATAPAGE, &current_process->p_s);
 		insertProcQ(readyQueue, current_process);
 		scheduler();
 	}
 
-	if(cause & TIMERINTERRUPT){
+	if(cause & TIMERINTERRUPT) {
 		/* re-set Interval Timer with 100 milliseconds */
 		LDIT(PSECOND);
 		/*	unlock all pcbs in pseudoClockQueue */
@@ -35,9 +35,45 @@ void interruptHandler(int cause){
 
 	/* device interrupts */
 
-	if(cause & DISKINTERRUPT){
-		
+	//TODO better management of different interrupts and priority
+	//with the way the if conditions are put it should already follow a priority order 
+	
+	unsigned int devAddrBase;
+	unsigned int deviceNumber;
+	unsigned int intdevBitMap = 0x10000040; // Interrupt Line 3 Interrupting Devices Bit Map
+
+	//find interrupt lines active in order of priority
+	if(cause & DISKINTERRUPT) {
+
+		intdevBitMap = intdevBitMap + ((DISKINT - 3) * 0x04);
+		//find the device number [Tip: to calculate the device number you can use a switch among constants DEVxON]
+		switch(intdevBitMap & 0x000000FF) { // the last 8 bits represent the device number
+			case DEV0ON: deviceNumber = 0; break;
+        	case DEV1ON: deviceNumber = 1; break;
+        	case DEV2ON: deviceNumber = 2; break;
+        	case DEV3ON: deviceNumber = 3; break;
+        	case DEV4ON: deviceNumber = 4; break;
+        	case DEV5ON: deviceNumber = 5; break;
+        	case DEV6ON: deviceNumber = 6; break;
+        	case DEV7ON: deviceNumber = 7; break;
+			default: deviceNumber = 0;
+		}
+		// find the address for this device's device register
+		// devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
+		devAddrBase = 0x10000054 + ((DISKINT - 3) * 0x80) + (deviceNumber * 0x10);
+
+		//save off the status code from the device’s device register
+		// (base) + 0x0
+		unsigned int devStatus = *((unsigned int *)devAddrBase);
+
+		//acknowledge the interrupt (command is found at address (base) + 0x4)
+		*((unsigned int *)(devAddrBase + 0x4)) = ACK; //??
+
+		//TODO points 4-7
 	}
+	//TODO apply to all non-timer interrupts
+
+
 	if(cause & FLASHINTERRUPT){
 		
 	}
