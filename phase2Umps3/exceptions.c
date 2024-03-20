@@ -17,10 +17,12 @@ void uTLB_RefillHandler(void){
 /* redirects exceptions to the correct handler */
 void exceptionHandler(void){
 	/* the processor state at the time of the exception will
-	have been stored at the start of the BIOS Data Page */
+	have been stored at BIOS data page */
 	/* processor already set to kernel mode and disabled interrupts*/
 	unsigned int cause = getCAUSE();
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
+
+	copyState((state_t *)BIOSDATAPAGE, &current_process->p_s);
 
 	if(excCode == IOINTERRUPTS)
 		interruptHandler(cause);
@@ -36,28 +38,21 @@ void exceptionHandler(void){
 }
 
 void syscallHandler(void){
-	/* information saved in registers:
-	current_process->p_s.reg_a0 reg_a1 reg_a2 reg_a3 */
+	if(current_process->p_s.status & USERPON != 0){
+		/* reserved instruction PRIVINSTR
+		syscall only available in kernel mode */
+		programTrapHandler();
+	}
+	/* information saved in registers: a0, a1, a2, a3 */
 
 	if(current_process->p_s.reg_a0 == SENDMESSAGE){
-			if(current_process->p_s.status & USERPON == 0){
-				/* reserved instruction PRIVINSTR
-				syscall only available in kernel mode */
-				programTrapHandler();
-			}
-			current_process->p_s.reg_v0 = sendMessage(current_process->p_s.reg_a1, current_process->p_s.reg_a2);
+		current_process->p_s.reg_v0 = sendMessage(current_process->p_s.reg_a1, current_process->p_s.reg_a2);
 	}else if(current_process->p_s.reg_a0 == RECEIVEMESSAGE){
-			if(current_process->p_s.status & USERPON == 0){
-				/* reserved instruction PRIVINSTR
-				syscall only available in kernel mode */
-				programTrapHandler();
-			}
-			current_process->p_s.reg_v0 = receiveMessage(current_process->p_s.reg_a1, current_process->p_s.reg_a2);
+		current_process->p_s.reg_v0 = receiveMessage(current_process->p_s.reg_a1, current_process->p_s.reg_a2);
 	}
 
-	state_t *savedState = (state_t *)BIOSDATAPAGE;
-	savedState->pc_epc += WORDLEN;
-	LDST(savedState);
+	current_process->p_s.pc_epc += WORDLEN;
+	LDST(&current_process->p_s);
 }
 
 /*
