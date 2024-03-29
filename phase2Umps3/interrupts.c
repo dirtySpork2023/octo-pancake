@@ -10,8 +10,9 @@ void interruptHandler(int cause){
 	/* timer interrupts */
 
 	if(cause & LOCALTIMERINT) {
-		/*	timer will be reset in scheduler() */
+		copyState((state_t *)BIOSDATAPAGE, &current_process->p_s); // bisogna farlo questo?
 		insertProcQ(readyQueue, current_process);
+		current_process = NULL;
 		scheduler();
 	}
 

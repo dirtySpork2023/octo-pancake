@@ -26,15 +26,16 @@ void exceptionHandler(void){
 
 	if(excCode == IOINTERRUPTS)
 		interruptHandler(cause);
-	if(excCode == SYSEXCEPTION)
+	else if(excCode == SYSEXCEPTION)
 		syscallHandler();
-	if(excCode <= 3) // codes 1-3
+	else if(excCode <= 3) // codes 1-3
 		{}//TLB exception handler, 
-	if(excCode <= 12) // codes 4-7, 9-12
+	else if(excCode <= 12) // codes 4-7, 9-12
 		programTrapHandler();
-	
-	klog_print("exeption not handled\n");
-	breakPoint();
+	else{
+		klog_print("exeption not handled\n");
+		breakPoint();
+	}
 }
 
 void syscallHandler(void){

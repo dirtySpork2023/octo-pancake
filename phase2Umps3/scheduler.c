@@ -8,6 +8,12 @@ extern struct list_head *readyQueue;
 /* assuming old process was saved
 sets currentProcess to another PCB*/
 void scheduler(){
+	/*for debugging*/
+	if(current_process != NULL){
+		klog_print("process not saved correctly\n");
+		breakPoint();
+	}
+
 	if(emptyProcQ(readyQueue)){
 		if(process_count == 1)
 			/* the SSI is the only process in the system */
