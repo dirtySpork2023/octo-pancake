@@ -94,4 +94,10 @@ int receiveMessage(pcb_PTR sender, unsigned int payload){
 void programTrapHandler(){
 	/*	The Nucleus Program Trap exception handler should perform a standard Pass
 		Up or Die operation using the GENERALEXCEPT index value. */
+	if(currentProcess->p_supportStruct == NULL) {
+		// TerminateProcess
+	} else {
+		//  store the saved exception state at an accessible location known to the Nucleus,
+		//  and pass control to a routine specified by the Nucleus
+	}
 }
