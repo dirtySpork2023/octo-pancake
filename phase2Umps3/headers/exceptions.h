@@ -4,11 +4,10 @@
 #include <umps/libumps.h>
 #include "../../headers/const.h"
 #include "../../headers/types.h"
-#include "../../phase1/pcb.c"
-#include "../../phase1/msg.c"
-#include "../main.c"
+#include "../../phase1/headers/pcb.h"
+#include "../../phase1/headers/msg.h"
 
-void uTLB_RefillHandler();
+void uTLB_RefillHandler(void);
 void exceptionHandler(void);
 void syscallHandler(void);
 

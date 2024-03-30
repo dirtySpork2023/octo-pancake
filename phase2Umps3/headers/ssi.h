@@ -4,8 +4,7 @@
 #include <umps/libumps.h>
 #include "../../headers/const.h"
 #include "../../headers/types.h"
-#include "../../phase1/pcb.c"
-#include "../main.c"
+#include "../../phase1/headers/pcb.h"
 
 void initSSI();
 void systemServiceInterface();

@@ -1,5 +1,7 @@
 #include "./headers/ssi.h"
 
+extern struct list_head *pseudoClockQueue;
+
 void initSSI(){
 	// TODO make SSI available for other processes to send messages
 	systemServiceInterface();
@@ -10,7 +12,7 @@ void systemServiceInterface(){
 	pcb_PTR sender;
 	
 	while(TRUE){
-		sender = SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, &payload, 0);
+		sender = SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)&payload, 0);
 		switch(payload.service_code){
 			case CREATEPROCESS:
 				createProcess(payload.arg, sender);
@@ -26,6 +28,9 @@ void systemServiceInterface(){
 				getSupportStruct(sender);
 			case GETPROCESSID:
 				getPID(sender);
+			default:
+				klog_print("SSI call invalid\n");
+				breakPoint();
 		}
 	}
 }
@@ -37,21 +42,21 @@ void createProcess(ssi_create_process_PTR arg, pcb_PTR sender){
 		sender->p_s.reg_v0 = NOPROC;
 	}else{
 		copyState(arg->state, &newChild->p_s);
-		newChild->p_supportStruct = &arg->support;
+		newChild->p_supportStruct = arg->support;
 		insertChild(sender, newChild);
-		SYSCALL(SENDMESSAGE, sender, newChild, 0);
+		SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)newChild, 0);
 	}
 }
 
-void killProcess(pcb_PTR dead, pcb_PTR sender){
-	if(dead == NULL) dead = sender;
+void killProcess(pcb_PTR doomed, pcb_PTR sender){
+	if(doomed == NULL) doomed = sender;
 	
-	while(!emptyChild(dead)){
-		killProcess(removeChild(dead));
+	while(!emptyChild(doomed)){
+		killProcess(removeChild(doomed), NULL);
 	}
 	
-	outChild(dead);
-	freePcb(dead);
+	outChild(doomed);
+	freePcb(doomed);
 }
 
 void doIO(ssi_do_io_PTR arg){
@@ -59,7 +64,7 @@ void doIO(ssi_do_io_PTR arg){
 }
 
 void getTime(pcb_PTR sender){
-	SYSCALL(SENDMESSAGE, sender, sender->p_time, 0);
+	SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)sender->p_time, 0);
 }
 
 void waitForClock(pcb_PTR sender){
@@ -67,9 +72,9 @@ void waitForClock(pcb_PTR sender){
 }
 
 void getSupportStruct(pcb_PTR sender){
-	SYSCALL(SENDMESSAGE, sender, &sender->p_supportStruct, 0);
+	SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)&sender->p_supportStruct, 0);
 }
 
 void getPID(pcb_PTR sender){
-	SYSCALL(SENDMESSAGE, sender, sender->p_pid, 0);
+	SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)sender->p_pid, 0);
 }

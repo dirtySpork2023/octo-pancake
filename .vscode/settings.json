@@ -4,6 +4,7 @@
         "const.h": "c",
         "types.h": "c",
         "libumps.h": "c",
-        "*.gitignore": "c"
+        "*.gitignore": "c",
+        "interrupts.h": "c"
     }
 }
