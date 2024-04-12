@@ -54,10 +54,14 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 	while(!emptyChild(doomed)){
 		killProcess(removeChild(doomed), NULL);
 	}
-	
+	// TODO 
+	// Manca qualcoa secondo me
+
 	outChild(doomed);
 	freePcb(doomed);
 }
+
+
 
 void doIO(ssi_do_io_PTR arg){
 	//TODO

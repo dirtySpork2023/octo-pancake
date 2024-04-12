@@ -31,7 +31,7 @@ void exceptionHandler(void){
 	else if(excCode <= 3) // codes 1-3
 		{}//TLB exception handler, 
 	else if(excCode <= 12) // codes 4-7, 9-12
-		programTrapHandler();
+		PassUpOrDie(GENERALEXCEPT, cause); // Trap Handler
 	else{
 		klog_print("exeption not handled\n");
 		breakPoint();
@@ -42,7 +42,8 @@ void syscallHandler(void){
 	if(current_process->p_s.status & USERPON != 0){
 		/* reserved instruction PRIVINSTR
 		syscall only available in kernel mode */
-		programTrapHandler();
+		unsigned int cause = getCAUSE();
+		PassUpOrDie(GENERALEXCEPT, cause); // Trap Handler
 	}
 	/* information saved in registers: a0, a1, a2, a3 */
 
@@ -96,13 +97,14 @@ int receiveMessage(pcb_PTR sender, unsigned int payload){
 	}
 }
 
-void programTrapHandler(){
-	/*	The Nucleus Program Trap exception handler should perform a standard Pass
-		Up or Die operation using the GENERALEXCEPT index value. */
-	if(currentProcess->p_supportStruct == NULL) {
-		// TerminateProcess
-	} else {
-		//  store the saved exception state at an accessible location known to the Nucleus,
-		//  and pass control to a routine specified by the Nucleus
-	}
+void PassUpOrDie(int except_type, state_t* exceptionState) {
+    if (&current_process->p_supportStruct == NULL) { 
+        killProcess(current_process, NULL); } // Die (process termination)
+    else // PassUp
+    {
+        (current_process->p_supportStruct)->sup_exceptState[except_type] = *exceptionState; 
+        context_t info_to_pass = (current_process->p_supportStruct)->sup_exceptContext[except_type]; // passing up the support info
+        LDCXT(info_to_pass.stackPtr, info_to_pass.status, info_to_pass.pc);                   // to the support level
+        // LDCXT is used to change the operating mode/context of a process
+    }
 }
