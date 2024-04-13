@@ -8,6 +8,7 @@
 
 void initSSI();
 void systemServiceInterface();
+void SSIRequest(pcb_t* sender, int service, void* arg);
 
 void createProcess(ssi_create_process_PTR, pcb_PTR);
 void killProcess(pcb_PTR, pcb_PTR);

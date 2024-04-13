@@ -11,30 +11,36 @@ void initSSI(){
 }
 
 void systemServiceInterface(){
-	ssi_payload_t payload;
+	ssi_payload_PTR payload;
 	pcb_PTR sender;
 	
 	while(TRUE){
-		sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)&payload, 0);
-		switch(payload.service_code){
-			case CREATEPROCESS:
-				createProcess(payload.arg, sender);
-			case TERMPROCESS:
-				killProcess(payload.arg, sender);
-			case DOIO:
-				doIO(payload.arg);
-			case GETTIME:
-				getTime(sender);
-			case CLOCKWAIT:
-				waitForClock(sender);
-			case GETSUPPORTPTR:
-				getSupportStruct(sender);
-			case GETPROCESSID:
-				getPID(sender);
-			default:
-				klog_print("SSI call invalid\n");
-				breakPoint();
-		}
+		sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)payload, 0);
+		SSIRequest(sender, payload->service_code, payload->arg);
+		// SYSCALL(SENDMESSAGE, risposta? )
+	}
+}
+
+void SSIRequest(pcb_t* sender, int service, void* arg){
+	switch(service){
+		case CREATEPROCESS:
+			createProcess(arg, sender);
+		case TERMPROCESS:
+			killProcess(arg, sender);
+		case DOIO:
+			doIO(arg);
+		case GETTIME:
+			getTime(sender);
+		case CLOCKWAIT:
+			waitForClock(sender);
+		case GETSUPPORTPTR:
+			getSupportStruct(sender);
+		case GETPROCESSID:
+			getPID(sender);
+		default:
+			klog_print("SSI call invalid\n");
+			killProcess(sender, sender);
+			breakPoint();
 	}
 }
 
@@ -47,6 +53,8 @@ void createProcess(ssi_create_process_PTR arg, pcb_PTR sender){
 		copyState(arg->state, &newChild->p_s);
 		newChild->p_supportStruct = arg->support;
 		insertChild(sender, newChild);
+		insertProcQ(readyQueue, newChild);
+		process_count++;
 		SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)newChild, 0);
 	}
 }

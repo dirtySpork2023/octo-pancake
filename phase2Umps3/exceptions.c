@@ -31,30 +31,11 @@ void exceptionHandler(void){
 	else if(excCode <= 3) // codes 1-3
 		{}//TLB exception handler, 
 	else if(excCode <= 12) // codes 4-7, 9-12
-		PassUpOrDie(GENERALEXCEPT, cause); // Trap Handler
+		passUpOrDie(GENERALEXCEPT, cause); // Trap Handler
 	else{
 		klog_print("exeption not handled\n");
 		breakPoint();
 	}
-}
-
-void syscallHandler(void){
-	if(current_process->p_s.status & USERPON != 0){
-		/* reserved instruction PRIVINSTR
-		syscall only available in kernel mode */
-		unsigned int cause = getCAUSE();
-		PassUpOrDie(GENERALEXCEPT, cause); // Trap Handler
-	}
-	/* information saved in registers: a0, a1, a2, a3 */
-
-	if(current_process->p_s.reg_a0 == SENDMESSAGE){
-		current_process->p_s.reg_v0 = sendMessage(current_process->p_s.reg_a1, current_process->p_s.reg_a2);
-	}else if(current_process->p_s.reg_a0 == RECEIVEMESSAGE){
-		current_process->p_s.reg_v0 = receiveMessage(current_process->p_s.reg_a1, current_process->p_s.reg_a2);
-	}
-
-	current_process->p_s.pc_epc += WORDLEN;
-	LDST(&current_process->p_s);
 }
 
 /*
@@ -97,11 +78,32 @@ int receiveMessage(pcb_PTR sender, unsigned int payload){
 	}
 }
 
-void PassUpOrDie(int except_type, state_t* exceptionState) {
+void syscallHandler(void){
+	if(current_process->p_s.status & USERPON != 0){
+		/* reserved instruction PRIVINSTR
+		syscall only available in kernel mode */
+		unsigned int cause = getCAUSE();
+		passUpOrDie(GENERALEXCEPT, cause); // Trap Handler
+	}
+	/* information saved in registers: a0, a1, a2, a3 */
+
+	if(current_process->p_s.reg_a0 == SENDMESSAGE){
+		current_process->p_s.reg_v0 = sendMessage((pcb_PTR)current_process->p_s.reg_a1, current_process->p_s.reg_a2);
+	}else if(current_process->p_s.reg_a0 == RECEIVEMESSAGE){
+		current_process->p_s.reg_v0 = receiveMessage(current_process->p_s.reg_a1, current_process->p_s.reg_a2);
+	}
+
+	current_process->p_s.pc_epc += WORDLEN;
+	LDST(&current_process->p_s);
+}
+
+void passUpOrDie(int except_type, state_t* exceptionState) {
     if (&current_process->p_supportStruct == NULL) { 
-        killProcess(current_process, NULL); } // Die (process termination)
-    else // PassUp
-    {
+        struct ssi_payload_t payload; // Die (process termination)
+		payload.service_code = TERMPROCESS;
+		payload.arg = NULL;
+		sendMessage(SSIADDRESS, (unsigned int) &payload);
+	}else{ // PassUp
         (current_process->p_supportStruct)->sup_exceptState[except_type] = *exceptionState; 
         context_t info_to_pass = (current_process->p_supportStruct)->sup_exceptContext[except_type]; // passing up the support info
         LDCXT(info_to_pass.stackPtr, info_to_pass.status, info_to_pass.pc);                   // to the support level
