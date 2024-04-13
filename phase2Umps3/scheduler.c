@@ -3,7 +3,7 @@
 extern int process_count;
 extern int softBlockCount;
 extern pcb_PTR current_process;
-extern struct list_head *readyQueue;
+extern struct list_head readyQueue;
 
 /* assuming old process was saved
 sets currentProcess to another PCB*/
@@ -14,7 +14,7 @@ void scheduler(){
 		breakPoint();
 	}
 
-	if(emptyProcQ(readyQueue)){
+	if(emptyProcQ(&readyQueue)){
 		if(process_count == 1)
 			/* the SSI is the only process in the system */
 			HALT(); /* HALT BIOS service/instruction */
@@ -34,7 +34,8 @@ void scheduler(){
 		}
 	}
 
-	current_process = removeProcQ(readyQueue);
+	klog_print("scheduling\n");
+	current_process = removeProcQ(&readyQueue);
 	/* load round-robin timeslice into Processor's Local Timer */
 	setTIMER(TIMESLICE);
 	/* load the processor state of the current process */

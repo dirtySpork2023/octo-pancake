@@ -3,8 +3,8 @@
 extern struct list_head pcbFree_h;
 extern pcb_PTR current_process;
 extern pcb_PTR ssi_pcb;
-extern struct list_head *readyQueue;
-extern struct list_head *receiveMessageQueue;
+extern struct list_head readyQueue;
+extern struct list_head receiveMessageQueue;
 
 /* to be replaced in phase 3 */
 void uTLB_RefillHandler(void){
@@ -29,9 +29,9 @@ void exceptionHandler(void){
 	else if(excCode == SYSEXCEPTION)
 		syscallHandler();
 	else if(excCode <= 3) // codes 1-3
-		{}//TLB exception handler, 
+		passUpOrDie(PGFAULTEXCEPT, &current_process->p_s);
 	else if(excCode <= 12) // codes 4-7, 9-12
-		passUpOrDie(GENERALEXCEPT, cause); // Trap Handler
+		passUpOrDie(GENERALEXCEPT, &current_process->p_s); // Trap Handler
 	else{
 		klog_print("exeption not handled\n");
 		breakPoint();
@@ -42,6 +42,7 @@ void exceptionHandler(void){
 SYSCALL(SENDMESSAGE, (unsigned int)destination, (unsigned int)payload, 0);
 */
 int sendMessage(pcb_PTR dest, unsigned int payload){
+	klog_print("sending message\n");
 	if(dest == SSIADDRESS) dest = ssi_pcb;
 
 	msg_PTR msg = allocMsg();
@@ -52,8 +53,8 @@ int sendMessage(pcb_PTR dest, unsigned int payload){
 	if(searchProcQ(&pcbFree_h, dest) == dest){
 		return DEST_NOT_EXIST;
 	}else{
-		if(isDead(dest))
-			insertProcQ(readyQueue, outProcQ(receiveMessageQueue, dest));
+		if(searchProcQ(&receiveMessageQueue, dest) == dest)
+			insertProcQ(&readyQueue, outProcQ(&receiveMessageQueue, dest));
 		pushMessage(&dest->msg_inbox, msg);
 		return 0;
 	}
@@ -63,12 +64,14 @@ int sendMessage(pcb_PTR dest, unsigned int payload){
 SYSCALL(RECEIVEMESSAGE, (unsigned int)sender, (unsigned int)payload, 0);
 */
 int receiveMessage(pcb_PTR sender, unsigned int payload){
+	klog_print("receiving message\n");
 	/* assuming ANYMESSAGE == NULL */
 	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);
 	if(msg == NULL){
 		copyState(BIOSDATAPAGE, &current_process->p_s);
 		// TODO current_process->p_time += accumulated cpu time??
-		insertProcQ(receiveMessageQueue, current_process);
+		insertProcQ(&receiveMessageQueue, current_process);
+		current_process = NULL;
 		scheduler();
 		return 0; // for compiler
 		/* does work with specific sender */
@@ -88,7 +91,7 @@ void syscallHandler(void){
 	/* information saved in registers: a0, a1, a2, a3 */
 
 	if(current_process->p_s.reg_a0 == SENDMESSAGE){
-		current_process->p_s.reg_v0 = sendMessage((pcb_PTR)current_process->p_s.reg_a1, current_process->p_s.reg_a2);
+		current_process->p_s.reg_v0 = sendMessage(current_process->p_s.reg_a1, current_process->p_s.reg_a2);
 	}else if(current_process->p_s.reg_a0 == RECEIVEMESSAGE){
 		current_process->p_s.reg_v0 = receiveMessage(current_process->p_s.reg_a1, current_process->p_s.reg_a2);
 	}
@@ -97,14 +100,15 @@ void syscallHandler(void){
 	LDST(&current_process->p_s);
 }
 
-void passUpOrDie(int except_type, state_t* exceptionState) {
+void passUpOrDie(int except_type, state_t *exceptionState) {
+	klog_print("passUpOrDie\n");
     if (&current_process->p_supportStruct == NULL) { 
         struct ssi_payload_t payload; // Die (process termination)
 		payload.service_code = TERMPROCESS;
 		payload.arg = NULL;
 		sendMessage(SSIADDRESS, (unsigned int) &payload);
 	}else{ // PassUp
-        (current_process->p_supportStruct)->sup_exceptState[except_type] = *exceptionState; 
+		copyState(exceptionState, &(current_process->p_supportStruct)->sup_exceptState[except_type]); 
         context_t info_to_pass = (current_process->p_supportStruct)->sup_exceptContext[except_type]; // passing up the support info
         LDCXT(info_to_pass.stackPtr, info_to_pass.status, info_to_pass.pc);                   // to the support level
         // LDCXT is used to change the operating mode/context of a process

@@ -6,7 +6,6 @@ extern int process_count;
 extern int softBlockCount;
 
 void initSSI(){
-	
 	systemServiceInterface();
 }
 
@@ -16,6 +15,7 @@ void systemServiceInterface(){
 	
 	while(TRUE){
 		sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)payload, 0);
+		klog_print("SSI request\n");
 		SSIRequest(sender, payload->service_code, payload->arg);
 		// SYSCALL(SENDMESSAGE, risposta? )
 	}
@@ -38,7 +38,8 @@ void SSIRequest(pcb_t* sender, int service, void* arg){
 		case GETPROCESSID:
 			getPID(sender);
 		default:
-			klog_print("SSI call invalid\n");
+			klog_print_dec(service);
+			klog_print("invalid SSI service\n");
 			killProcess(sender, sender);
 			breakPoint();
 	}

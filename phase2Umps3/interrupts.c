@@ -2,8 +2,8 @@
 
 extern int softBlockCount;
 extern pcb_PTR current_process;
-extern struct list_head *readyQueue;
-extern struct list_head *pseudoClockQueue;
+extern struct list_head readyQueue;
+extern struct list_head pseudoClockQueue;
 
 void interruptHandler(int cause){
 
@@ -11,7 +11,7 @@ void interruptHandler(int cause){
 
 	if(cause & LOCALTIMERINT) {
 		copyState((state_t *)BIOSDATAPAGE, &current_process->p_s); // bisogna farlo questo?
-		insertProcQ(readyQueue, current_process);
+		insertProcQ(&readyQueue, current_process);
 		current_process = NULL;
 		scheduler();
 	}
@@ -20,9 +20,9 @@ void interruptHandler(int cause){
 		/* re-set Interval Timer with 100 milliseconds */
 		LDIT(PSECOND);
 		/*	unlock all pcbs in pseudoClockQueue */
-		while(!emptyProcQ(pseudoClockQueue)){
+		while(!emptyProcQ(&pseudoClockQueue)){
 			softBlockCount--;
-			insertProcQ(readyQueue, removeProcQ(pseudoClockQueue));
+			insertProcQ(&readyQueue, removeProcQ(&pseudoClockQueue));
 		}
 		if(current_process != NULL){
 			// only if there was a process running before the interrupt

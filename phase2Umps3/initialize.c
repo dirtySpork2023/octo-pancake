@@ -20,15 +20,15 @@ pcb_PTR current_process;
 pcb_PTR ssi_pcb;
 
 /* READY PCBS */
-struct list_head *readyQueue; // tail pointer
+struct list_head readyQueue; // tail pointer
 
 /* BLOCKED PCBS */
 /*	processes that requested WaitForClock service to the SSI
 	resumed by: system-wide interval timer's interrupt */
-struct list_head *pseudoClockQueue;
+struct list_head pseudoClockQueue;
 /*	processes waiting for a message to be received
 	resumed by: new message directed to them */
-struct list_head *receiveMessageQueue;
+struct list_head receiveMessageQueue;
 // TODO I/O queues ?
 
 int main(){
@@ -43,15 +43,15 @@ int main(){
 	process_count = 0;
 	softBlockCount = 0;
 	current_process = NULL;
-	mkEmptyProcQ(readyQueue);
-	mkEmptyProcQ(pseudoClockQueue);
-	mkEmptyProcQ(receiveMessageQueue);
+	mkEmptyProcQ(&readyQueue);
+	mkEmptyProcQ(&pseudoClockQueue);
+	mkEmptyProcQ(&receiveMessageQueue);
 	/* load System-wide Interval Timer with 100 milliseconds */
 	LDIT(PSECOND);
 
 	// first process
 	ssi_pcb = allocPcb();
-	insertProcQ(readyQueue, ssi_pcb);
+	insertProcQ(&readyQueue, ssi_pcb);
 	process_count++;
 	//ssi_pcb->p_s.status &= !IMON;
 	ssi_pcb->p_s.status &= !IEPON; // interrupt enabled ==> interrupt mask disabled
@@ -63,7 +63,7 @@ int main(){
 
 	// second process
 	pcb_PTR root = allocPcb();
-	insertProcQ(readyQueue, root);
+	insertProcQ(&readyQueue, root);
 	process_count++;
 	//root->p_s.status &= !IMON;
 	root->p_s.status &= !IEPON; // interrupt enabled ==> interrupt mask disabled
@@ -74,6 +74,7 @@ int main(){
 	RAMTOP(root->p_s.reg_sp); // stack pointer = RAMTOP - 2*PAGESIZE
 	root->p_s.reg_sp -= 2*PAGESIZE;
 
+	klog_print("init complete\n");
 	scheduler();
 	return 0;
 }

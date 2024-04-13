@@ -15,6 +15,6 @@ int receiveMessage(pcb_PTR, unsigned int);
 int sendMessage(pcb_PTR, unsigned int);
 
 void syscallHandler(void);
-void passUpOrDie(int except_type, state_t* exceptionState);
+void passUpOrDie(int except_type, state_t *exceptionState);
 
 #endif
