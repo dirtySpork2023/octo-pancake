@@ -18,7 +18,10 @@ void scheduler(){
 		if(process_count == 1)
 			/* the SSI is the only process in the system */
 			HALT(); /* HALT BIOS service/instruction */
-		if(process_count > 0 && softBlockCount > 0){
+		if(process_count > 0 && softBlockCount == 0)
+			/* deadlock */
+			PANIC(); /* PANIC BIOS service/instruction*/
+		else if(process_count > 1 && softBlockCount > 0){
 			/* all pcbs are waiting for an I/O operation to complete */
 			current_process = NULL;
 			unsigned int waitStatus = getSTATUS();
@@ -29,9 +32,6 @@ void scheduler(){
 			setSTATUS(waitStatus);
 			WAIT(); /* enter a Wait State */
 		}
-		if(process_count > 0 && softBlockCount == 0)
-			/* deadlock */
-			PANIC(); /* PANIC BIOS service/instruction*/
 	}
 
 	current_process = removeProcQ(readyQueue);

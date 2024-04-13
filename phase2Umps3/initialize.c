@@ -11,7 +11,8 @@ extern void test();
 /* counter of all started but not yet terminated processes
 	includes processes in "running", "ready" AND "blocked" state */
 int process_count;
-/* counter of processes in the "blocked" state due to an I/O or timer request. */
+/* counter of processes in the "blocked" state due to an I/O or timer request.
+	doesn't include processes waiting for a message*/
 int softBlockCount;
 /* pointer to process in running state, NULL when kernel is in WAIT() */
 pcb_PTR current_process;

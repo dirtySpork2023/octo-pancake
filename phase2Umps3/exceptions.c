@@ -71,7 +71,7 @@ int sendMessage(pcb_PTR dest, unsigned int payload){
 	if(searchProcQ(&pcbFree_h, dest) == dest){
 		return DEST_NOT_EXIST;
 	}else{
-		if(searchProcQ(receiveMessageQueue, dest) == dest)
+		if(isDead(dest))
 			insertProcQ(readyQueue, outProcQ(receiveMessageQueue, dest));
 		pushMessage(&dest->msg_inbox, msg);
 		return 0;

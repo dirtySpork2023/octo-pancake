@@ -82,6 +82,13 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
     return NULL;
 }
 
+// removes p from whatever queue he's in
+pcb_t *outAnyProcQ(pcb_t *p){
+	if(p == NULL) return NULL;
+	list_del(&p->p_list);
+	return p;
+}
+
 // cerca p nella lista head senza rimuoverlo
 pcb_t *searchProcQ(struct list_head *head, pcb_t *p) {
     if(p == NULL) return NULL;
@@ -92,6 +99,13 @@ pcb_t *searchProcQ(struct list_head *head, pcb_t *p) {
         }
     } 
     return NULL;
+}
+
+// returns true if p is in pcbFree queue, else returns false
+int isDead(pcb_PTR p){
+	if(searchProcQ(&pcbFree_h, p) == p)
+		return 1;
+	else return 0;
 }
 
 // p_child è l'elemento sentinella della lista di p_sib
@@ -105,7 +119,7 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
 	list_add_tail(&p->p_sib, &prnt->p_child);
 }
 
-// ritorna il figlio in testa togliendolo dalla lista
+// toglie e ritorna il figlio in testa togliendolo dalla lista di figli
 pcb_t *removeChild(pcb_t *p) {
 	if(emptyChild(p)) return NULL;
 	else{

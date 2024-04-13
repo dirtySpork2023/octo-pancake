@@ -1,9 +1,12 @@
 #include "./headers/ssi.h"
 
+extern struct list_head *readyQueue;
 extern struct list_head *pseudoClockQueue;
+extern int process_count;
+extern int softBlockCount;
 
 void initSSI(){
-	// TODO make SSI available for other processes to send messages
+	
 	systemServiceInterface();
 }
 
@@ -12,7 +15,7 @@ void systemServiceInterface(){
 	pcb_PTR sender;
 	
 	while(TRUE){
-		sender = SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)&payload, 0);
+		sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)&payload, 0);
 		switch(payload.service_code){
 			case CREATEPROCESS:
 				createProcess(payload.arg, sender);
@@ -54,14 +57,17 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 	while(!emptyChild(doomed)){
 		killProcess(removeChild(doomed), NULL);
 	}
-	// TODO 
-	// Manca qualcoa secondo me
 
+	//remove from sibling list
 	outChild(doomed);
+	//remove from any process queue
+	if(outProcQ(readyQueue, doomed) == NULL){
+		softBlockCount--;
+		outAnyProcQ(doomed);
+	}
 	freePcb(doomed);
+	process_count--;
 }
-
-
 
 void doIO(ssi_do_io_PTR arg){
 	//TODO
