@@ -4,7 +4,7 @@ extern struct list_head pcbFree_h;
 extern pcb_PTR current_process;
 extern pcb_PTR ssi_pcb;
 extern struct list_head readyQueue;
-extern struct list_head receiveMessageQueue;
+//extern struct list_head receiveMessageQueue;
 
 /* to be replaced in phase 3 */
 void uTLB_RefillHandler(void){
@@ -53,8 +53,8 @@ int sendMessage(pcb_PTR dest, unsigned int payload){
 	if(searchProcQ(&pcbFree_h, dest) == dest){
 		return DEST_NOT_EXIST;
 	}else{
-		if(searchProcQ(&receiveMessageQueue, dest) == dest)
-			insertProcQ(&readyQueue, outProcQ(&receiveMessageQueue, dest));
+//		if(searchProcQ(&receiveMessageQueue, dest) == dest)
+//			insertProcQ(&readyQueue, outProcQ(&receiveMessageQueue, dest));
 		pushMessage(&dest->msg_inbox, msg);
 		return 0;
 	}
@@ -70,7 +70,7 @@ int receiveMessage(pcb_PTR sender, unsigned int payload){
 	if(msg == NULL){
 		copyState(BIOSDATAPAGE, &current_process->p_s);
 		// TODO current_process->p_time += accumulated cpu time??
-		insertProcQ(&receiveMessageQueue, current_process);
+		insertProcQ(&readyQueue, current_process);
 		current_process = NULL;
 		scheduler();
 		return 0; // for compiler
@@ -88,7 +88,6 @@ void syscallHandler(void){
 		unsigned int cause = getCAUSE();
 		passUpOrDie(GENERALEXCEPT, cause); // Trap Handler
 	}
-	/* information saved in registers: a0, a1, a2, a3 */
 
 	if(current_process->p_s.reg_a0 == SENDMESSAGE){
 		current_process->p_s.reg_v0 = sendMessage(current_process->p_s.reg_a1, current_process->p_s.reg_a2);

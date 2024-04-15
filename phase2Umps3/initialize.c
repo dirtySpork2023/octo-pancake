@@ -28,8 +28,9 @@ struct list_head readyQueue; // tail pointer
 struct list_head pseudoClockQueue;
 /*	processes waiting for a message to be received
 	resumed by: new message directed to them */
-struct list_head receiveMessageQueue;
+//struct list_head receiveMessageQueue;
 // TODO I/O queues ?
+// array[8] for each device ?
 
 int main(){
 	passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;
@@ -45,7 +46,7 @@ int main(){
 	current_process = NULL;
 	mkEmptyProcQ(&readyQueue);
 	mkEmptyProcQ(&pseudoClockQueue);
-	mkEmptyProcQ(&receiveMessageQueue);
+//	mkEmptyProcQ(&receiveMessageQueue);
 	/* load System-wide Interval Timer with 100 milliseconds */
 	LDIT(PSECOND);
 

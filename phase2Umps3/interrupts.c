@@ -70,6 +70,7 @@ void interruptHandler(int cause){
 		*((unsigned int *)(devAddrBase + 0x4)) = ACK; //??
 
 		//TODO points 4-7
+		//sendMessage()
 	}
 	//TODO apply to all non-timer interrupts
 

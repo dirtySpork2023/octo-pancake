@@ -80,6 +80,8 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 
 void doIO(ssi_do_io_PTR arg){
 	//TODO
+	// given device addr save pcb in device
+	//commandAddr = commandValue;
 }
 
 void getTime(pcb_PTR sender){
