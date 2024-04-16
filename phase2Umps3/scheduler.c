@@ -33,9 +33,11 @@ void scheduler(){
 			WAIT(); /* enter a Wait State */
 		}
 	}
-
-	klog_print("scheduling\n");
+	
 	current_process = removeProcQ(&readyQueue);
+	klog_print("scheduling pcb ");
+	klog_print_dec(current_process->p_pid);
+	klog_print("\n");
 	/* load round-robin timeslice into Processor's Local Timer */
 	setTIMER(TIMESLICE);
 	/* load the processor state of the current process */
