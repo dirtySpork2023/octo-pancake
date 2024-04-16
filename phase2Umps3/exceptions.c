@@ -42,7 +42,7 @@ void exceptionHandler(void){
 SYSCALL(SENDMESSAGE, (unsigned int)destination, (unsigned int)payload, 0);
 */
 int sendMessage(pcb_PTR dest, unsigned int payload){
-	klog_print("sending message\n");
+	klog_print("msg sent\n");
 	if(dest == SSIADDRESS) dest = ssi_pcb;
 
 	msg_PTR msg = allocMsg();
@@ -53,8 +53,6 @@ int sendMessage(pcb_PTR dest, unsigned int payload){
 	if(searchProcQ(&pcbFree_h, dest) == dest){
 		return DEST_NOT_EXIST;
 	}else{
-//		if(searchProcQ(&receiveMessageQueue, dest) == dest)
-//			insertProcQ(&readyQueue, outProcQ(&receiveMessageQueue, dest));
 		pushMessage(&dest->msg_inbox, msg);
 		return 0;
 	}
@@ -64,18 +62,18 @@ int sendMessage(pcb_PTR dest, unsigned int payload){
 SYSCALL(RECEIVEMESSAGE, (unsigned int)sender, (unsigned int)payload, 0);
 */
 int receiveMessage(pcb_PTR sender, unsigned int payload){
-	klog_print("receiving message\n");
 	/* assuming ANYMESSAGE == NULL */
 	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);
 	if(msg == NULL){
+		klog_print("blocking receive\n");
 		copyState(BIOSDATAPAGE, &current_process->p_s);
 		// TODO current_process->p_time += accumulated cpu time??
 		insertProcQ(&readyQueue, current_process);
 		current_process = NULL;
 		scheduler();
 		return 0; // for compiler
-		/* does work with specific sender */
 	}else{
+		klog_print("msg received\n");
 		*&payload = msg->m_payload;
 		return msg->m_sender;
 	}

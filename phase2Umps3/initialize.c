@@ -3,7 +3,6 @@
 #include "../phase1/headers/pcb.h"
 #include "headers/scheduler.h"
 #include "headers/exceptions.h"
-#include "headers/interrupts.h"
 #include "headers/ssi.h"
 
 extern void test();
@@ -46,7 +45,7 @@ int main(){
 	current_process = NULL;
 	mkEmptyProcQ(&readyQueue);
 	mkEmptyProcQ(&pseudoClockQueue);
-//	mkEmptyProcQ(&receiveMessageQueue);
+
 	/* load System-wide Interval Timer with 100 milliseconds */
 	LDIT(PSECOND);
 
@@ -74,8 +73,7 @@ int main(){
 	root->p_s.reg_t9 = (memaddr) test;
 	RAMTOP(root->p_s.reg_sp); // stack pointer = RAMTOP - 2*PAGESIZE
 	root->p_s.reg_sp -= 2*PAGESIZE;
-
-	klog_print("init complete\n");
+	
 	scheduler();
 	return 0;
 }

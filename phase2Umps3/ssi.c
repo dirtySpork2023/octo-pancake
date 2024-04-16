@@ -1,5 +1,8 @@
 #include "./headers/ssi.h"
 
+void klog_print();
+void klog_print_dec();
+void breakPoint();
 extern struct list_head *readyQueue;
 extern struct list_head *pseudoClockQueue;
 extern int process_count;
@@ -15,7 +18,7 @@ void systemServiceInterface(){
 	
 	while(TRUE){
 		sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)payload, 0);
-		klog_print("SSI request\n");
+		klog_print("SSI received request\n");
 		SSIRequest(sender, payload->service_code, payload->arg);
 		// SYSCALL(SENDMESSAGE, risposta? )
 	}
@@ -74,8 +77,8 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 		softBlockCount--;
 		outAnyProcQ(doomed);
 	}
-	freePcb(doomed);
 	process_count--;
+	freePcb(doomed);
 }
 
 void doIO(ssi_do_io_PTR arg){
