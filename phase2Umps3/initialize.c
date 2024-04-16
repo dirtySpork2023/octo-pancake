@@ -7,15 +7,18 @@
 
 extern void test();
 
-/* counter of all started but not yet terminated processes
+/*	counter of all started but not yet terminated processes
 	includes processes in "running", "ready" AND "blocked" state */
 int process_count;
-/* counter of processes in the "blocked" state due to an I/O or timer request.
+/*	counter of processes in the "blocked" state due to an I/O or timer request.
 	doesn't include processes waiting for a message*/
 int softBlockCount;
-/* pointer to process in running state, NULL when kernel is in WAIT() */
+/*	last recorded timestamp of TimeOfDay clock
+	used to calculate accumulated CPU time*/
+int lastTOD;
+/*	pointer to process in running state, NULL when kernel is in WAIT() */
 pcb_PTR current_process;
-/* pointer to SSI process */
+/*	pointer to SSI process */
 pcb_PTR ssi_pcb;
 
 /* READY PCBS */
@@ -46,7 +49,7 @@ int main(){
 	mkEmptyProcQ(&readyQueue);
 	mkEmptyProcQ(&pseudoClockQueue);
 
-	/* load System-wide Interval Timer with 100 milliseconds */
+	/* load System-wide Interval Timer with 100 milliseconds for pseudo-clock*/
 	LDIT(PSECOND);
 
 	// first process
@@ -73,7 +76,8 @@ int main(){
 	root->p_s.reg_t9 = (memaddr) test;
 	RAMTOP(root->p_s.reg_sp); // stack pointer = RAMTOP - 2*PAGESIZE
 	root->p_s.reg_sp -= 2*PAGESIZE;
-	
+
+	STCK(lastTOD);
 	scheduler();
 	return 0;
 }

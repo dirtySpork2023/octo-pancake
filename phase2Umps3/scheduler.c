@@ -33,7 +33,8 @@ void scheduler(){
 			WAIT(); /* enter a Wait State */
 		}
 	}
-	
+
+
 	current_process = removeProcQ(&readyQueue);
 	klog_print("scheduling pcb ");
 	klog_print_dec(current_process->p_pid);

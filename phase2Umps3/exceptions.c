@@ -67,7 +67,7 @@ int receiveMessage(pcb_PTR sender, unsigned int payload){
 	if(msg == NULL){
 		klog_print("blocking receive\n");
 		copyState(BIOSDATAPAGE, &current_process->p_s);
-		// TODO current_process->p_time += accumulated cpu time??
+		current_process->p_time += getTIMER();
 		insertProcQ(&readyQueue, current_process);
 		current_process = NULL;
 		scheduler();
@@ -100,7 +100,8 @@ void syscallHandler(void){
 void passUpOrDie(int except_type, state_t *exceptionState) {
 	klog_print("passUpOrDie\n");
     if (&current_process->p_supportStruct == NULL) { 
-        struct ssi_payload_t payload; // Die (process termination)
+        // Die (process termination)
+		struct ssi_payload_t payload;
 		payload.service_code = TERMPROCESS;
 		payload.arg = NULL;
 		sendMessage(SSIADDRESS, (unsigned int) &payload);

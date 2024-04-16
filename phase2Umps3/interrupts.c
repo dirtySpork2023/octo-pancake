@@ -6,18 +6,19 @@ extern struct list_head readyQueue;
 extern struct list_head pseudoClockQueue;
 
 void interruptHandler(int cause){
-
-	/* timer interrupts */
-
+	
+	/* Processor Local Timer */
 	if(cause & LOCALTIMERINT) {
-		copyState((state_t *)BIOSDATAPAGE, &current_process->p_s); // bisogna farlo questo?
+		copyState((state_t *)BIOSDATAPAGE, &current_process->p_s);
+		current_process->p_time += TIMESLICE;
 		insertProcQ(&readyQueue, current_process);
 		current_process = NULL;
 		scheduler();
 	}
 
+	/* Interval Timer */
 	if(cause & TIMERINTERRUPT) {
-		/* re-set Interval Timer with 100 milliseconds */
+		/* re-set with 100 milliseconds */
 		LDIT(PSECOND);
 		/*	unlock all pcbs in pseudoClockQueue */
 		while(!emptyProcQ(&pseudoClockQueue)){
