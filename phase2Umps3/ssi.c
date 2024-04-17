@@ -92,8 +92,8 @@ void getTime(pcb_PTR sender){
 }
 
 void waitForClock(pcb_PTR sender){
-	// save accumulated CPU time?
 	insertProcQ(pseudoClockQueue, outAnyProcQ(sender));
+	SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
 }
 
 void getSupportStruct(pcb_PTR sender){

@@ -13,9 +13,6 @@ int process_count;
 /*	counter of processes in the "blocked" state due to an I/O or timer request.
 	doesn't include processes waiting for a message*/
 int softBlockCount;
-/*	last recorded timestamp of TimeOfDay clock
-	used to calculate accumulated CPU time*/
-int lastTOD;
 /*	pointer to process in running state, NULL when kernel is in WAIT() */
 pcb_PTR current_process;
 /*	pointer to SSI process */
@@ -64,10 +61,7 @@ int main(){
 	ssi_pcb = allocPcb();
 	insertProcQ(&readyQueue, ssi_pcb);
 	process_count++;
-	//ssi_pcb->p_s.status &= !IMON;
-	ssi_pcb->p_s.status &= !IEPON; // interrupt enabled ==> interrupt mask disabled
-	ssi_pcb->p_s.status &= !USERPON; // user mode disabled
-	ssi_pcb->p_s.status |= TEBITON; // local timer on
+	ssi_pcb->p_s.status = ALLOFF | IEPON | IMON;	
 	ssi_pcb->p_s.pc_epc = (memaddr) initSSI;
 	ssi_pcb->p_s.reg_t9 = (memaddr) initSSI;
 	RAMTOP(ssi_pcb->p_s.reg_sp); // stack pointer = RAMTOP
@@ -76,10 +70,7 @@ int main(){
 	pcb_PTR root = allocPcb();
 	insertProcQ(&readyQueue, root);
 	process_count++;
-	//root->p_s.status &= !IMON;
-	root->p_s.status &= !IEPON; // interrupt enabled ==> interrupt mask disabled
-	root->p_s.status &= !USERPON; // user mode disabled
-	root->p_s.status |= TEBITON; // local timer on
+	root->p_s.status = ALLOFF | IEPON | IMON | TEBITON;	
 	root->p_s.pc_epc = (memaddr) test;
 	root->p_s.reg_t9 = (memaddr) test;
 	RAMTOP(root->p_s.reg_sp); // stack pointer = RAMTOP - 2*PAGESIZE
