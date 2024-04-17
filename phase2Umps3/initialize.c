@@ -32,7 +32,15 @@ struct list_head pseudoClockQueue;
 	resumed by: new message directed to them */
 //struct list_head receiveMessageQueue;
 // TODO I/O queues ?
-// array[8] for each device ?
+
+// Lists of blocked PCBS for each device (o array di length SEMDEVLEN - 1) ?
+struct list_head diskQueue;
+struct list_head flashQueue;
+struct list_head networkQueue;
+struct list_head printerQueue;
+// terminal devices are actually two independent sub-devices
+struct list_head terminal1Queue; 
+struct list_head terminal2Queue;
 
 int main(){
 	passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;

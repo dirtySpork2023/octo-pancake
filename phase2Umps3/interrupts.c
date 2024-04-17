@@ -5,6 +5,26 @@ extern pcb_PTR current_process;
 extern struct list_head readyQueue;
 extern struct list_head pseudoClockQueue;
 
+unsigned int getDeviceNumber (unsigned int interruptLine) {
+	unsigned int intdevBitMap = 0x10000040; // Interrupt Line ? Interrupting Devices Bit Map
+	unsigned int deviceNumber;
+
+	intdevBitMap = intdevBitMap + ((interruptLine - 3) * 0x04);
+	//find the device number [Tip: to calculate the device number you can use a switch among constants DEVxON]
+	switch(intdevBitMap & 0x000000FF) { // the last 8 bits represent the device number
+		case DEV0ON: deviceNumber = 0; break;
+    	case DEV1ON: deviceNumber = 1; break;
+    	case DEV2ON: deviceNumber = 2; break;
+    	case DEV3ON: deviceNumber = 3; break;
+    	case DEV4ON: deviceNumber = 4; break;
+    	case DEV5ON: deviceNumber = 5; break;
+    	case DEV6ON: deviceNumber = 6; break;
+    	case DEV7ON: deviceNumber = 7; break;
+		default: deviceNumber = 0;
+	}
+	return deviceNumber;
+}
+
 void interruptHandler(int cause){
 	
 	/* Processor Local Timer */
@@ -41,49 +61,48 @@ void interruptHandler(int cause){
 	
 	unsigned int devAddrBase;
 	unsigned int deviceNumber;
-	unsigned int intdevBitMap = 0x10000040; // Interrupt Line 3 Interrupting Devices Bit Map
+	unsigned int devStatus;
 
 	//find interrupt lines active in order of priority
 	if(cause & DISKINTERRUPT) {
 
-		intdevBitMap = intdevBitMap + ((DISKINT - 3) * 0x04);
-		//find the device number [Tip: to calculate the device number you can use a switch among constants DEVxON]
-		switch(intdevBitMap & 0x000000FF) { // the last 8 bits represent the device number
-			case DEV0ON: deviceNumber = 0; break;
-        	case DEV1ON: deviceNumber = 1; break;
-        	case DEV2ON: deviceNumber = 2; break;
-        	case DEV3ON: deviceNumber = 3; break;
-        	case DEV4ON: deviceNumber = 4; break;
-        	case DEV5ON: deviceNumber = 5; break;
-        	case DEV6ON: deviceNumber = 6; break;
-        	case DEV7ON: deviceNumber = 7; break;
-			default: deviceNumber = 0;
-		}
 		// find the address for this device's device register
+		deviceNumber = getDeviceNumber(DISKINT);
 		// devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
 		devAddrBase = 0x10000054 + ((DISKINT - 3) * 0x80) + (deviceNumber * 0x10);
 
-		//save off the status code from the device’s device register
+		// save off the status code from the device’s device register
 		// (base) + 0x0
-		unsigned int devStatus = *((unsigned int *)devAddrBase);
+		devStatus = *((unsigned int *)devAddrBase);
 
-		//acknowledge the interrupt (command is found at address (base) + 0x4)
-		*((unsigned int *)(devAddrBase + 0x4)) = ACK; //??
+		//acknowledge the interrupt (COMMAND is found at address (base) + 0x4)
+		*((unsigned int *)(devAddrBase + 0x4)) = ACK;
 
 		//TODO points 4-7
 		//sendMessage()
-	}
-	//TODO apply to all non-timer interrupts
 
+		// roba collegata al doIO?
+	}
 
 	if(cause & FLASHINTERRUPT){
-		
+		deviceNumber = getDeviceNumber(FLASHINT);
+		devAddrBase = 0x10000054 + ((FLASHINT - 3) * 0x80) + (deviceNumber * 0x10);
+		devStatus = *((unsigned int *)devAddrBase);
+		*((unsigned int *)(devAddrBase + 0x4)) = ACK;
+		// ...
 	}
+
 	if(cause & PRINTINTERRUPT){
+		deviceNumber = getDeviceNumber(PRNTINT);
+		devAddrBase = 0x10000054 + ((PRNTINT - 3) * 0x80) + (deviceNumber * 0x10);
+		devStatus = *((unsigned int *)devAddrBase);
+		*((unsigned int *)(devAddrBase + 0x4)) = ACK;
+		// ...
 		
 	}
 	if(cause & TERMINTERRUPT){
-
+		// terminal devices have different formats
+		
 	}
 
 	/* interrupt lines 0 and 5 are ignored */

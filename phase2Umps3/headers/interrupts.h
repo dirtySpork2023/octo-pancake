@@ -8,5 +8,6 @@
 #include "scheduler.h"
 
 void interruptHandler(int cause);
+unsigned int getDeviceNumber (unsigned int interruptLine);
 
 #endif
