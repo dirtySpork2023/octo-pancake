@@ -61,7 +61,7 @@ int main(){
 	ssi_pcb = allocPcb();
 	insertProcQ(&readyQueue, ssi_pcb);
 	process_count++;
-	ssi_pcb->p_s.status = ALLOFF | IEPON | IMON;	
+	ssi_pcb->p_s.status = ALLOFF | IEPON | IMON;
 	ssi_pcb->p_s.pc_epc = (memaddr) initSSI;
 	ssi_pcb->p_s.reg_t9 = (memaddr) initSSI;
 	RAMTOP(ssi_pcb->p_s.reg_sp); // stack pointer = RAMTOP
@@ -70,7 +70,7 @@ int main(){
 	pcb_PTR root = allocPcb();
 	insertProcQ(&readyQueue, root);
 	process_count++;
-	root->p_s.status = ALLOFF | IEPON | IMON | TEBITON;	
+	root->p_s.status = ALLOFF | IEPON | IMON | TEBITON;
 	root->p_s.pc_epc = (memaddr) test;
 	root->p_s.reg_t9 = (memaddr) test;
 	RAMTOP(root->p_s.reg_sp); // stack pointer = RAMTOP - 2*PAGESIZE

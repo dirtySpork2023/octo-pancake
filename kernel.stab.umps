@@ -27,7 +27,7 @@ print                            :FUN:0x20003BA0:0x00000154:GLB
 p5Stack                          :OBJ:0x2000B784:0x00000004:GLB
 headProcQ                        :FUN:0x200016B8:0x00000040:GLB
 setSTATUS                        :FUN:0x2000695C:0x0000001C:GLB
-exceptionHandler                 :FUN:0x2000281C:0x0000014C:GLB
+exceptionHandler                 :FUN:0x2000280C:0x0000014C:GLB
 klog_char_index                  :OBJ:0x2000A044:0x00000004:GLB
 child2state                      :OBJ:0x2000AFBC:0x0000008C:GLB
 initPcbs                         :FUN:0x20001358:0x000000A0:GLB
@@ -97,7 +97,7 @@ getSTATUS                        :FUN:0x2000689C:0x00000014:GLB
 test                             :FUN:0x20003F0C:0x00001108:GLB
 TLBR                             :FUN:0x200069D0:0x00000014:GLB
 createProcess                    :FUN:0x200032D4:0x00000104:GLB
-scheduler                        :FUN:0x20002610:0x000001A8:GLB
+scheduler                        :FUN:0x20002600:0x000001A8:GLB
 p8root                           :FUN:0x2000600C:0x00000120:GLB
 setTIMER                         :FUN:0x20006924:0x0000001C:GLB
 syscallHandler                   :FUN:0x20002B5C:0x0000018C:GLB
@@ -105,7 +105,7 @@ CAS                              :FUN:0x20006A0C:0x00000010:GLB
 p8rootstate                      :OBJ:0x2000AEA4:0x0000008C:GLB
 getINDEX                         :FUN:0x20006824:0x00000014:GLB
 passUpOrDie                      :FUN:0x20002CE8:0x00000134:GLB
-receiveMessage                   :FUN:0x20002A68:0x000000F4:GLB
+receiveMessage                   :FUN:0x20002A58:0x00000104:GLB
 p4pid                            :OBJ:0x2000B53C:0x00000004:GLB
 hp_p2state                       :OBJ:0x2000B41C:0x0000008C:GLB
 p2pid                            :OBJ:0x2000B534:0x00000004:GLB
@@ -122,7 +122,7 @@ gchild2_pcb                      :OBJ:0x2000B7C8:0x00000004:GLB
 getTime                          :FUN:0x200034FC:0x00000058:GLB
 initSSI                          :FUN:0x20003120:0x00000034:GLB
 terminate_process                :FUN:0x20003DEC:0x00000088:GLB
-main                             :FUN:0x20002320:0x000002E8:GLB
+main                             :FUN:0x20002320:0x000002D8:GLB
 p4inc                            :OBJ:0x20008020:0x00000004:GLB
 getPID                           :FUN:0x200035F4:0x00000058:GLB
 TLBWI                            :FUN:0x200069A8:0x00000014:GLB
@@ -155,7 +155,7 @@ allocPcb                         :FUN:0x20001440:0x000001BC:GLB
 p5b                              :FUN:0x20005D80:0x00000078:GLB
 outProcQ                         :FUN:0x2000177C:0x000000C0:GLB
 pushMessage                      :FUN:0x20002120:0x00000048:GLB
-sendMessage                      :FUN:0x20002968:0x00000100:GLB
+sendMessage                      :FUN:0x20002958:0x00000100:GLB
 child2                           :FUN:0x20006238:0x0000010C:GLB
 p3                               :FUN:0x200053BC:0x00000318:GLB
 p8root_pcb                       :OBJ:0x2000B7B8:0x00000004:GLB
@@ -168,7 +168,7 @@ p2state                          :OBJ:0x2000AAD0:0x0000008C:GLB
 p9                               :FUN:0x20006514:0x000000A8:GLB
 getPRID                          :FUN:0x200068D8:0x00000014:GLB
 p8_pcb                           :OBJ:0x2000B7B4:0x00000004:GLB
-uTLB_RefillHandler               :FUN:0x200027C0:0x0000005C:GLB
+uTLB_RefillHandler               :FUN:0x200027B0:0x0000005C:GLB
 isDead                           :FUN:0x20001948:0x00000064:GLB
 p8pid                            :OBJ:0x2000B540:0x00000004:GLB
 p8leaf1                          :FUN:0x20006344:0x00000074:GLB

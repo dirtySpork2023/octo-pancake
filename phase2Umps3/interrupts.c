@@ -13,8 +13,8 @@ unsigned int getDeviceNumber (unsigned int interruptLine) {
 	//find the device number [Tip: to calculate the device number you can use a switch among constants DEVxON]
 	switch(intdevBitMap & 0x000000FF) { // the last 8 bits represent the device number
 		case DEV0ON: deviceNumber = 0; break;
-    	case DEV1ON: deviceNumber = 1; break;
-    	case DEV2ON: deviceNumber = 2; break;
+		case DEV1ON: deviceNumber = 1; break;
+		case DEV2ON: deviceNumber = 2; break;
     	case DEV3ON: deviceNumber = 3; break;
     	case DEV4ON: deviceNumber = 4; break;
     	case DEV5ON: deviceNumber = 5; break;
@@ -35,7 +35,7 @@ void interruptHandler(int cause){
 		current_process = NULL;
 		scheduler();
 	}
-
+	
 	/* Interval Timer */
 	if(cause & TIMERINTERRUPT) {
 		/* re-set with 100 milliseconds */
@@ -53,11 +53,11 @@ void interruptHandler(int cause){
 			scheduler();
 		}
 	}
-
+	
 	/* device interrupts */
-
+	
 	//TODO better management of different interrupts and priority
-	//with the way the if conditions are put it should already follow a priority order 
+	//with the way the if conditions are put it should already follow a priority order
 	
 	unsigned int devAddrBase;
 	unsigned int deviceNumber;
@@ -65,7 +65,6 @@ void interruptHandler(int cause){
 
 	//find interrupt lines active in order of priority
 	if(cause & DISKINTERRUPT) {
-
 		// find the address for this device's device register
 		deviceNumber = getDeviceNumber(DISKINT);
 		// devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
