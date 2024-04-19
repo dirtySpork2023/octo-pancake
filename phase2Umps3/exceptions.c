@@ -66,7 +66,7 @@ int receiveMessage(pcb_PTR sender, unsigned int payload){
 	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);
 	if(msg == NULL){
 		klog_print("blocking receive\n");
-		copyState(BIOSDATAPAGE, &current_process->p_s);
+		copyState((state_t *)BIOSDATAPAGE, &current_process->p_s);
 		current_process->p_time += getTIMER();
 		insertProcQ(&readyQueue, current_process);
 		current_process = NULL;

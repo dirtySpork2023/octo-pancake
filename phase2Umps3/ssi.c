@@ -13,7 +13,7 @@ void initSSI(){
 }
 
 void systemServiceInterface(){
-	ssi_payload_PTR payload;
+	ssi_payload_PTR payload = NULL;
 	pcb_PTR sender;
 	
 	while(TRUE){

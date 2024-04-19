@@ -76,7 +76,6 @@ int main(){
 	RAMTOP(root->p_s.reg_sp); // stack pointer = RAMTOP - 2*PAGESIZE
 	root->p_s.reg_sp -= 2*PAGESIZE;
 
-	STCK(lastTOD);
 	scheduler();
 	return 0;
 }
