@@ -11,7 +11,7 @@
 void uTLB_RefillHandler(void);
 void exceptionHandler(void);
 
-int receiveMessage(pcb_PTR, unsigned int);
+pcb_PTR receiveMessage(pcb_PTR, unsigned int);
 int sendMessage(pcb_PTR, unsigned int);
 
 void syscallHandler(void);

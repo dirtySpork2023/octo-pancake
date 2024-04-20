@@ -61,12 +61,11 @@ int sendMessage(pcb_PTR dest, unsigned int payload){
 /*
 SYSCALL(RECEIVEMESSAGE, (unsigned int)sender, (unsigned int)payload, 0);
 */
-int receiveMessage(pcb_PTR sender, unsigned int payload){
+pcb_PTR receiveMessage(pcb_PTR sender, unsigned int payload){
 	/* assuming ANYMESSAGE == NULL */
 	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);
 	if(msg == NULL){
 		klog_print("blocking receive\n");
-		copyState((state_t *)BIOSDATAPAGE, &current_process->p_s);
 		current_process->p_time += getTIMER();
 		insertProcQ(&readyQueue, current_process);
 		current_process = NULL;
@@ -80,17 +79,16 @@ int receiveMessage(pcb_PTR sender, unsigned int payload){
 }
 
 void syscallHandler(void){
-	if(current_process->p_s.status & USERPON != 0){
+	if((current_process->p_s.status & USERPON) != 0){
 		/* reserved instruction PRIVINSTR
 		syscall only available in kernel mode */
-		unsigned int cause = getCAUSE();
-		passUpOrDie(GENERALEXCEPT, cause); // Trap Handler
+		passUpOrDie(GENERALEXCEPT, &current_process->p_s); // Trap Handler
 	}
 
 	if(current_process->p_s.reg_a0 == SENDMESSAGE){
-		current_process->p_s.reg_v0 = sendMessage(current_process->p_s.reg_a1, current_process->p_s.reg_a2);
+		current_process->p_s.reg_v0 = sendMessage((pcb_PTR)current_process->p_s.reg_a1, current_process->p_s.reg_a2);
 	}else if(current_process->p_s.reg_a0 == RECEIVEMESSAGE){
-		current_process->p_s.reg_v0 = receiveMessage(current_process->p_s.reg_a1, current_process->p_s.reg_a2);
+		current_process->p_s.reg_v0 = (unsigned int)receiveMessage((pcb_PTR)current_process->p_s.reg_a1, current_process->p_s.reg_a2);
 	}
 
 	current_process->p_s.pc_epc += WORDLEN;
@@ -99,7 +97,7 @@ void syscallHandler(void){
 
 void passUpOrDie(int except_type, state_t *exceptionState) {
 	klog_print("passUpOrDie\n");
-    if (&current_process->p_supportStruct == NULL) { 
+    if (current_process->p_supportStruct == NULL) { 
         // Die (process termination)
 		struct ssi_payload_t payload;
 		payload.service_code = TERMPROCESS;

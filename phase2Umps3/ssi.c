@@ -20,7 +20,6 @@ void systemServiceInterface(){
 		sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)payload, 0);
 		klog_print("SSI received request\n");
 		SSIRequest(sender, payload->service_code, payload->arg);
-		// SYSCALL(SENDMESSAGE, risposta? )
 	}
 }
 
@@ -28,18 +27,25 @@ void SSIRequest(pcb_t* sender, int service, void* arg){
 	switch(service){
 		case CREATEPROCESS:
 			createProcess(arg, sender);
+			break;
 		case TERMPROCESS:
 			killProcess(arg, sender);
+			break;
 		case DOIO:
 			doIO(arg);
+			break;
 		case GETTIME:
 			getTime(sender);
+			break;
 		case CLOCKWAIT:
 			waitForClock(sender);
+			break;
 		case GETSUPPORTPTR:
 			getSupportStruct(sender);
+			break;
 		case GETPROCESSID:
 			getPID(sender);
+			break;
 		default:
 			klog_print_dec(service);
 			klog_print("invalid SSI service\n");
@@ -84,7 +90,7 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 void doIO(ssi_do_io_PTR arg){
 	//TODO
 	// given device addr save pcb in device
-	//commandAddr = commandValue;
+	*arg->commandAddr = arg->commandValue;	
 }
 
 void getTime(pcb_PTR sender){
