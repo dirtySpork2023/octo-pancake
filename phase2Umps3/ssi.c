@@ -89,7 +89,7 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 
 void doIO(ssi_do_io_PTR arg){
 	//TODO
-	// given device addr save pcb in device
+	// in which device do i save the sender???
 	*arg->commandAddr = arg->commandValue;	
 }
 

@@ -27,10 +27,10 @@ struct list_head readyQueue; // tail pointer
 struct list_head pseudoClockQueue;
 /*	processes waiting for a message to be received
 	resumed by: new message directed to them */
+// not needed: pcbs wait for messages in the ready queue
 //struct list_head receiveMessageQueue;
-// TODO I/O queues ?
 
-// Lists of blocked PCBS for each device (o array di length SEMDEVLEN - 1) ?
+// Lists of blocked PCBS for each device (si potrebbero sostituire con array di length DEVPERINT)
 struct list_head diskQueue;
 struct list_head flashQueue;
 struct list_head networkQueue;
@@ -53,6 +53,12 @@ int main(){
 	current_process = NULL;
 	mkEmptyProcQ(&readyQueue);
 	mkEmptyProcQ(&pseudoClockQueue);
+	mkEmptyProcQ(&diskQueue);
+	mkEmptyProcQ(&flashQueue);
+	mkEmptyProcQ(&networkQueue);
+	mkEmptyProcQ(&printerQueue);
+	mkEmptyProcQ(&terminal1Queue);
+	mkEmptyProcQ(&terminal2Queue);
 
 	/* load System-wide Interval Timer with 100 milliseconds for pseudo-clock*/
 	LDIT(PSECOND);

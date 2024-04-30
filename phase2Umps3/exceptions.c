@@ -22,7 +22,11 @@ void exceptionHandler(void){
 	unsigned int cause = getCAUSE();
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
 
-	copyState((state_t *)BIOSDATAPAGE, &current_process->p_s);
+	if(current_process != NULL){
+		copyState((state_t *)BIOSDATAPAGE, &current_process->p_s);
+		// update accumulated cpu time
+		current_process->p_time += getTIMER();
+	}
 
 	if(excCode == IOINTERRUPTS)
 		interruptHandler(cause);
@@ -66,7 +70,6 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int payload){
 	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);
 	if(msg == NULL){
 		klog_print("blocking receive\n");
-		current_process->p_time += getTIMER();
 		insertProcQ(&readyQueue, current_process);
 		current_process = NULL;
 		scheduler();
