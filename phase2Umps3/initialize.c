@@ -31,13 +31,15 @@ struct list_head pseudoClockQueue;
 //struct list_head receiveMessageQueue;
 
 // Lists of blocked PCBS for each device (si potrebbero sostituire con array di length DEVPERINT)
+pcb_PTR devQueue[DEVINTNUM][DEVPERINT];
+/*
 struct list_head diskQueue;
 struct list_head flashQueue;
 struct list_head networkQueue;
 struct list_head printerQueue;
 // terminal devices are actually two independent sub-devices
 struct list_head terminal1Queue; 
-struct list_head terminal2Queue;
+struct list_head terminal2Queue;*/
 
 int main(){
 	passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;
@@ -53,12 +55,18 @@ int main(){
 	current_process = NULL;
 	mkEmptyProcQ(&readyQueue);
 	mkEmptyProcQ(&pseudoClockQueue);
+	for(int i=0; i<DEVINTNUM; i++){
+		for(int j=0; j<DEVPERINT; j++){
+			devQueue[i][j] = NULL;
+		}
+	}
+	/*
 	mkEmptyProcQ(&diskQueue);
 	mkEmptyProcQ(&flashQueue);
 	mkEmptyProcQ(&networkQueue);
 	mkEmptyProcQ(&printerQueue);
 	mkEmptyProcQ(&terminal1Queue);
-	mkEmptyProcQ(&terminal2Queue);
+	mkEmptyProcQ(&terminal2Queue);*/
 
 	/* load System-wide Interval Timer with 100 milliseconds for pseudo-clock*/
 	LDIT(PSECOND);

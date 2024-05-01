@@ -5,6 +5,7 @@ void klog_print_dec();
 void breakPoint();
 extern struct list_head *readyQueue;
 extern struct list_head *pseudoClockQueue;
+extern pcb_PTR devQueue[DEVINTNUM][DEVPERINT];
 extern int process_count;
 extern int softBlockCount;
 
@@ -32,7 +33,7 @@ void SSIRequest(pcb_t* sender, int service, void* arg){
 			killProcess(arg, sender);
 			break;
 		case DOIO:
-			doIO(arg);
+			doIO(arg, sender);
 			break;
 		case GETTIME:
 			getTime(sender);
@@ -87,9 +88,15 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 	freePcb(doomed);
 }
 
-void doIO(ssi_do_io_PTR arg){
-	//TODO
-	// in which device do i save the sender???
+void doIO(ssi_do_io_PTR arg, pcb_PTR sender){
+	// calculating interrupt line and device number from commandAddr	
+	device = (arg->commandAddr - DEVADDR) / DEVREGSIZE;	
+	intLineNo = device / DEVPERINT;
+	devNo = device % DEVPERINT;
+
+	softBlockCount++;
+	devQueue[intLineNo][devNo] = outAnyProcQ(sender);
+	
 	*arg->commandAddr = arg->commandValue;	
 }
 

@@ -21,13 +21,13 @@ void exceptionHandler(void){
 	/* processor already set to kernel mode and disabled interrupts*/
 	unsigned int cause = getCAUSE();
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
-
+	
 	if(current_process != NULL){
 		copyState((state_t *)BIOSDATAPAGE, &current_process->p_s);
 		// update accumulated cpu time
 		current_process->p_time += getTIMER();
 	}
-
+	
 	if(excCode == IOINTERRUPTS)
 		interruptHandler(cause);
 	else if(excCode == SYSEXCEPTION)
@@ -40,6 +40,27 @@ void exceptionHandler(void){
 		klog_print("exeption not handled\n");
 		breakPoint();
 	}
+}
+
+void syscallHandler(void){
+	if(current_process->p_s.reg_a0 >= 1)
+		passUpOrDie(GENERALEXCEPT, &current_process->p_s);
+	if((current_process->p_s.status & USERPON) != 0){
+		/* syscall only available in kernel mode
+		 * change excCode to Reserved Instruction (10) */
+		unsigned int cause = PRIVINSTR << CAUSESHIFT;
+		current_process->p_s.cause = getCAUSE() & !GETEXECCODE | cause;	
+		passUpOrDie(GENERALEXCEPT, &current_process->p_s); // Trap Handler
+	}
+
+	if(current_process->p_s.reg_a0 == SENDMESSAGE){
+		current_process->p_s.reg_v0 = sendMessage((pcb_PTR)current_process->p_s.reg_a1, current_process->p_s.reg_a2);
+	}else if(current_process->p_s.reg_a0 == RECEIVEMESSAGE){
+		current_process->p_s.reg_v0 = (unsigned int)receiveMessage((pcb_PTR)current_process->p_s.reg_a1, current_process->p_s.reg_a2);
+	}
+
+	current_process->p_s.pc_epc += WORDLEN;
+	LDST(&current_process->p_s);
 }
 
 /*
@@ -79,23 +100,6 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int payload){
 		*&payload = msg->m_payload;
 		return msg->m_sender;
 	}
-}
-
-void syscallHandler(void){
-	if((current_process->p_s.status & USERPON) != 0){
-		/* reserved instruction PRIVINSTR
-		syscall only available in kernel mode */
-		passUpOrDie(GENERALEXCEPT, &current_process->p_s); // Trap Handler
-	}
-
-	if(current_process->p_s.reg_a0 == SENDMESSAGE){
-		current_process->p_s.reg_v0 = sendMessage((pcb_PTR)current_process->p_s.reg_a1, current_process->p_s.reg_a2);
-	}else if(current_process->p_s.reg_a0 == RECEIVEMESSAGE){
-		current_process->p_s.reg_v0 = (unsigned int)receiveMessage((pcb_PTR)current_process->p_s.reg_a1, current_process->p_s.reg_a2);
-	}
-
-	current_process->p_s.pc_epc += WORDLEN;
-	LDST(&current_process->p_s);
 }
 
 void passUpOrDie(int except_type, state_t *exceptionState) {

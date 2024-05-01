@@ -24,6 +24,8 @@
 #define TODLOADDR     0x1000001C
 #define INTERVALTMR   0x10000020
 #define TIMESCALEADDR 0x10000024
+#define DEVADDR       0x10000054
+#define TERMADDR      0x10000254
 
 /* Memory related constants */
 #define KSEG0        0x00000000
