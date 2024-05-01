@@ -18,13 +18,15 @@ void systemServiceInterface(){
 	pcb_PTR sender;
 	
 	while(TRUE){
-		sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)payload, 0);
-		klog_print("SSI received request\n");
+		sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)(&payload), 0);
 		SSIRequest(sender, payload->service_code, payload->arg);
 	}
 }
 
 void SSIRequest(pcb_t* sender, int service, void* arg){
+	klog_print("SSI request ");
+	klog_print_dec(service);
+	klog_print("\n");
 	switch(service){
 		case CREATEPROCESS:
 			createProcess(arg, sender);
@@ -47,8 +49,7 @@ void SSIRequest(pcb_t* sender, int service, void* arg){
 		case GETPROCESSID:
 			getPID(sender);
 			break;
-		default:
-			klog_print_dec(service);
+		default:	
 			klog_print("invalid SSI service\n");
 			killProcess(sender, sender);
 			breakPoint();
@@ -90,13 +91,23 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 
 void doIO(ssi_do_io_PTR arg, pcb_PTR sender){
 	// calculating interrupt line and device number from commandAddr	
-	device = (arg->commandAddr - DEVADDR) / DEVREGSIZE;	
-	intLineNo = device / DEVPERINT;
-	devNo = device % DEVPERINT;
-
+	int device = ((unsigned int)arg->commandAddr - DEVADDR) / DEVREGSIZE;	
+	int intLineNo = device / DEVPERINT;
+	int devNo = device % DEVPERINT;
 	softBlockCount++;
+
+	klog_print("interrupt line = ");
+	klog_print_dec(intLineNo);
+	klog_print("\ndevice number = ");
+	klog_print_dec(devNo);
+	klog_print("\n");
+	
 	devQueue[intLineNo][devNo] = outAnyProcQ(sender);
 	
+	klog_print("blocked pcb ");
+	klog_print_dec(sender->p_pid);
+	klog_print("\n");
+
 	*arg->commandAddr = arg->commandValue;	
 }
 

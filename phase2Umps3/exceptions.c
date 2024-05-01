@@ -4,7 +4,6 @@ extern struct list_head pcbFree_h;
 extern pcb_PTR current_process;
 extern pcb_PTR ssi_pcb;
 extern struct list_head readyQueue;
-//extern struct list_head receiveMessageQueue;
 
 /* to be replaced in phase 3 */
 void uTLB_RefillHandler(void){
@@ -43,7 +42,7 @@ void exceptionHandler(void){
 }
 
 void syscallHandler(void){
-	if(current_process->p_s.reg_a0 >= 1)
+	if((int)current_process->p_s.reg_a0 >= 1)
 		passUpOrDie(GENERALEXCEPT, &current_process->p_s);
 	if((current_process->p_s.status & USERPON) != 0){
 		/* syscall only available in kernel mode
@@ -54,9 +53,9 @@ void syscallHandler(void){
 	}
 
 	if(current_process->p_s.reg_a0 == SENDMESSAGE){
-		current_process->p_s.reg_v0 = sendMessage((pcb_PTR)current_process->p_s.reg_a1, current_process->p_s.reg_a2);
+		sendMessage((pcb_PTR)current_process->p_s.reg_a1, &current_process->p_s.reg_a2);
 	}else if(current_process->p_s.reg_a0 == RECEIVEMESSAGE){
-		current_process->p_s.reg_v0 = (unsigned int)receiveMessage((pcb_PTR)current_process->p_s.reg_a1, current_process->p_s.reg_a2);
+		receiveMessage((pcb_PTR)current_process->p_s.reg_a1, current_process->p_s.reg_a2);
 	}
 
 	current_process->p_s.pc_epc += WORDLEN;
@@ -66,27 +65,32 @@ void syscallHandler(void){
 /*
 SYSCALL(SENDMESSAGE, (unsigned int)destination, (unsigned int)payload, 0);
 */
-int sendMessage(pcb_PTR dest, unsigned int payload){
+int sendMessage(pcb_PTR dest, unsigned int *payload){
 	klog_print("msg sent\n");
 	if(dest == SSIADDRESS) dest = ssi_pcb;
 
 	msg_PTR msg = allocMsg();
-	if(msg == NULL) return MSGNOGOOD;
+	if(msg == NULL){
+		current_process->p_s.reg_v0 = MSGNOGOOD;
+		return;
+	}
 	msg->m_sender = current_process;
-	msg->m_payload = payload;
+	msg->m_payload = *payload;
 
 	if(searchProcQ(&pcbFree_h, dest) == dest){
-		return DEST_NOT_EXIST;
+		current_process->p_s.reg_v0 = DEST_NOT_EXIST;
+		return;
 	}else{
 		pushMessage(&dest->msg_inbox, msg);
-		return 0;
+		current_process->p_s.reg_v0 = 0;
+		return;
 	}
 }
 
 /*
 SYSCALL(RECEIVEMESSAGE, (unsigned int)sender, (unsigned int)payload, 0);
 */
-pcb_PTR receiveMessage(pcb_PTR sender, unsigned int payload){
+pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 	/* assuming ANYMESSAGE == NULL */
 	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);
 	if(msg == NULL){
@@ -94,11 +98,12 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int payload){
 		insertProcQ(&readyQueue, current_process);
 		current_process = NULL;
 		scheduler();
-		return 0; // for compiler
+		return; // for compiler
 	}else{
 		klog_print("msg received\n");
-		*&payload = msg->m_payload;
-		return msg->m_sender;
+		if(payload != NULL) *payload = msg->m_payload;
+		current_process->p_s.reg_v0 = msg->m_sender;
+		return;
 	}
 }
 
