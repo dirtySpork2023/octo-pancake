@@ -97,14 +97,14 @@ void interruptHandler(int cause){
 		// TODO adesso è hard coded solo per trasmettere
 		// viene causato kernel panic perchè lo status del device è 0
 		
-		// save off the status code from the device’s device register
+		// save off the status code from the device’s register
 		// TRANSM_STATUS = (base) + 0x8 
-		devStatus = *((unsigned int *)devAddrBase + 0x8);
+		devStatus = *((unsigned int *)(devAddrBase + 0x8)) & 0x000000FF; 
 		// acknowledge the interrupt
 		// TRANSM_COMMAND = (base) + 0xc
 		*((unsigned int *)(devAddrBase + 0xc)) = ACK;
 	}else{
-		// save off the status code from the device’s device register
+		// save off the status code from the device’s register
 		// STATUS = (base) + 0x0
 		devStatus = *((unsigned int *)devAddrBase);
 	
@@ -122,10 +122,13 @@ void interruptHandler(int cause){
 	if(requester != NULL){
 		requester->p_s.reg_v0 = devStatus;
 		// la risposta dev'essere da parte della SSI
-		pcb_PTR tmp = current_process;
-		current_process = ssi_pcb;
-		sendMessage(requester, devStatus);
-		current_process = tmp;
+		//pcb_PTR tmp = current_process;
+		//current_process = ssi_pcb;
+		{
+			pcb_PTR current_process = ssi_pcb;
+			sendMessage(requester, devStatus);
+		}
+		//current_process = tmp;
 		insertProcQ(&readyQueue, requester);
 	}
 	LDST((state_t *)BIOSDATAPAGE);

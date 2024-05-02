@@ -53,9 +53,9 @@ void syscallHandler(void){
 	}
 
 	if(current_process->p_s.reg_a0 == SENDMESSAGE){
-		sendMessage((pcb_PTR)current_process->p_s.reg_a1, &current_process->p_s.reg_a2);
+		current_process->p_s.reg_v0 = sendMessage((pcb_PTR)current_process->p_s.reg_a1, &current_process->p_s.reg_a2);
 	}else if(current_process->p_s.reg_a0 == RECEIVEMESSAGE){
-		receiveMessage((pcb_PTR)current_process->p_s.reg_a1, current_process->p_s.reg_a2);
+		current_process->p_s.reg_v0 = receiveMessage((pcb_PTR)current_process->p_s.reg_a1, current_process->p_s.reg_a2);
 	}
 
 	current_process->p_s.pc_epc += WORDLEN;
@@ -71,19 +71,16 @@ int sendMessage(pcb_PTR dest, unsigned int *payload){
 
 	msg_PTR msg = allocMsg();
 	if(msg == NULL){
-		current_process->p_s.reg_v0 = MSGNOGOOD;
-		return;
+		return MSGNOGOOD;
 	}
 	msg->m_sender = current_process;
 	msg->m_payload = *payload;
 
 	if(searchProcQ(&pcbFree_h, dest) == dest){
-		current_process->p_s.reg_v0 = DEST_NOT_EXIST;
-		return;
+		return DEST_NOT_EXIST;
 	}else{
 		pushMessage(&dest->msg_inbox, msg);
-		current_process->p_s.reg_v0 = 0;
-		return;
+		return 0;
 	}
 }
 
@@ -98,12 +95,11 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 		insertProcQ(&readyQueue, current_process);
 		current_process = NULL;
 		scheduler();
-		return; // for compiler
+		return NULL; // for compiler
 	}else{
 		klog_print("msg received\n");
 		if(payload != NULL) *payload = msg->m_payload;
-		current_process->p_s.reg_v0 = msg->m_sender;
-		return;
+		return msg->m_sender;
 	}
 }
 
