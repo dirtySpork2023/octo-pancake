@@ -11,28 +11,51 @@ extern struct list_head pseudoClockQueue;
 extern pcb_PTR devQueue[DEVINTNUM][DEVPERINT];
 
 unsigned int getDeviceNumber (unsigned int interruptLine) {
+    unsigned int intdevBitMap = 0x10000040; // Interrupt Line ? Interrupting Devices Bit Map
+
+    intdevBitMap = intdevBitMap + ((interruptLine - 3) * 0x04);
+    //find the device number [Tip: to calculate the device number you can use a switch among constan    ts DEVxON]
+	switch(intdevBitMap & 0x000000FF) { // the last 8 bits represent the device number
+        case DEV0ON: return 0;
+        case DEV1ON: return 1;
+        case DEV2ON: return 2;
+        case DEV3ON: return 3;
+        case DEV4ON: return 4;
+		case DEV5ON: return 5;
+		case DEV6ON: return 6;
+		case DEV7ON: return 7;
+		default: return 0;
+	}
+}
+
+/*
+ * non so se ho sbagliato io a fare merge
+ * funzionava da dio prima che lo fixxavi
+ * ma se vuoi usare il bit shifting invece dello switch fai pure 
+ * 
+unsigned int getDeviceNumber (unsigned int interruptLine) {
 	unsigned int intdevBitMap = 0x10000040; // Interrupt Line ? Interrupting Devices Bit Map
 
 	intdevBitMap = intdevBitMap + ((interruptLine - 3) * 0x04);
 	//find the device number [Tip: to calculate the device number you can use a switch among constants DEVxON]
 	unsigned int mask = 0x01;
-
+	
 	for (int i = 0; i < 8; i++) {
-		switch(intdevBitMap & mask) { // the last 8 bits represent the device number
-			case DEV0ON: return 0;
-			case DEV1ON: return 1;
-			case DEV2ON: return 2;
-    		case DEV3ON: return 3;
-    		case DEV4ON: return 4;
-    		case DEV5ON: return 5;
-    		case DEV6ON: return 6;
-    		case DEV7ON: return 7;
+		if(intdevBitMap & mask) { // the last 8 bits represent the device number
+        	case DEV0ON: return 0;
+     		case DEV1ON: return 1;
+        	case DEV2ON: return 2;
+        	case DEV3ON: return 3;
+        	case DEV4ON: return 4;
+			case DEV5ON: return 5;
+			case DEV6ON: return 6;
+			case DEV7ON: return 7;
 		}
 		mask = mask << 1;
 	}
 	// if all cases fail, default to 0
 	return 0;
-}
+}*/
 
 void interruptHandler(int cause){
 	
