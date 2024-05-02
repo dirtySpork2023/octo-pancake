@@ -1,5 +1,8 @@
 #include "./headers/interrupts.h"
 
+void klog_print();
+void klog_print_dec();
+void breakPoint();
 extern int softBlockCount;
 extern pcb_PTR current_process;
 extern pcb_PTR ssi_pcb;
@@ -34,7 +37,9 @@ unsigned int getDeviceNumber (unsigned int interruptLine) {
 void interruptHandler(int cause){
 	
 	/* Processor Local Timer */
-	if(cause & LOCALTIMERINT) {	
+	if(cause & LOCALTIMERINT) {
+		setTIMER(NEVER); // redundant operation, will be overwritten by scheduler
+		copyState(EXST, &current_process->p_s);
 		current_process->p_time += TIMESLICE;
 		insertProcQ(&readyQueue, current_process);
 		current_process = NULL;
@@ -53,7 +58,7 @@ void interruptHandler(int cause){
 		if(current_process != NULL){
 			// only if there was a process running before the interrupt
 			// load processor state stored at address BIOSDATAPAGE
-			LDST((state_t *)BIOSDATAPAGE);
+			LDST(EXST);
 		}else{
 			scheduler();
 		}
@@ -88,23 +93,20 @@ void interruptHandler(int cause){
 	klog_print("device number = ");
 	klog_print_dec(devNumber);
 	klog_print("\n");
+
+	//ho creato DEVADDR ma mi sono accordo adesso che esiste anche START_DEVREG
 	
 	// devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
-	unsigned int devAddrBase = DEVADDR + ((interruptLine - 3) * 0x80) + (devNumber * 0x10);
-	devAddrBase = TERMADDR;	
-	klog_print("address base = ");
-	klog_print_hex(devAddrBase);
-	klog_print("\n");
+	unsigned int devAddrBase = START_DEVREG + ((interruptLine - 3) * 0x80) + (devNumber * 0x10);
 	
 	unsigned int devStatus;
 	if(interruptLine == TERMINT){
 		// terminal device has two command and two status registers
 		// both must be handled before acknowledging the interrupt
 		// TODO adesso è hard coded solo per trasmettere
-		// viene causato kernel panic perchè lo status del device è 0
 		
 		// save off the status code from the device’s register
-		// TRANSM_STATUS = (base) + 0x8 
+		// from bits 0-7 of TRANSM_STATUS register (base+0x8)
 		devStatus = *((unsigned int *)(devAddrBase + 0x8)) & 0x000000FF; 
 		// acknowledge the interrupt
 		// TRANSM_COMMAND = (base) + 0xc
@@ -126,18 +128,17 @@ void interruptHandler(int cause){
 	pcb_PTR requester = devQueue[interruptLine-3][devNumber];	
 	devQueue[interruptLine-3][devNumber] = NULL;
 	if(requester != NULL){
-		requester->p_s.reg_v0 = devStatus;
 		// la risposta dev'essere da parte della SSI
-		//pcb_PTR tmp = current_process;
-		//current_process = ssi_pcb;
-		{
-			pcb_PTR current_process = ssi_pcb;
-			sendMessage(requester, devStatus);
-		}
-		//current_process = tmp;
+		pcb_PTR tmp = current_process;
+		current_process = ssi_pcb;
+		sendMessage(requester, &devStatus);
+		current_process = tmp;
+		
+		requester->p_s.reg_v0 = devStatus;
+		
 		insertProcQ(&readyQueue, requester);
 	}
-	LDST((state_t *)BIOSDATAPAGE);
+	LDST(EXST);
 	
 
 	/*

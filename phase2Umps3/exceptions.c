@@ -1,5 +1,8 @@
 #include "./headers/exceptions.h"
 
+void klog_print();
+void klog_print_dec();
+void breakPoint();
 extern struct list_head pcbFree_h;
 extern pcb_PTR current_process;
 extern pcb_PTR ssi_pcb;
@@ -21,20 +24,21 @@ void exceptionHandler(void){
 	unsigned int cause = getCAUSE();
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
 	
+	/*
 	if(current_process != NULL){
 		copyState((state_t *)BIOSDATAPAGE, &current_process->p_s);
 		// update accumulated cpu time
 		current_process->p_time += getTIMER();
-	}
+	}*/
 	
 	if(excCode == IOINTERRUPTS)
 		interruptHandler(cause);
 	else if(excCode == SYSEXCEPTION)
 		syscallHandler();
 	else if(excCode <= 3) // codes 1-3
-		passUpOrDie(PGFAULTEXCEPT, &current_process->p_s);
+		passUpOrDie(PGFAULTEXCEPT, EXST);
 	else if(excCode <= 12) // codes 4-7, 9-12
-		passUpOrDie(GENERALEXCEPT, &current_process->p_s); // Trap Handler
+		passUpOrDie(GENERALEXCEPT, EXST); // Trap Handler
 	else{
 		klog_print("exeption not handled\n");
 		breakPoint();
@@ -42,24 +46,25 @@ void exceptionHandler(void){
 }
 
 void syscallHandler(void){
-	if((int)current_process->p_s.reg_a0 >= 1)
-		passUpOrDie(GENERALEXCEPT, &current_process->p_s);
-	if((current_process->p_s.status & USERPON) != 0){
+	if((int)EXST->reg_a0 >= 1)
+		passUpOrDie(GENERALEXCEPT, EXST);
+	if((EXST->status & USERPON) != 0){
 		/* syscall only available in kernel mode
 		 * change excCode to Reserved Instruction (10) */
 		unsigned int cause = PRIVINSTR << CAUSESHIFT;
-		current_process->p_s.cause = getCAUSE() & !GETEXECCODE | cause;	
-		passUpOrDie(GENERALEXCEPT, &current_process->p_s); // Trap Handler
+		EXST->cause = getCAUSE() & !GETEXECCODE | cause;	
+		klog_print("syscall not allowed in user mode");
+		passUpOrDie(GENERALEXCEPT, EXST); // Trap Handler
 	}
 
-	if(current_process->p_s.reg_a0 == SENDMESSAGE){
-		current_process->p_s.reg_v0 = sendMessage((pcb_PTR)current_process->p_s.reg_a1, &current_process->p_s.reg_a2);
-	}else if(current_process->p_s.reg_a0 == RECEIVEMESSAGE){
-		current_process->p_s.reg_v0 = receiveMessage((pcb_PTR)current_process->p_s.reg_a1, current_process->p_s.reg_a2);
+	if(EXST->reg_a0 == SENDMESSAGE){
+		EXST->reg_v0 = sendMessage((pcb_PTR)EXST->reg_a1, &EXST->reg_a2);
+	}else if(EXST->reg_a0 == RECEIVEMESSAGE){
+		EXST->reg_v0 = receiveMessage((pcb_PTR)EXST->reg_a1, EXST->reg_a2);
 	}
-
-	current_process->p_s.pc_epc += WORDLEN;
-	LDST(&current_process->p_s);
+	
+	EXST->pc_epc += WORDLEN;
+	LDST(EXST);
 }
 
 /*
@@ -107,10 +112,14 @@ void passUpOrDie(int except_type, state_t *exceptionState) {
 	klog_print("passUpOrDie\n");
     if (current_process->p_supportStruct == NULL) { 
         // Die (process termination)
+		killProcess(current_process, current_process);
+		/*
 		struct ssi_payload_t payload;
 		payload.service_code = TERMPROCESS;
 		payload.arg = NULL;
-		sendMessage(SSIADDRESS, (unsigned int) &payload);
+		sendMessage(SSIADDRESS, (unsigned int *)(&payload));*/
+		current_process = NULL;
+		scheduler();
 	}else{ // PassUp
 		copyState(exceptionState, &(current_process->p_supportStruct)->sup_exceptState[except_type]); 
         context_t info_to_pass = (current_process->p_supportStruct)->sup_exceptContext[except_type]; // passing up the support info

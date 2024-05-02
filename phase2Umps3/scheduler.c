@@ -1,5 +1,8 @@
 #include "./headers/scheduler.h"
 
+void klog_print();
+void klog_print_dec();
+void breakPoint();
 extern int process_count;
 extern int softBlockCount;
 extern pcb_PTR current_process;
@@ -23,24 +26,26 @@ void scheduler(){
 			PANIC(); /* PANIC BIOS service/instruction*/
 		else if(process_count > 1 && softBlockCount > 0){
 			/* all pcbs are waiting for an I/O operation to complete */
-			current_process = NULL;
 			unsigned int waitStatus = getSTATUS();
 			/* enable all interrupts and disable PLT */
-			waitStatus &= !IMON;
-			waitStatus &= !IEPON;
+			waitStatus != IMON | IEPON;
 			waitStatus &= !TEBITON;
 			setSTATUS(waitStatus);
 			WAIT(); /* enter a Wait State */
 		}
+		klog_print("empty process queue error\n");
+		breakPoint();
 	}
 
-
 	current_process = removeProcQ(&readyQueue);
+	
 	klog_print("scheduling pcb ");
 	klog_print_dec(current_process->p_pid);
 	klog_print("\n");
+	
 	/* load round-robin timeslice into Processor's Local Timer */
 	setTIMER(TIMESLICE);
+	
 	/* load the processor state of the current process */
 	LDST(&current_process->p_s);
 }

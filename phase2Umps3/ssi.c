@@ -3,6 +3,7 @@
 void klog_print();
 void klog_print_dec();
 void breakPoint();
+extern pcb_PTR current_process;
 extern struct list_head *readyQueue;
 extern struct list_head *pseudoClockQueue;
 extern pcb_PTR devQueue[DEVINTNUM][DEVPERINT];
@@ -71,6 +72,18 @@ void createProcess(ssi_create_process_PTR arg, pcb_PTR sender){
 	}
 }
 
+pcb_PTR outDevQ(pcb_PTR doomed){
+	for(int i=0; i<DEVINTNUM; i++){
+		for(int j=0; j<DEVPERINT; j++){
+			if(devQueue[i][j] == doomed){
+				devQueue[i][j] = NULL;
+				return doomed;
+			}
+		}
+	}
+	return NULL;
+}
+
 void killProcess(pcb_PTR doomed, pcb_PTR sender){
 	if(doomed == NULL) doomed = sender;
 	
@@ -80,11 +93,19 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 
 	//remove from sibling list
 	outChild(doomed);
+	
 	//remove from any process queue
-	if(outProcQ(readyQueue, doomed) == NULL){
+	if(current_process == doomed){
+	}else if(searchProcQ(readyQueue, doomed) == doomed){
+		outAnyProcQ(doomed);
+	}else if(searchProcQ(pseudoClockQueue, doomed) == doomed){
 		softBlockCount--;
 		outAnyProcQ(doomed);
+	}else{
+		softBlockCount--;
+		outDevQ(doomed);
 	}
+
 	process_count--;
 	freePcb(doomed);
 }
@@ -96,17 +117,11 @@ void doIO(ssi_do_io_PTR arg, pcb_PTR sender){
 	int devNo = device % DEVPERINT;
 	softBlockCount++;
 
-	klog_print("interrupt line = ");
-	klog_print_dec(intLineNo);
-	klog_print("\ndevice number = ");
-	klog_print_dec(devNo);
-	klog_print("\n");
-	
 	devQueue[intLineNo][devNo] = outAnyProcQ(sender);
 	
 	klog_print("blocked pcb ");
 	klog_print_dec(sender->p_pid);
-	klog_print("\n");
+	klog_print(" for I/O\n");
 
 	*arg->commandAddr = arg->commandValue;	
 }
