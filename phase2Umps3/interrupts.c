@@ -106,11 +106,9 @@ void interruptHandler(int cause){
 		// save off the status code from the device’s register
 		// TRANSM_STATUS = (base) + 0x8 
 		devStatus = *((unsigned int *)(devAddrBase + 0x8)) & 0x000000FF; 
-		devStatus = *((unsigned int *)(devAddrBase + 0x0)) & 0x000000FF;
 		// acknowledge the interrupt
 		// TRANSM_COMMAND = (base) + 0xc
 		*((unsigned int *)(devAddrBase + 0xc)) = ACK;
-		*((unsigned int *)(devAddrBase + 0x4)) = ACK;	
 	}else{
 		// save off the status code from the device’s register
 		// STATUS = (base) + 0x0
