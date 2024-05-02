@@ -12,17 +12,23 @@ unsigned int getDeviceNumber (unsigned int interruptLine) {
 
 	intdevBitMap = intdevBitMap + ((interruptLine - 3) * 0x04);
 	//find the device number [Tip: to calculate the device number you can use a switch among constants DEVxON]
-	switch(intdevBitMap & 0x000000FF) { // the last 8 bits represent the device number
-		case DEV0ON: return 0;
-		case DEV1ON: return 1;
-		case DEV2ON: return 2;
-    	case DEV3ON: return 3;
-    	case DEV4ON: return 4;
-    	case DEV5ON: return 5;
-    	case DEV6ON: return 6;
-    	case DEV7ON: return 7;
-		default: return 0;
+	unsigned int mask = 0x01;
+
+	for (int i = 0; i < 8; i++) {
+		switch(intdevBitMap & mask) { // the last 8 bits represent the device number
+			case DEV0ON: return 0;
+			case DEV1ON: return 1;
+			case DEV2ON: return 2;
+    		case DEV3ON: return 3;
+    		case DEV4ON: return 4;
+    		case DEV5ON: return 5;
+    		case DEV6ON: return 6;
+    		case DEV7ON: return 7;
+		}
+		mask = mask << 1;
 	}
+	// if all cases fail, default to 0
+	return 0;
 }
 
 void interruptHandler(int cause){
@@ -100,9 +106,11 @@ void interruptHandler(int cause){
 		// save off the status code from the device’s register
 		// TRANSM_STATUS = (base) + 0x8 
 		devStatus = *((unsigned int *)(devAddrBase + 0x8)) & 0x000000FF; 
+		devStatus = *((unsigned int *)(devAddrBase + 0x0)) & 0x000000FF;
 		// acknowledge the interrupt
 		// TRANSM_COMMAND = (base) + 0xc
 		*((unsigned int *)(devAddrBase + 0xc)) = ACK;
+		*((unsigned int *)(devAddrBase + 0x4)) = ACK;	
 	}else{
 		// save off the status code from the device’s register
 		// STATUS = (base) + 0x0
