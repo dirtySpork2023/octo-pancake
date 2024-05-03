@@ -106,7 +106,7 @@ void print()
         devregtr *base = (devregtr *)(TERM0ADDR);
         devregtr *command = base + 3;
         devregtr status;
-klog_print("Received print string\n");
+
         while (*s != EOS)
         {
             devregtr value = PRINTCHR | (((devregtr)*s) << 8);
@@ -119,28 +119,23 @@ klog_print("Received print string\n");
                 .arg = &do_io,
             };
             SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
-klog_print("sent DOIO\n");
+
 			SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
 
             if ((status & TERMSTATMASK) != RECVD)
                 PANIC();
-klog_print("received DOIO status\n");
+
             s++;
         }
         SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
-klog_print_dec(((pcb_PTR)sender)->p_pid);
-klog_print("finished printing\n");
-breakPoint();
     }
 }
 
 void print_term0(char *s)
 {
     SYSCALL(SENDMESSAGE, (unsigned int)print_pcb, (unsigned int)s, 0);
-    klog_print("waiting for print finish\n");
-	breakPoint();
 	SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
-	klog_print("print finish received\n");
+	klog_print("print finished\n");
 	breakPoint();
 	//SYSCALL(RECEIVEMESSAGE, (unsigned int)print_pcb, 0, 0);
 }

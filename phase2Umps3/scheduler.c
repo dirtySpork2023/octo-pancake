@@ -13,7 +13,7 @@ sets currentProcess to another PCB*/
 void scheduler(){
 	/*for debugging*/
 	if(current_process != NULL){
-		klog_print("process not saved correctly\n");
+		klog_print("ERR: process not saved correctly\n");
 		breakPoint();
 	}
 
@@ -34,17 +34,16 @@ void scheduler(){
 			klog_print("WAIT STATE");
 			WAIT(); /* enter a Wait State */
 		}
-		klog_print("empty process queue error\n");
+		klog_print("ERR: empty ready queue\n");
 		breakPoint();
 	}
 
 	current_process = removeProcQ(&readyQueue);
 	
-	klog_print("scheduling pcb ");
+	klog_print("scheduling pcb");
 	klog_print_dec(current_process->p_pid);
-	klog_print("\nwith interrupts ");
-	if(current_process->p_s.status & IEPON) klog_print("enabled\n");
-	else klog_print("disabled\n");
+	if(current_process->p_s.status & IEPON) klog_print(" IE\n");
+	else klog_print(" ID\n");
 	
 	/* load round-robin timeslice into Processor's Local Timer */
 	setTIMER(TIMESLICE);

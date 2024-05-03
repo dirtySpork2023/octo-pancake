@@ -23,9 +23,6 @@ void exceptionHandler(void){
 	/* processor already set to kernel mode and disabled interrupts*/
 	unsigned int cause = getCAUSE();
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
-	klog_print("exception interrupts ");
-	if(getSTATUS() & IECON) klog_print("enabled\n");
-	else klog_print("disabled\n");
 	/*
 	if(current_process != NULL){
 		copyState((state_t *)BIOSDATAPAGE, &current_process->p_s);
@@ -42,7 +39,7 @@ void exceptionHandler(void){
 	else if(excCode <= 12) // codes 4-7, 9-12
 		passUpOrDie(GENERALEXCEPT, EXST); // Trap Handler
 	else{
-		klog_print("exeption not handled\n");
+		klog_print("ERR: exception not handled\n");
 		breakPoint();
 	}
 }
@@ -55,7 +52,7 @@ void syscallHandler(void){
 		 * change excCode to Reserved Instruction (10) */
 		// clear exception code and write PRIVINSTR
 		EXST->cause = (getCAUSE() & !GETEXECCODE) | (PRIVINSTR << CAUSESHIFT);	
-		klog_print("syscall not allowed in user mode");
+		klog_print("ERR: syscall not allowed in user mode");
 		passUpOrDie(GENERALEXCEPT, EXST); // Trap Handler
 	}
 
@@ -73,7 +70,6 @@ void syscallHandler(void){
 SYSCALL(SENDMESSAGE, (unsigned int)destination, (unsigned int)payload, 0);
 */
 int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
-	klog_print("msg sent\n");
 	if(dest == SSIADDRESS) dest = ssi_pcb;
 	
 	msg_PTR msg = allocMsg();
@@ -104,7 +100,6 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 		scheduler();
 		return NULL; // for compiler
 	}else{
-		klog_print("msg received\n");
 		if(payload != NULL) *payload = msg->m_payload;
 		return msg->m_sender;
 	}
