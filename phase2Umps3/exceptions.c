@@ -51,16 +51,16 @@ void syscallHandler(void){
 	if((EXST->status & USERPON) != 0){
 		/* syscall only available in kernel mode
 		 * change excCode to Reserved Instruction (10) */
-		unsigned int cause = PRIVINSTR << CAUSESHIFT;
-		EXST->cause = getCAUSE() & !GETEXECCODE | cause;	
+		// clear exception code and write PRIVINSTR
+		EXST->cause = (getCAUSE() & !GETEXECCODE) | (PRIVINSTR << CAUSESHIFT);	
 		klog_print("syscall not allowed in user mode");
 		passUpOrDie(GENERALEXCEPT, EXST); // Trap Handler
 	}
 
 	if(EXST->reg_a0 == SENDMESSAGE){
-		EXST->reg_v0 = sendMessage((pcb_PTR)EXST->reg_a1, &EXST->reg_a2);
+		EXST->reg_v0 = sendMessage((pcb_PTR)EXST->reg_a1, &EXST->reg_a2, current_process);
 	}else if(EXST->reg_a0 == RECEIVEMESSAGE){
-		EXST->reg_v0 = receiveMessage((pcb_PTR)EXST->reg_a1, EXST->reg_a2);
+		EXST->reg_v0 = (pcb_PTR)receiveMessage((pcb_PTR)EXST->reg_a1, (unsigned int *)EXST->reg_a2);
 	}
 	
 	EXST->pc_epc += WORDLEN;
@@ -70,17 +70,17 @@ void syscallHandler(void){
 /*
 SYSCALL(SENDMESSAGE, (unsigned int)destination, (unsigned int)payload, 0);
 */
-int sendMessage(pcb_PTR dest, unsigned int *payload){
+int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 	klog_print("msg sent\n");
 	if(dest == SSIADDRESS) dest = ssi_pcb;
-
+	
 	msg_PTR msg = allocMsg();
 	if(msg == NULL){
 		return MSGNOGOOD;
 	}
-	msg->m_sender = current_process;
+	msg->m_sender = sender;
 	msg->m_payload = *payload;
-
+	
 	if(searchProcQ(&pcbFree_h, dest) == dest){
 		return DEST_NOT_EXIST;
 	}else{
@@ -110,8 +110,9 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 
 void passUpOrDie(int except_type, state_t *exceptionState) {
 	klog_print("passUpOrDie\n");
-    if (current_process->p_supportStruct == NULL) { 
+   	if (current_process->p_supportStruct == NULL) { 
         // Die (process termination)
+		breakPoint();
 		killProcess(current_process, current_process);
 		/*
 		struct ssi_payload_t payload;

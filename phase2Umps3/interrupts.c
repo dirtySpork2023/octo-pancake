@@ -90,7 +90,7 @@ void interruptHandler(int cause){
 	/* device interrupts */
 	
 	klog_print("device interrupt\n");
-
+	
 	// TODO priority within same interrupt line ?
 	unsigned int interruptLine;	
 	if(cause & DISKINTERRUPT)
@@ -116,7 +116,7 @@ void interruptHandler(int cause){
 	klog_print("device number = ");
 	klog_print_dec(devNumber);
 	klog_print("\n");
-
+	
 	//ho creato DEVADDR ma mi sono accordo adesso che esiste anche START_DEVREG
 	
 	// devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
@@ -152,10 +152,10 @@ void interruptHandler(int cause){
 	devQueue[interruptLine-3][devNumber] = NULL;
 	if(requester != NULL){
 		// la risposta dev'essere da parte della SSI
-		pcb_PTR tmp = current_process;
-		current_process = ssi_pcb;
-		sendMessage(requester, &devStatus);
-		current_process = tmp;
+		//pcb_PTR tmp = current_process;
+		//current_process = ssi_pcb;
+		sendMessage(requester, &devStatus, ssi_pcb);
+		//current_process = tmp;
 		
 		requester->p_s.reg_v0 = devStatus;
 		

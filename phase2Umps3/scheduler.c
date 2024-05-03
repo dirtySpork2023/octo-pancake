@@ -28,7 +28,7 @@ void scheduler(){
 			/* all pcbs are waiting for an I/O operation to complete */
 			unsigned int waitStatus = getSTATUS();
 			/* enable all interrupts and disable PLT */
-			waitStatus != IMON | IEPON;
+			waitStatus |= IMON | IEPON;
 			waitStatus &= !TEBITON;
 			setSTATUS(waitStatus);
 			WAIT(); /* enter a Wait State */
