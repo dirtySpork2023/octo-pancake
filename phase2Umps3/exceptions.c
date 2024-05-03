@@ -95,6 +95,7 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);
 	if(msg == NULL){
 		klog_print("blocking receive\n");
+		copyState(EXST, &current_process->p_s);
 		insertProcQ(&readyQueue, current_process);
 		current_process = NULL;
 		scheduler();
@@ -111,7 +112,7 @@ void passUpOrDie(int except_type, state_t *exceptionState) {
         // Die (process termination)
 		breakPoint();
 		killProcess(current_process, current_process);
-		/*
+		/* bisognerebbe usare sendMessage per essere più disponibili a interrupt ma così funziona sicuro
 		struct ssi_payload_t payload;
 		payload.service_code = TERMPROCESS;
 		payload.arg = NULL;
