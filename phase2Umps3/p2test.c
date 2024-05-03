@@ -119,7 +119,6 @@ void print()
                 .arg = &do_io,
             };
             SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
-
 			SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
 
             if ((status & TERMSTATMASK) != RECVD)
@@ -134,10 +133,7 @@ void print()
 void print_term0(char *s)
 {
     SYSCALL(SENDMESSAGE, (unsigned int)print_pcb, (unsigned int)s, 0);
-	SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
-	klog_print("print finished\n");
-	breakPoint();
-	//SYSCALL(RECEIVEMESSAGE, (unsigned int)print_pcb, 0, 0);
+	SYSCALL(RECEIVEMESSAGE, (unsigned int)print_pcb, 0, 0);
 }
 
 void clockwait_process()

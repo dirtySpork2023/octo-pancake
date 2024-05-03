@@ -105,6 +105,10 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 		softBlockCount--;
 		outDevQ(doomed);
 	}
+	
+	klog_print("killing pcb ");
+	klog_print_dec(doomed->p_pid);
+	klog_print("\n");
 
 	process_count--;
 	freePcb(doomed);
@@ -119,9 +123,9 @@ void doIO(ssi_do_io_PTR arg, pcb_PTR sender){
 
 	devQueue[intLineNo][devNo] = outAnyProcQ(sender);
 	
-	klog_print("blocked pcb ");
+/*	klog_print("blocked pcb ");
 	klog_print_dec(sender->p_pid);
-	klog_print(" for I/O\n");
+	klog_print(" for I/O\n");*/
 
 	*arg->commandAddr = arg->commandValue;	
 }

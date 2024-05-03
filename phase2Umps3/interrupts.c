@@ -86,10 +86,9 @@ void interruptHandler(int cause){
 			scheduler();
 		}
 	}
-	
+
+
 	/* device interrupts */
-	
-	klog_print("device interrupt\n");
 	
 	// TODO priority within same interrupt line ?
 	unsigned int interruptLine;	
@@ -107,18 +106,9 @@ void interruptHandler(int cause){
 		breakPoint();
 	}
 	
-	klog_print("interrupt line = ");
-	klog_print_dec(interruptLine);
-	klog_print("\n");
-	
 	unsigned int devNumber = getDeviceNumber(interruptLine);
 	
-	klog_print("device number = ");
-	klog_print_dec(devNumber);
-	klog_print("\n");
-	
 	//ho creato DEVADDR ma mi sono accordo adesso che esiste anche START_DEVREG
-	
 	// devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
 	unsigned int devAddrBase = START_DEVREG + ((interruptLine - 3) * 0x80) + (devNumber * 0x10);
 	
@@ -144,10 +134,14 @@ void interruptHandler(int cause){
 		*((unsigned int *)(devAddrBase + 0x4)) = ACK;
 	}
 	
-	klog_print("device status = ");
+/*	klog_print("dev ");
+	klog_print_dec(devNumber);
+	klog_print(" of ");
+	klog_print_dec(interruptLine);
+	klog_print(" status ");
 	klog_print_dec(devStatus);
-	klog_print("\n");
-	
+	klog_print("\n");*/
+
 	pcb_PTR requester = devQueue[interruptLine-3][devNumber];	
 	devQueue[interruptLine-3][devNumber] = NULL;
 	if(requester != NULL){

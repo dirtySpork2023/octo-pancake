@@ -94,7 +94,9 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 	/* assuming ANYMESSAGE == NULL */
 	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);
 	if(msg == NULL){
-		klog_print("blocking receive\n");
+/*		klog_print("blck recv ");
+		klog_print_dec(current_process->p_pid);
+		klog_print("\n");*/
 		copyState(EXST, &current_process->p_s);
 		insertProcQ(&readyQueue, current_process);
 		current_process = NULL;
