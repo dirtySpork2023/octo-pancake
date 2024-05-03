@@ -23,7 +23,9 @@ void exceptionHandler(void){
 	/* processor already set to kernel mode and disabled interrupts*/
 	unsigned int cause = getCAUSE();
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
-	
+	klog_print("exception interrupts ");
+	if(getSTATUS() & IECON) klog_print("enabled\n");
+	else klog_print("disabled\n");
 	/*
 	if(current_process != NULL){
 		copyState((state_t *)BIOSDATAPAGE, &current_process->p_s);

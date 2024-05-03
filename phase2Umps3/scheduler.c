@@ -31,6 +31,7 @@ void scheduler(){
 			waitStatus |= IMON | IEPON;
 			waitStatus &= !TEBITON;
 			setSTATUS(waitStatus);
+			klog_print("WAIT STATE");
 			WAIT(); /* enter a Wait State */
 		}
 		klog_print("empty process queue error\n");
@@ -41,7 +42,9 @@ void scheduler(){
 	
 	klog_print("scheduling pcb ");
 	klog_print_dec(current_process->p_pid);
-	klog_print("\n");
+	klog_print("\nwith interrupts ");
+	if(current_process->p_s.status & IEPON) klog_print("enabled\n");
+	else klog_print("disabled\n");
 	
 	/* load round-robin timeslice into Processor's Local Timer */
 	setTIMER(TIMESLICE);
