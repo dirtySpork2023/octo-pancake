@@ -47,14 +47,6 @@ void exceptionHandler(void){
 void syscallHandler(void){
 	if((int)EXST->reg_a0 >= 1)
 		passUpOrDie(GENERALEXCEPT, EXST);
-	if((EXST->status & USERPON) != 0){
-		/* syscall only available in kernel mode
-		 * change excCode to Reserved Instruction (10) */
-		// clear exception code and write PRIVINSTR
-		EXST->cause = (getCAUSE() & !GETEXECCODE) | (PRIVINSTR << CAUSESHIFT);	
-		klog_print("ERR: syscall not allowed in user mode");
-		passUpOrDie(GENERALEXCEPT, EXST); // Trap Handler
-	}
 
 	if(EXST->reg_a0 == SENDMESSAGE){
 		EXST->reg_v0 = sendMessage((pcb_PTR)EXST->reg_a1, &EXST->reg_a2, current_process);
@@ -70,6 +62,15 @@ void syscallHandler(void){
 SYSCALL(SENDMESSAGE, (unsigned int)destination, (unsigned int)payload, 0);
 */
 int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
+	if((EXST->status & USERPON) != 0){
+		/* syscall only available in kernel mode
+		 * change excCode to Reserved Instruction (10) */
+		// clear exception code and write PRIVINSTR
+		EXST->cause = (getCAUSE() & !GETEXECCODE) | (PRIVINSTR << CAUSESHIFT);	
+		klog_print("ERR: syscall not allowed in user mode");
+		passUpOrDie(GENERALEXCEPT, EXST); // Trap Handler
+	}
+	
 	if(dest == SSIADDRESS) dest = ssi_pcb;
 	
 	msg_PTR msg = allocMsg();
@@ -91,6 +92,15 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 SYSCALL(RECEIVEMESSAGE, (unsigned int)sender, (unsigned int)payload, 0);
 */
 pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
+	if((EXST->status & USERPON) != 0){
+		/* syscall only available in kernel mode
+		 * change excCode to Reserved Instruction (10) */
+		// clear exception code and write PRIVINSTR
+		EXST->cause = (getCAUSE() & !GETEXECCODE) | (PRIVINSTR << CAUSESHIFT);	
+		klog_print("ERR: syscall not allowed in user mode");
+		passUpOrDie(GENERALEXCEPT, EXST); // Trap Handler
+	}
+
 	/* assuming ANYMESSAGE == NULL */
 	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);
 	if(msg == NULL){
