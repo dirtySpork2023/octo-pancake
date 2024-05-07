@@ -88,7 +88,7 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 		breakPoint();
 		return DEST_NOT_EXIST;
 	}else{
-		klog_print("sent ");
+		if(dest != ssi_pcb && sender != ssi_pcb) klog_print("sent ");
 		pushMessage(&dest->msg_inbox, msg);
 		return 0;
 	}
@@ -119,12 +119,14 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 		scheduler();
 		return NULL; // for compiler
 	}else{
-		klog_print("msg from ");
-		klog_print_dec(msg->m_sender->p_pid);
-		klog_print(" to ");
-		klog_print_dec(current_process->p_pid);
-		klog_print("\n");
-		
+		if(msg->m_sender != ssi_pcb && current_process != ssi_pcb){
+			klog_print("msg from ");
+			klog_print_dec(msg->m_sender->p_pid);
+			klog_print(" to ");
+			klog_print_dec(current_process->p_pid);
+			klog_print("\n");
+		}
+
 		freeMsg(msg); // il messaggio rimane accessibile
 		if(payload != NULL) *payload = msg->m_payload;
 		return msg->m_sender;

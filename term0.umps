@@ -8,8 +8,45 @@ p3 - CLOCKWAIT OK
 ERROR: p3 - CPU time incorrectly maintained
 p1 knows p3 ended
 hp_p1 starts
-hp_p2 starts
 first incarnation of p4 starts
+hp_p2 starts
 second incarnation of p4 starts
 p4 is OK
 p1 knows p4's first incarnation ended
+p1 knows p4's second incarnation ended
+p5 starts
+p8 starts
+Bus Error (as expected): Access non-existent memory
+p8 ok
+p5a starts
+check p8 root and leaf
+memory management trap
+p8root starts
+ERROR: support structure addresses are not the same
+child2 starts
+Address Error (as expected): non-kuseg access w/KU=1
+Inconsistent (parent) process id for p8's first child
+p5sys enter
+leaf process (4) starts
+High level SYS call from kernel mode process
+leaf process (3) starts
+p5 ok
+child1 starts
+p7 starts
+Inconsistent (parent) process id for p8's first child
+p6 starts
+leaf process (2) starts
+leaf process (1) starts
+p8root starts
+child1 starts
+child2 starts
+Inconsistent (parent) process id for p8's first child
+Inconsistent (parent) process id for p8's first child
+leaf process (2) starts
+leaf process (4) starts
+leaf process (3) starts
+leaf process (1) starts
+p9 starts
+p10 starts
+Inconsistent process id for p9!
+p9 and p10 ok
