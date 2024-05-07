@@ -127,7 +127,7 @@ void doIO(ssi_do_io_PTR arg, pcb_PTR sender){
 	klog_print_dec(sender->p_pid);
 	klog_print(" for I/O\n");*/
 
-	*arg->commandAddr = arg->commandValue;	
+	*arg->commandAddr = arg->commandValue;
 }
 
 void getTime(pcb_PTR sender){

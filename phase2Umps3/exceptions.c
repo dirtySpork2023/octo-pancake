@@ -75,14 +75,20 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 	
 	msg_PTR msg = allocMsg();
 	if(msg == NULL){
-		return MSGNOGOOD;
+		klog_print("ERR: alloc msg failed\n");
+		breakPoint();
+		return MSGNOGOOD;	
 	}
+
 	msg->m_sender = sender;
 	msg->m_payload = *payload;
 	
 	if(searchProcQ(&pcbFree_h, dest) == dest){
+		klog_print("ERR: dest pcb dead\n");
+		breakPoint();
 		return DEST_NOT_EXIST;
 	}else{
+		klog_print("sent ");
 		pushMessage(&dest->msg_inbox, msg);
 		return 0;
 	}
@@ -104,7 +110,7 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 	/* assuming ANYMESSAGE == NULL */
 	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);
 	if(msg == NULL){
-/*		klog_print("blck recv ");
+/*		klog_print("blocking recv ");
 		klog_print_dec(current_process->p_pid);
 		klog_print("\n");*/
 		copyState(EXST, &current_process->p_s);
@@ -113,6 +119,13 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 		scheduler();
 		return NULL; // for compiler
 	}else{
+		klog_print("msg from ");
+		klog_print_dec(msg->m_sender->p_pid);
+		klog_print(" to ");
+		klog_print_dec(current_process->p_pid);
+		klog_print("\n");
+		
+		freeMsg(msg); // il messaggio rimane accessibile
 		if(payload != NULL) *payload = msg->m_payload;
 		return msg->m_sender;
 	}

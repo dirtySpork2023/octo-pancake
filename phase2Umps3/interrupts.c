@@ -89,7 +89,8 @@ void interruptHandler(int cause){
 
 
 	/* device interrupts */
-	
+	klog_print("device interrupt\n");	
+
 	// TODO priority within same interrupt line ?
 	unsigned int interruptLine;	
 	if(cause & DISKINTERRUPT)
@@ -134,26 +135,33 @@ void interruptHandler(int cause){
 		*((unsigned int *)(devAddrBase + 0x4)) = ACK;
 	}
 	
-/*	klog_print("dev ");
+	klog_print("dev ");
 	klog_print_dec(devNumber);
 	klog_print(" of ");
 	klog_print_dec(interruptLine);
 	klog_print(" status ");
 	klog_print_dec(devStatus);
-	klog_print("\n");*/
+	//klog_print("\n");
 
 	pcb_PTR requester = devQueue[interruptLine-3][devNumber];	
+	klog_print("a");
 	devQueue[interruptLine-3][devNumber] = NULL;
+	klog_print("b");
 	if(requester != NULL){
 		// la risposta dev'essere da parte della SSI
 		//pcb_PTR tmp = current_process;
 		//current_process = ssi_pcb;
+		klog_print("c\n");
 		sendMessage(requester, &devStatus, ssi_pcb);
+		klog_print("d\n");
 		//current_process = tmp;
 		
 		requester->p_s.reg_v0 = devStatus;
 		
 		insertProcQ(&readyQueue, requester);
+	}else{
+		klog_print("ERR: requester NULL");
+		breakPoint();
 	}
 	LDST(EXST);
 	

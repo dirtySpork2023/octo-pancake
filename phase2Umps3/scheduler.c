@@ -40,9 +40,9 @@ void scheduler(){
 
 	current_process = removeProcQ(&readyQueue);
 	
-/*	klog_print("scheduling pcb");
+/*	klog_print("pcb ");
 	klog_print_dec(current_process->p_pid);
-	klog_print("\n");*/
+	klog_print(": ");*/
 	
 	/* load round-robin timeslice into Processor's Local Timer */
 	setTIMER(TIMESLICE);
