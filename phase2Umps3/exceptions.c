@@ -76,7 +76,6 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 	msg_PTR msg = allocMsg();
 	if(msg == NULL){
 		klog_print("ERR: alloc msg failed\n");
-		breakPoint();
 		return MSGNOGOOD;	
 	}
 
@@ -85,7 +84,6 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 	
 	if(searchProcQ(&pcbFree_h, dest) == dest){
 		klog_print("ERR: dest pcb dead\n");
-		breakPoint();
 		return DEST_NOT_EXIST;
 	}else{
 		if(dest != ssi_pcb && sender != ssi_pcb) klog_print("sent ");
@@ -114,6 +112,9 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 		klog_print_dec(current_process->p_pid);
 		klog_print("\n");*/
 		copyState(EXST, &current_process->p_s);
+		// TODO correct cpu time?
+		current_process->p_time += getTIMER();
+		
 		insertProcQ(&readyQueue, current_process);
 		current_process = NULL;
 		scheduler();
@@ -137,7 +138,6 @@ void passUpOrDie(int except_type, state_t *exceptionState) {
 	klog_print("passUpOrDie\n");
    	if (current_process->p_supportStruct == NULL) { 
         // Die (process termination)
-		breakPoint();
 		killProcess(current_process, current_process);
 		/* bisognerebbe usare sendMessage per essere più disponibili a interrupt ma così funziona sicuro
 		struct ssi_payload_t payload;
