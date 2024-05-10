@@ -22,7 +22,7 @@ p5a starts
 check p8 root and leaf
 memory management trap
 p8root starts
-ERROR: support structure addresses are not the same
+Correct Support Structure Address
 child2 starts
 Address Error (as expected): non-kuseg access w/KU=1
 Inconsistent (parent) process id for p8's first child

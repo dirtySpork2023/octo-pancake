@@ -140,7 +140,7 @@ void waitForClock(pcb_PTR sender){
 }
 
 void getSupportStruct(pcb_PTR sender){
-	SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)&sender->p_supportStruct, 0);
+	SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)sender.p_supportStruct, 0);
 }
 
 void getPID(pcb_PTR sender){
