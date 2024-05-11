@@ -18,13 +18,15 @@ void scheduler(){
 	}
 
 	if(emptyProcQ(&readyQueue)){
-		if(process_count == 1)
+		if(process_count == 1){
 			/* the SSI is the only process in the system */
+			klog_print("HALT STATE");
 			HALT(); /* HALT BIOS service/instruction */
-		if(process_count > 0 && softBlockCount == 0)
+		}if(process_count > 0 && softBlockCount == 0){
 			/* deadlock */
+			klog_print("PANIC STATE");
 			PANIC(); /* PANIC BIOS service/instruction*/
-		else if(process_count > 1 && softBlockCount > 0){
+		}else if(process_count > 1 && softBlockCount > 0){
 			/* all pcbs are waiting for an I/O operation to complete */
 			unsigned int waitStatus = getSTATUS();
 			/* enable all interrupts and disable PLT */

@@ -16,6 +16,6 @@ void doIO(ssi_do_io_PTR, pcb_PTR sender);
 void getTime(pcb_PTR);
 void waitForClock(pcb_PTR);
 void getSupportStruct(pcb_PTR);
-void getPID(pcb_PTR);
+void getPID(void* arg, pcb_PTR sender);
 
 #endif

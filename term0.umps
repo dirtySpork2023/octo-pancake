@@ -25,28 +25,23 @@ p8root starts
 Correct Support Structure Address
 child2 starts
 Address Error (as expected): non-kuseg access w/KU=1
-Inconsistent (parent) process id for p8's first child
-p5sys enter
 leaf process (4) starts
-High level SYS call from kernel mode process
+p5sys enter
 leaf process (3) starts
-p5 ok
+High level SYS call from kernel mode process
 child1 starts
-p7 starts
-Inconsistent (parent) process id for p8's first child
-p6 starts
+p5 ok
 leaf process (2) starts
 leaf process (1) starts
+p7 starts
+p6 starts
 p8root starts
 child1 starts
 child2 starts
-Inconsistent (parent) process id for p8's first child
-Inconsistent (parent) process id for p8's first child
 leaf process (2) starts
 leaf process (4) starts
 leaf process (3) starts
 leaf process (1) starts
 p9 starts
 p10 starts
-Inconsistent process id for p9!
 p9 and p10 ok
