@@ -45,7 +45,7 @@ void syscallHandler(void){
 	if(EXST->reg_a0 == SENDMESSAGE){
 		EXST->reg_v0 = sendMessage((pcb_PTR)EXST->reg_a1, &EXST->reg_a2, current_process);
 	}else if(EXST->reg_a0 == RECEIVEMESSAGE){
-		EXST->reg_v0 = receiveMessage((pcb_PTR)EXST->reg_a1, (unsigned int *)EXST->reg_a2);
+		EXST->reg_v0 = (unsigned int)receiveMessage((pcb_PTR)EXST->reg_a1, (unsigned int *)EXST->reg_a2);
 	}
 	
 	EXST->pc_epc += WORDLEN;
@@ -67,16 +67,7 @@ void checkUserMode(void){
 SYSCALL(SENDMESSAGE, (unsigned int)destination, (unsigned int)payload, 0);
 */
 int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
-	if((EXST->status & USERPON) != 0){
-		/* syscall only available in kernel mode
-		 * change excCode to Reserved Instruction (10) */
-		// clear exception code and write PRIVINSTR
-		EXST->cause = (getCAUSE() & !GETEXECCODE) | (PRIVINSTR << CAUSESHIFT);	
-		klog_print("ERR: syscall not allowed in user mode");
-		passUpOrDie(GENERALEXCEPT, EXST); // Trap Handler
-	}
 	checkUserMode();
-	
 	
 	if(dest == SSIADDRESS) dest = ssi_pcb;
 	
@@ -93,8 +84,8 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 		//klog_print("ERR: dest pcb dead\n");
 		return DEST_NOT_EXIST;
 	}else{
-		/*if(dest != ssi_pcb && sender != ssi_pcb)*/
-			klog_print("sent ");
+		/*if(dest != ssi_pcb && sender != ssi_pcb)
+			klog_print("sent ");*/
 		pushMessage(&dest->msg_inbox, msg);
 		return 0;
 	}
@@ -104,21 +95,14 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 SYSCALL(RECEIVEMESSAGE, (unsigned int)sender, (unsigned int)payload, 0);
 */
 pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
-	if((EXST->status & USERPON) != 0){
-		/* syscall only available in kernel mode
-		 * change excCode to Reserved Instruction (10) */
-		// clear exception code and write PRIVINSTR
-		EXST->cause = (getCAUSE() & !GETEXECCODE) | (PRIVINSTR << CAUSESHIFT);	
-		klog_print("ERR: syscall not allowed in user mode");
-		passUpOrDie(GENERALEXCEPT, EXST); // Trap Handler
-	}
+	checkUserMode();
 	
 	/* assuming ANYMESSAGE == NULL */
 	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);
 	if(msg == NULL){
-		klog_print("blocking recv ");
+/*		klog_print("blocking recv ");
 		klog_print_dec(current_process->p_pid);
-		klog_print("\n");
+		klog_print("\n");*/
 		copyState(EXST, &current_process->p_s);
 		current_process->p_time += getTIMER();
 		insertProcQ(&readyQueue, current_process);

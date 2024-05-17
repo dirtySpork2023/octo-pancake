@@ -417,23 +417,19 @@ void test()
     p9pid = p9_pcb->p_pid;
 
     SYSCALL(SENDMESSAGE, (unsigned int)p9_pcb, START, 0);
-	klog_print("started p9\n");
 	SYSCALL(RECEIVEMESSAGE, (unsigned int)p9_pcb, 0, 0);
     SYSCALL(RECEIVEMESSAGE, (unsigned int)p10_pcb, 0, 0);
 
-	klog_print("p9 kill request from test\n");
     terminate_process(p9_pcb);
 
     // check test_pcb child's length
     struct list_head *pos;
     int c = 0;
-    klog_print("count children\n");
 	list_for_each(pos, &test_pcb->p_child)
         c++;
 
     if (c > 1)
         print_term0("ERROR: all process child should be dead!\n");
-	else klog_print("success\n");
 
     print_term0("A towel, it says, is about the most massively useful thing an interstellar hitchhiker can have.\n");
 
@@ -886,9 +882,9 @@ void p9()
     print_term0("p9 starts\n");
     /* create p10 */
     p10_pcb = create_process(&p10state);
-	klog_print("p9 created p10\n");
+	
     SYSCALL(SENDMESSAGE, (unsigned int)test_pcb, 0, 0);
-    klog_print("p9 finished\n");
+    
 	SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
 }
 
@@ -908,7 +904,6 @@ void p10()
 
     print_term0("p9 and p10 ok\n");
     SYSCALL(SENDMESSAGE, (unsigned int)test_pcb, 0, 0);
-	klog_print("p10 suicide request\n");
     terminate_process(SELF);
 
     print_term0("ERROR: p10 didn't die with its parent!\n");
