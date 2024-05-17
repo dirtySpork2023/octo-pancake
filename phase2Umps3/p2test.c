@@ -427,11 +427,13 @@ void test()
     // check test_pcb child's length
     struct list_head *pos;
     int c = 0;
-    list_for_each(pos, &test_pcb->p_child)
+    klog_print("count children\n");
+	list_for_each(pos, &test_pcb->p_child)
         c++;
 
     if (c > 1)
         print_term0("ERROR: all process child should be dead!\n");
+	else klog_print("success\n");
 
     print_term0("A towel, it says, is about the most massively useful thing an interstellar hitchhiker can have.\n");
 

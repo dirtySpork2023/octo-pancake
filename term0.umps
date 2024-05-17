@@ -5,7 +5,7 @@ p2 is OK
 p1 knows p2 ended
 p3 started correctly
 p3 - CLOCKWAIT OK
-p3 - CPU time correctly maintained
+ERROR: p3 - CPU time incorrectly maintained
 p1 knows p3 ended
 hp_p1 starts
 first incarnation of p4 starts
@@ -45,3 +45,4 @@ leaf process (1) starts
 p9 starts
 p10 starts
 p9 and p10 ok
+A towel, it says, is about the most massively useful thing an interstellar hitchhiker can have.

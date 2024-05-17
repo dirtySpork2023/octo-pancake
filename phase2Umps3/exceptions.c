@@ -23,12 +23,6 @@ void exceptionHandler(void){
 	/* processor already set to kernel mode and disabled interrupts*/
 	unsigned int cause = getCAUSE();
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
-	/*
-	if(current_process != NULL){
-		copyState((state_t *)BIOSDATAPAGE, &current_process->p_s);
-		// update accumulated cpu time
-		current_process->p_time += getTIMER();
-	}*/
 	
 	if(excCode == IOINTERRUPTS)
 		interruptHandler(cause);
@@ -51,11 +45,22 @@ void syscallHandler(void){
 	if(EXST->reg_a0 == SENDMESSAGE){
 		EXST->reg_v0 = sendMessage((pcb_PTR)EXST->reg_a1, &EXST->reg_a2, current_process);
 	}else if(EXST->reg_a0 == RECEIVEMESSAGE){
-		EXST->reg_v0 = (pcb_PTR)receiveMessage((pcb_PTR)EXST->reg_a1, (unsigned int *)EXST->reg_a2);
+		EXST->reg_v0 = receiveMessage((pcb_PTR)EXST->reg_a1, (unsigned int *)EXST->reg_a2);
 	}
 	
 	EXST->pc_epc += WORDLEN;
 	LDST(EXST);
+}
+
+void checkUserMode(void){
+	if((EXST->status & USERPON) != 0){
+		/* syscall only available in kernel mode
+		 * change excCode to Reserved Instruction (10) */
+		// clear exception code and write PRIVINSTR
+		EXST->cause = (getCAUSE() & !GETEXECCODE) | (PRIVINSTR << CAUSESHIFT);	
+		klog_print("ERR: syscall not allowed in user mode");
+		passUpOrDie(GENERALEXCEPT, EXST); // Trap Handler
+	}
 }
 
 /*
@@ -70,6 +75,8 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 		klog_print("ERR: syscall not allowed in user mode");
 		passUpOrDie(GENERALEXCEPT, EXST); // Trap Handler
 	}
+	checkUserMode();
+	
 	
 	if(dest == SSIADDRESS) dest = ssi_pcb;
 	
@@ -78,7 +85,7 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 		klog_print("ERR: alloc msg failed\n");
 		return MSGNOGOOD;	
 	}
-
+	
 	msg->m_sender = sender;
 	msg->m_payload = *payload;
 	
@@ -86,7 +93,8 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 		//klog_print("ERR: dest pcb dead\n");
 		return DEST_NOT_EXIST;
 	}else{
-		/*if(dest != ssi_pcb && sender != ssi_pcb) klog_print("sent ");*/
+		/*if(dest != ssi_pcb && sender != ssi_pcb)*/
+			klog_print("sent ");
 		pushMessage(&dest->msg_inbox, msg);
 		return 0;
 	}
@@ -104,13 +112,13 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 		klog_print("ERR: syscall not allowed in user mode");
 		passUpOrDie(GENERALEXCEPT, EXST); // Trap Handler
 	}
-
+	
 	/* assuming ANYMESSAGE == NULL */
 	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);
 	if(msg == NULL){
-/*		klog_print("blocking recv ");
+		klog_print("blocking recv ");
 		klog_print_dec(current_process->p_pid);
-		klog_print("\n");*/
+		klog_print("\n");
 		copyState(EXST, &current_process->p_s);
 		current_process->p_time += getTIMER();
 		insertProcQ(&readyQueue, current_process);
@@ -118,8 +126,7 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 		scheduler();
 		return NULL; // for compiler
 	}else{
-		/*
-		if(msg->m_sender != ssi_pcb && current_process != ssi_pcb){
+		/*if(msg->m_sender != ssi_pcb && current_process != ssi_pcb){
 			klog_print("msg from ");
 			klog_print_dec(msg->m_sender->p_pid);
 			klog_print(" to ");

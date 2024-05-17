@@ -27,15 +27,17 @@ void systemServiceInterface(){
 }
 
 void SSIRequest(pcb_t* sender, int service, void* arg){
-	/*klog_print("SSI request ");
+	klog_print("SSI request ");
 	klog_print_dec(service);
-	klog_print("\n");*/
+	klog_print("\n");
 	switch(service){
 		case CREATEPROCESS:
 			createProcess(arg, sender);
 			break;
 		case TERMPROCESS:
 			killProcess(arg, sender);
+			if(arg !=NULL)
+				SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
 			break;
 		case DOIO:
 			doIO(arg, sender);
@@ -99,6 +101,7 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 
 	if(searchProcQ(&pcbFree_h, doomed) == doomed){
 		klog_print("doomed pcb already dead!\n");
+		breakPoint();
 		return;
 	}
 
