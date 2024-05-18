@@ -89,7 +89,7 @@ void interruptHandler(int cause){
 
 
 	/* device interrupts */
-	//klog_print("device interrupt\n");	
+	klog_print("device interrupt\n");	
 
 	// TODO priority within same interrupt line ?
 	unsigned int interruptLine;	
@@ -142,23 +142,32 @@ void interruptHandler(int cause){
 	klog_print(" status ");
 	klog_print_dec(devStatus);
 	klog_print("\n");*/
-
+	
+	softBlockCount--;
 	pcb_PTR requester = devQueue[interruptLine-3][devNumber];	
 	
 	devQueue[interruptLine-3][devNumber] = NULL;
 	
 	if(requester != NULL){
-		// la risposta dev'essere da parte della SSI
+		// la risposta viene mandata direttamente da qui ma da parte dell'SSI
+		// le specifiche dicono di mandare lo status all'SSI mettendo devaddrbase nel registro a3 :c
 		sendMessage(requester, &devStatus, ssi_pcb);
 		
 		requester->p_s.reg_v0 = devStatus;
 		
-		insertProcQ(&readyQueue, requester);
+		insertProcQ(&readyQueue, outAnyProcQ(requester));
 	}else{
 		klog_print("ERR: requester NULL");
 		breakPoint();
 	}
-	LDST(EXST);
+	
+	if(current_process != NULL){
+		// only if there was a process running before the interrupt
+		// load processor state stored at address BIOSDATAPAGE
+		LDST(EXST);
+	}else{
+		scheduler();
+	}
 	
 
 	/*

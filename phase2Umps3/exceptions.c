@@ -7,6 +7,7 @@ extern struct list_head pcbFree_h;
 extern pcb_PTR current_process;
 extern pcb_PTR ssi_pcb;
 extern struct list_head readyQueue;
+extern struct list_head receiveMessageQueue;
 
 /* to be replaced in phase 3 */
 void uTLB_RefillHandler(void){
@@ -23,7 +24,9 @@ void exceptionHandler(void){
 	/* processor already set to kernel mode and disabled interrupts*/
 	unsigned int cause = getCAUSE();
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
-	
+
+	klog_print("exception");
+		
 	if(excCode == IOINTERRUPTS)
 		interruptHandler(cause);
 	else if(excCode == SYSEXCEPTION)
@@ -83,12 +86,23 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 	if(searchProcQ(&pcbFree_h, dest) == dest){
 		//klog_print("ERR: dest pcb dead\n");
 		return DEST_NOT_EXIST;
-	}else{
-		/*if(dest != ssi_pcb && sender != ssi_pcb)
-			klog_print("sent ");*/
-		pushMessage(&dest->msg_inbox, msg);
-		return 0;
 	}
+	/*if(dest != ssi_pcb && sender != ssi_pcb)*/
+		klog_print("sent ");
+
+	/* pcb blocked on receive is put in ready state */
+	if(searchProcQ(&receiveMessageQueue, dest) == dest){
+		insertProcQ(&readyQueue, outAnyProcQ(dest));
+	}
+
+	pushMessage(&dest->msg_inbox, msg);
+
+	/* move dest pcb in head of ready queue ?
+	if( dest = outProcQ(&readyQueue, dest) == dest){
+		//	searchProcQ(&readyQueue, dest) == dest){
+		insertChild(&readyQueue, dest, 1);
+	}*/
+	return 0;
 }
 
 /*
@@ -105,18 +119,18 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 		klog_print("\n");*/
 		copyState(EXST, &current_process->p_s);
 		current_process->p_time += getTIMER();
-		insertProcQ(&readyQueue, current_process);
+		insertProcQ(&receiveMessageQueue, current_process);	
 		current_process = NULL;
 		scheduler();
 		return NULL; // for compiler
 	}else{
-		/*if(msg->m_sender != ssi_pcb && current_process != ssi_pcb){
+		/*if(msg->m_sender != ssi_pcb && current_process != ssi_pcb){*/
 			klog_print("msg from ");
 			klog_print_dec(msg->m_sender->p_pid);
 			klog_print(" to ");
 			klog_print_dec(current_process->p_pid);
 			klog_print("\n");
-		}*/
+		//}*/
 
 		freeMsg(msg); // il messaggio rimane accessibile
 		if(payload != NULL) *payload = msg->m_payload;

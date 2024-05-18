@@ -10,6 +10,8 @@ extern void test();
 /*	counter of all started but not yet terminated processes
 	includes processes in "running", "ready" AND "blocked" state */
 int process_count;
+/*	counter of processes in the "blocked" state for a blocking receive */
+//int msgBlockCount;
 /*	counter of processes in the "blocked" state due to an I/O or timer request.
 	doesn't include processes waiting for a message*/
 int softBlockCount;
@@ -27,8 +29,8 @@ struct list_head readyQueue; // tail pointer
 struct list_head pseudoClockQueue;
 /*	processes waiting for a message to be received
 	resumed by: new message directed to them */
-// not needed: pcbs wait for messages in the ready queue
-//struct list_head receiveMessageQueue;
+// not needed: pcbs can wait for messages in the ready queue
+struct list_head receiveMessageQueue;
 
 // Lists of blocked PCBS for each device (si potrebbero sostituire con array di length DEVPERINT)
 pcb_PTR devQueue[DEVINTNUM][DEVPERINT];
@@ -47,6 +49,7 @@ int main(){
 	current_process = NULL;
 	mkEmptyProcQ(&readyQueue);
 	mkEmptyProcQ(&pseudoClockQueue);
+	mkEmptyProcQ(&receiveMessageQueue);
 	for(int i=0; i<DEVINTNUM; i++){
 		for(int j=0; j<DEVPERINT; j++){
 			devQueue[i][j] = NULL;

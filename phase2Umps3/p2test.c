@@ -120,8 +120,8 @@ void print()
             };
             SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
 			SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
-
-            if ((status & TERMSTATMASK) != RECVD)
+			
+			if ((status & TERMSTATMASK) != RECVD)
                 PANIC();
 
             s++;
@@ -185,8 +185,8 @@ void test()
     SYSCALL(SENDMESSAGE, (unsigned int)test_pcb, 0, 0);
     pcb_PTR sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
 
-
-    if (sender != test_pcb)
+    
+	if (sender != test_pcb)
         PANIC();
 
     // init print process

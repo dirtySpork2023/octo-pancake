@@ -35,7 +35,7 @@ pcb_t *allocPcb() {
         tmp->p_s.pc_epc = 0;
         tmp->p_s.status = 0;
         tmp->p_time = 0;
-        INIT_LIST_HEAD (&tmp->msg_inbox);
+		INIT_LIST_HEAD (&tmp->msg_inbox);
         tmp->p_supportStruct = NULL;
         tmp->p_pid = next_pid++;
         return tmp;
@@ -51,7 +51,7 @@ int emptyProcQ(struct list_head *head) {
 }
 
 void insertProcQ(struct list_head *head, pcb_t *p) {
-    list_add_tail(&p->p_list, head);
+	list_add_tail(&p->p_list, head);
 }
 
 // ritorna il pcb in testa senza rimuoverlo

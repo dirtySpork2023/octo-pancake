@@ -5,8 +5,9 @@ void klog_print_dec();
 void breakPoint();
 extern struct list_head pcbFree_h;
 extern pcb_PTR current_process;
-extern struct list_head *readyQueue;
-extern struct list_head *pseudoClockQueue;
+extern struct list_head readyQueue;
+extern struct list_head receiveMessageQueue;
+extern struct list_head pseudoClockQueue;
 extern pcb_PTR devQueue[DEVINTNUM][DEVPERINT];
 extern int process_count;
 extern int softBlockCount;
@@ -30,11 +31,13 @@ void SSIRequest(pcb_t* sender, int service, void* arg){
 /*	klog_print("SSI request ");
 	klog_print_dec(service);
 	klog_print("\n");*/
+	// TODO make if statements
 	switch(service){
 		case CREATEPROCESS:
 			createProcess(arg, sender);
 			break;
 		case TERMPROCESS:
+			// TODO put in one function
 			killProcess(arg, sender);
 			if(arg !=NULL)
 				SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
@@ -70,7 +73,7 @@ void createProcess(ssi_create_process_PTR arg, pcb_PTR sender){
 		copyState(arg->state, &newChild->p_s);
 		newChild->p_supportStruct = arg->support;
 		insertChild(sender, newChild);
-		insertProcQ(readyQueue, newChild);
+		insertProcQ(&readyQueue, newChild);
 		process_count++;
 		SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)newChild, 0);
 	}
@@ -115,9 +118,11 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 
 	//remove from any process queue
 	if(current_process == doomed){
-	}else if(searchProcQ(readyQueue, doomed) == doomed){
+	}else if(searchProcQ(&readyQueue, doomed) == doomed){
 		outAnyProcQ(doomed);
-	}else if(searchProcQ(pseudoClockQueue, doomed) == doomed){
+	}else if(searchProcQ(&receiveMessageQueue, doomed) == doomed){
+		outAnyProcQ(doomed);
+	}else if(searchProcQ(&pseudoClockQueue, doomed) == doomed){
 		softBlockCount--;
 		outAnyProcQ(doomed);
 	}else{
@@ -154,7 +159,8 @@ void getTime(pcb_PTR sender){
 }
 
 void waitForClock(pcb_PTR sender){
-	insertProcQ(pseudoClockQueue, outAnyProcQ(sender));
+	insertProcQ(&pseudoClockQueue, outAnyProcQ(sender));
+	softBlockCount++;
 	SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
 }
 
