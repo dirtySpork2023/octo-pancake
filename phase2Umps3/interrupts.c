@@ -165,8 +165,7 @@ void deviceInterrupt(int cause){
 		
 		requester->p_s.reg_v0 = devStatus;
 		
-		insertProcQ(&readyQueue, outAnyProcQ(requester));
-		klog_print(" handled\n");
+		insertProcQ(&readyQueue, requester);
 	}else{
 		klog_print("ERR: requester NULL");
 		breakPoint();

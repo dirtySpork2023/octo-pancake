@@ -9,6 +9,9 @@ extern int softBlockCount;
 extern pcb_PTR current_process;
 extern struct list_head readyQueue;
 
+extern pcb_PTR ssi_pcb;
+extern struct list_head receiveMessageQueue;
+
 /* assuming old process was saved
 sets currentProcess to another PCB*/
 void scheduler(){
@@ -40,6 +43,11 @@ void scheduler(){
 			/* deadlock */
 		//	klog_print("DEADLOCK PANIC STATE\n");
 		//	PANIC(); /* PANIC BIOS service/instruction*/
+			if(emptyProcQ(&receiveMessageQueue))
+				klog_print("no pcb waiting for message!\n");
+			klog_print("tmp WAIT STATE\n");
+			// ci sono errori nella gestione del softBlockCount
+			setSTATUS(ALLOFF | IMON | IEPON | IECON);	
 			WAIT();
 		}else{
 			klog_print("ERR: empty ready queue\n");
