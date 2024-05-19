@@ -10,6 +10,48 @@ extern struct list_head readyQueue;
 extern struct list_head pseudoClockQueue;
 extern pcb_PTR devQueue[DEVINTNUM][DEVPERINT];
 
+void interruptHandler(int cause){	
+
+	if(cause & LOCALTIMERINT) {
+		processorLocalTimer();
+	}else if(cause & TIMERINTERRUPT) {
+		intervalTimer();	
+	}else{
+		deviceInterrupt(cause);	
+	}
+
+	if(current_process != NULL){
+		// only if there was a process running before the interrupt
+		// load processor state stored at address BIOSDATAPAGE
+		LDST(EXST);
+	}else{
+		scheduler();
+	}
+}
+
+void processorLocalTimer(){
+	if(current_process == NULL){
+		klog_print("ERR localTimer\n");
+		breakPoint();
+	}
+
+	setTIMER(NEVER); // redundant operation, will be overwritten by scheduler
+	copyState(EXST, &current_process->p_s);
+	current_process->p_time += TIMESLICE;
+	insertProcQ(&readyQueue, current_process);
+	current_process = NULL;
+}
+
+void intervalTimer(){
+	/* re-set with 100 milliseconds */
+	LDIT(PSECOND);
+	/*	unlock all pcbs in pseudoClockQueue */
+	while(!emptyProcQ(&pseudoClockQueue)){
+		softBlockCount--;
+		insertProcQ(&readyQueue, removeProcQ(&pseudoClockQueue));
+	}
+}
+
 unsigned int getDeviceNumber (unsigned int interruptLine) {
     unsigned int intdevBitMap = 0x10000040; // Interrupt Line ? Interrupting Devices Bit Map
 
@@ -57,39 +99,7 @@ unsigned int getDeviceNumber (unsigned int interruptLine) {
 	return 0;
 }*/
 
-void interruptHandler(int cause){
-	
-	/* Processor Local Timer */
-	if(cause & LOCALTIMERINT) {
-		setTIMER(NEVER); // redundant operation, will be overwritten by scheduler
-		copyState(EXST, &current_process->p_s);
-		current_process->p_time += TIMESLICE;
-		insertProcQ(&readyQueue, current_process);
-		current_process = NULL;
-		scheduler();
-	}
-	
-	/* Interval Timer */
-	if(cause & TIMERINTERRUPT) {
-		/* re-set with 100 milliseconds */
-		LDIT(PSECOND);
-		/*	unlock all pcbs in pseudoClockQueue */
-		while(!emptyProcQ(&pseudoClockQueue)){
-			softBlockCount--;
-			insertProcQ(&readyQueue, removeProcQ(&pseudoClockQueue));
-		}
-		if(current_process != NULL){
-			// only if there was a process running before the interrupt
-			// load processor state stored at address BIOSDATAPAGE
-			LDST(EXST);
-		}else{
-			scheduler();
-		}
-	}
-
-
-	/* device interrupts */
-	klog_print("device interrupt\n");	
+void deviceInterrupt(int cause){
 
 	// TODO priority within same interrupt line ?
 	unsigned int interruptLine;	
@@ -135,13 +145,13 @@ void interruptHandler(int cause){
 		*((unsigned int *)(devAddrBase + 0x4)) = ACK;
 	}
 	
-/*	klog_print("dev ");
+	klog_print("dev ");
 	klog_print_dec(devNumber);
 	klog_print(" of ");
 	klog_print_dec(interruptLine);
 	klog_print(" status ");
 	klog_print_dec(devStatus);
-	klog_print("\n");*/
+	klog_print("\n");
 	
 	softBlockCount--;
 	pcb_PTR requester = devQueue[interruptLine-3][devNumber];	
@@ -156,19 +166,11 @@ void interruptHandler(int cause){
 		requester->p_s.reg_v0 = devStatus;
 		
 		insertProcQ(&readyQueue, outAnyProcQ(requester));
+		klog_print(" handled\n");
 	}else{
 		klog_print("ERR: requester NULL");
 		breakPoint();
 	}
-	
-	if(current_process != NULL){
-		// only if there was a process running before the interrupt
-		// load processor state stored at address BIOSDATAPAGE
-		LDST(EXST);
-	}else{
-		scheduler();
-	}
-	
 
 	/*
 	//find interrupt lines active in order of priority

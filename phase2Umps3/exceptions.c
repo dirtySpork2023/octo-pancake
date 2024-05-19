@@ -25,8 +25,6 @@ void exceptionHandler(void){
 	unsigned int cause = getCAUSE();
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
 
-	klog_print("exception");
-		
 	if(excCode == IOINTERRUPTS)
 		interruptHandler(cause);
 	else if(excCode == SYSEXCEPTION)
@@ -49,13 +47,15 @@ void syscallHandler(void){
 		EXST->reg_v0 = sendMessage((pcb_PTR)EXST->reg_a1, &EXST->reg_a2, current_process);
 	}else if(EXST->reg_a0 == RECEIVEMESSAGE){
 		EXST->reg_v0 = (unsigned int)receiveMessage((pcb_PTR)EXST->reg_a1, (unsigned int *)EXST->reg_a2);
+	}else{
+		klog_print("ERR strange syscall");
 	}
 	
 	EXST->pc_epc += WORDLEN;
 	LDST(EXST);
 }
 
-void checkUserMode(void){
+void enforceKernelMode(void){
 	if((EXST->status & USERPON) != 0){
 		/* syscall only available in kernel mode
 		 * change excCode to Reserved Instruction (10) */
@@ -70,7 +70,7 @@ void checkUserMode(void){
 SYSCALL(SENDMESSAGE, (unsigned int)destination, (unsigned int)payload, 0);
 */
 int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
-	checkUserMode();
+	enforceKernelMode();
 	
 	if(dest == SSIADDRESS) dest = ssi_pcb;
 	
@@ -84,11 +84,11 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 	msg->m_payload = *payload;
 	
 	if(searchProcQ(&pcbFree_h, dest) == dest){
-		//klog_print("ERR: dest pcb dead\n");
+		klog_print("ERR: dest pcb dead\n");
 		return DEST_NOT_EXIST;
 	}
 	/*if(dest != ssi_pcb && sender != ssi_pcb)*/
-		klog_print("sent ");
+		klog_print("Sent ");
 
 	/* pcb blocked on receive is put in ready state */
 	if(searchProcQ(&receiveMessageQueue, dest) == dest){
@@ -97,11 +97,6 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 
 	pushMessage(&dest->msg_inbox, msg);
 
-	/* move dest pcb in head of ready queue ?
-	if( dest = outProcQ(&readyQueue, dest) == dest){
-		//	searchProcQ(&readyQueue, dest) == dest){
-		insertChild(&readyQueue, dest, 1);
-	}*/
 	return 0;
 }
 
@@ -109,7 +104,7 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 SYSCALL(RECEIVEMESSAGE, (unsigned int)sender, (unsigned int)payload, 0);
 */
 pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
-	checkUserMode();
+	enforceKernelMode();
 	
 	/* assuming ANYMESSAGE == NULL */
 	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);

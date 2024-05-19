@@ -8,6 +8,11 @@
 #include "scheduler.h"
 
 void interruptHandler(int cause);
+
+void processorLocalTimer(); 
+void intervalTimer();
+void deviceInterrupt(int cause);
+
 unsigned int getDeviceNumber (unsigned int interruptLine);
 
 #endif

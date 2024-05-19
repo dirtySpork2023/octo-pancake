@@ -28,9 +28,9 @@ void systemServiceInterface(){
 }
 
 void SSIRequest(pcb_t* sender, int service, void* arg){
-/*	klog_print("SSI request ");
+	klog_print("SSI request ");
 	klog_print_dec(service);
-	klog_print("\n");*/
+	klog_print("\n");
 	// TODO make if statements
 	switch(service){
 		case CREATEPROCESS:
@@ -94,14 +94,6 @@ pcb_PTR outDevQ(pcb_PTR doomed){
 void killProcess(pcb_PTR doomed, pcb_PTR sender){
 	if(doomed == NULL) doomed = sender;
 
-/*	struct list_head p_list;
-    struct pcb_t *p_parent;
-    struct list_head p_child;
-    struct list_head p_sib;
-
-	p_child list is the sentinel element of p_sib list
-*/
-
 	if(searchProcQ(&pcbFree_h, doomed) == doomed){
 		// doomed pcb already killed
 		return;
@@ -147,9 +139,9 @@ void doIO(ssi_do_io_PTR arg, pcb_PTR sender){
 
 	devQueue[intLineNo][devNo] = outAnyProcQ(sender);
 	
-/*	klog_print("blocked pcb ");
+	klog_print("blocked pcb ");
 	klog_print_dec(sender->p_pid);
-	klog_print(" for I/O\n");*/
+	klog_print(" for I/O\n");
 
 	*arg->commandAddr = arg->commandValue;
 }

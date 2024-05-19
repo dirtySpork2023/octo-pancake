@@ -27,19 +27,20 @@ void scheduler(){
 			/* all pcbs are waiting for an I/O operation to complete */
 			unsigned int waitStatus = getSTATUS();
 			/* enable all interrupts and disable PLT */
-			waitStatus |= IMON | IEPON;
-			waitStatus &= !TEBITON;
+			waitStatus = ALLOFF | IMON | IEPON | IECON;
 			setSTATUS(waitStatus);
-			klog_print("WAIT STATE ");
+			klog_print("WAIT STATE\n");
 			WAIT(); /* enter a Wait State */
-			klog_print_hex(getSTATUS());
-			klog_print("HAPPENED\n");
-			// TODO why the fuck is the wait state not waiting and why the fuck is the device not interrupting god fucking fuck
-			scheduler();
+			klog_print("|");
+			klog_print_hex(getCAUSE());
+			klog_print(" ?HAPPENED\n");		
+			exceptionHandler();
+			// TODO why the fuck is wrong with the interrupts
 		}else if(process_count > 0 && softBlockCount == 0){
 			/* deadlock */
-			klog_print("DEADLOCK PANIC STATE\n");
-			PANIC(); /* PANIC BIOS service/instruction*/
+		//	klog_print("DEADLOCK PANIC STATE\n");
+		//	PANIC(); /* PANIC BIOS service/instruction*/
+			WAIT();
 		}else{
 			klog_print("ERR: empty ready queue\n");
 			breakPoint();
@@ -48,9 +49,9 @@ void scheduler(){
 
 	current_process = removeProcQ(&readyQueue);
 	
-	klog_print("pcb");
+	klog_print("[p");
 	klog_print_dec(current_process->p_pid);
-	klog_print(": ");
+	klog_print("] ");
 	
 	/* load round-robin timeslice into Processor's Local Timer */
 	setTIMER(TIMESLICE);
