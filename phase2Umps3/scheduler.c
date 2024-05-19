@@ -28,27 +28,14 @@ void scheduler(){
 			HALT(); /* HALT BIOS service/instruction */
 		}else if(process_count > 1 && softBlockCount > 0){
 			/* all pcbs are waiting for an I/O operation to complete */
-			unsigned int waitStatus = getSTATUS();
+			//klog_print("WAIT STATE\n");
 			/* enable all interrupts and disable PLT */
-			waitStatus = ALLOFF | IMON | IEPON | IECON;
-			setSTATUS(waitStatus);
-			klog_print("WAIT STATE\n");
+			setSTATUS(ALLOFF | IMON | IEPON | IECON);
 			WAIT(); /* enter a Wait State */
-			klog_print("|");
-			klog_print_hex(getCAUSE());
-			klog_print(" ?HAPPENED\n");		
-			exceptionHandler();
-			// TODO why the fuck is wrong with the interrupts
 		}else if(process_count > 0 && softBlockCount == 0){
 			/* deadlock */
-		//	klog_print("DEADLOCK PANIC STATE\n");
-		//	PANIC(); /* PANIC BIOS service/instruction*/
-			if(emptyProcQ(&receiveMessageQueue))
-				klog_print("no pcb waiting for message!\n");
-			klog_print("tmp WAIT STATE\n");
-			// ci sono errori nella gestione del softBlockCount
-			setSTATUS(ALLOFF | IMON | IEPON | IECON);	
-			WAIT();
+			klog_print("DEADLOCK PANIC STATE\n");
+			PANIC(); /* PANIC BIOS service/instruction*/
 		}else{
 			klog_print("ERR: empty ready queue\n");
 			breakPoint();
@@ -56,11 +43,13 @@ void scheduler(){
 	}
 
 	current_process = removeProcQ(&readyQueue);
-	
+
+	#ifdef DEBUG then
 	klog_print("[p");
 	klog_print_dec(current_process->p_pid);
 	klog_print("] ");
-	
+	#endif
+
 	/* load round-robin timeslice into Processor's Local Timer */
 	setTIMER(TIMESLICE);
 	

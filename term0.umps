@@ -5,7 +5,7 @@ p2 is OK
 p1 knows p2 ended
 p3 started correctly
 p3 - CLOCKWAIT OK
-ERROR: p3 - CPU time incorrectly maintained
+p3 - CPU time correctly maintained
 p1 knows p3 ended
 hp_p1 starts
 first incarnation of p4 starts

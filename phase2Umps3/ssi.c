@@ -28,18 +28,20 @@ void systemServiceInterface(){
 }
 
 void SSIRequest(pcb_t* sender, int service, void* arg){
+	#ifdef DEBUG then
 	klog_print("SSI request ");
 	klog_print_dec(service);
 	klog_print("\n");
+	#endif
+
 	// TODO make if statements
 	switch(service){
 		case CREATEPROCESS:
 			createProcess(arg, sender);
 			break;
 		case TERMPROCESS:
-			// TODO put in one function
 			killProcess(arg, sender);
-			if(arg !=NULL)
+			if(arg != NULL)
 				SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
 			break;
 		case DOIO:
@@ -60,7 +62,6 @@ void SSIRequest(pcb_t* sender, int service, void* arg){
 		default:	
 			klog_print("invalid SSI service\n");
 			killProcess(sender, sender);
-			breakPoint();
 	}
 }
 
@@ -103,7 +104,7 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 	// remove from sibling list
 	outChild(doomed);
 
-	// kill all children
+	// kill all children recursively
 	while(!emptyChild(doomed)){
 		killProcess(removeChild(doomed), NULL);
 	}
@@ -121,10 +122,12 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 		softBlockCount--;
 		outDevQ(doomed);
 	}
-	
+
+	#ifdef DEBUG then	
 	klog_print("killing pcb ");
 	klog_print_dec(doomed->p_pid);
 	klog_print("\n");
+	#endif
 
 	process_count--;
 	freePcb(doomed);
@@ -138,10 +141,12 @@ void doIO(ssi_do_io_PTR arg, pcb_PTR sender){
 	softBlockCount++;
 
 	devQueue[intLineNo][devNo] = outAnyProcQ(sender);
-	
+
+	#ifndef DEBUG then
 	klog_print("blocked pcb ");
 	klog_print_dec(sender->p_pid);
 	klog_print(" for I/O\n");
+	#endif
 
 	*arg->commandAddr = arg->commandValue;
 }

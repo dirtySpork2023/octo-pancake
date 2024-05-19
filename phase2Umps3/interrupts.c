@@ -144,7 +144,8 @@ void deviceInterrupt(int cause){
 		// COMMAND = (base) + 0x4)
 		*((unsigned int *)(devAddrBase + 0x4)) = ACK;
 	}
-	
+
+	#ifdef DEBUG then	
 	klog_print("dev ");
 	klog_print_dec(devNumber);
 	klog_print(" of ");
@@ -152,7 +153,8 @@ void deviceInterrupt(int cause){
 	klog_print(" status ");
 	klog_print_dec(devStatus);
 	klog_print("\n");
-	
+	#endif
+
 	softBlockCount--;
 	pcb_PTR requester = devQueue[interruptLine-3][devNumber];	
 	

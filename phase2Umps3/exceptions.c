@@ -84,11 +84,11 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 	msg->m_payload = *payload;
 	
 	if(searchProcQ(&pcbFree_h, dest) == dest){
-		klog_print("ERR: dest pcb dead\n");
+		//klog_print("ERR: dest pcb dead\n");
 		return DEST_NOT_EXIST;
 	}
-	/*if(dest != ssi_pcb && sender != ssi_pcb)*/
-		klog_print("Sent ");
+	/*if(dest != ssi_pcb && sender != ssi_pcb)
+		klog_print("Sent ");*/
 
 	/* pcb blocked on receive is put in ready state */
 	if(searchProcQ(&receiveMessageQueue, dest) == dest){
@@ -119,13 +119,13 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 		scheduler();
 		return NULL; // for compiler
 	}else{
-		/*if(msg->m_sender != ssi_pcb && current_process != ssi_pcb){*/
+		/*if(msg->m_sender != ssi_pcb && current_process != ssi_pcb){
 			klog_print("msg from ");
 			klog_print_dec(msg->m_sender->p_pid);
 			klog_print(" to ");
 			klog_print_dec(current_process->p_pid);
 			klog_print("\n");
-		//}*/
+		}*/
 
 		freeMsg(msg); // il messaggio rimane accessibile
 		if(payload != NULL) *payload = msg->m_payload;
