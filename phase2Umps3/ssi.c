@@ -142,7 +142,7 @@ void doIO(ssi_do_io_PTR arg, pcb_PTR sender){
 
 	devQueue[intLineNo][devNo] = outAnyProcQ(sender);
 
-	#ifndef DEBUG then
+	#ifdef DEBUG then
 	klog_print("blocked pcb ");
 	klog_print_dec(sender->p_pid);
 	klog_print(" for I/O\n");

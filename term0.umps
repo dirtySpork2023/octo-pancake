@@ -1,7 +1,8 @@
 Don't Panic.
 p2 started correctly
 p2 get pid successfully
-p2 is OK
+ERROR: more cpu time than real time
+p2 blew it!
 p1 knows p2 ended
 p3 started correctly
 p3 - CLOCKWAIT OK
@@ -27,13 +28,13 @@ child2 starts
 Address Error (as expected): non-kuseg access w/KU=1
 leaf process (4) starts
 p5sys enter
-leaf process (3) starts
 High level SYS call from kernel mode process
-child1 starts
+leaf process (3) starts
 p5 ok
+child1 starts
+p7 starts
 leaf process (2) starts
 leaf process (1) starts
-p7 starts
 p6 starts
 p8root starts
 child1 starts
