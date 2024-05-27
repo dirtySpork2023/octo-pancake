@@ -44,7 +44,7 @@ void scheduler(){
 
 	current_process = removeProcQ(&readyQueue);
 
-	#ifdef DEBUG then
+	#ifdef DEBUG
 	klog_print("[p");
 	klog_print_dec(current_process->p_pid);
 	klog_print("] ");

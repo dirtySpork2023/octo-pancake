@@ -11,6 +11,7 @@ void systemServiceInterface();
 void SSIRequest(pcb_t* sender, int service, void* arg);
 
 void createProcess(ssi_create_process_PTR, pcb_PTR);
+void killCall(void* arg, pcb_PTR sender);
 void killProcess(pcb_PTR, pcb_PTR);
 void doIO(ssi_do_io_PTR, pcb_PTR sender);
 void getTime(pcb_PTR);

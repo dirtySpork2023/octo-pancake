@@ -28,40 +28,23 @@ void systemServiceInterface(){
 }
 
 void SSIRequest(pcb_t* sender, int service, void* arg){
-	#ifdef DEBUG then
+	#ifdef DEBUG
 	klog_print("SSI request ");
 	klog_print_dec(service);
 	klog_print("\n");
 	#endif
 
 	// TODO make if statements
-	switch(service){
-		case CREATEPROCESS:
-			createProcess(arg, sender);
-			break;
-		case TERMPROCESS:
-			killProcess(arg, sender);
-			if(arg != NULL)
-				SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
-			break;
-		case DOIO:
-			doIO(arg, sender);
-			break;
-		case GETTIME:
-			getTime(sender);
-			break;
-		case CLOCKWAIT:
-			waitForClock(sender);
-			break;
-		case GETSUPPORTPTR:
-			getSupportStruct(sender);
-			break;
-		case GETPROCESSID:
-			getPID(arg, sender);
-			break;
-		default:	
-			klog_print("invalid SSI service\n");
-			killProcess(sender, sender);
+	if(		service == CREATEPROCESS) createProcess(arg, sender);
+	else if(service == TERMPROCESS	) killCall(arg, sender);
+	else if(service == DOIO			) doIO(arg, sender);
+	else if(service == GETTIME		) getTime(sender);
+	else if(service == CLOCKWAIT	) waitForClock(sender);
+	else if(service == GETSUPPORTPTR) getSupportStruct(sender);
+	else if(service == GETPROCESSID	) getPID(arg, sender);
+	else{
+		klog_print("invalid SSI service\n");
+		killProcess(sender, sender);
 	}
 }
 
@@ -90,6 +73,12 @@ pcb_PTR outDevQ(pcb_PTR doomed){
 		}
 	}
 	return NULL;
+}
+
+void killCall(void* arg, pcb_PTR sender){
+	killProcess(arg, sender);
+	if(arg != NULL)
+		SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
 }
 
 void killProcess(pcb_PTR doomed, pcb_PTR sender){
@@ -123,7 +112,7 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 		outDevQ(doomed);
 	}
 
-	#ifdef DEBUG then	
+	#ifdef DEBUG
 	klog_print("killing pcb ");
 	klog_print_dec(doomed->p_pid);
 	klog_print("\n");
@@ -142,7 +131,7 @@ void doIO(ssi_do_io_PTR arg, pcb_PTR sender){
 
 	devQueue[intLineNo][devNo] = outAnyProcQ(sender);
 
-	#ifdef DEBUG then
+	#ifdef DEBUG
 	klog_print("blocked pcb ");
 	klog_print_dec(sender->p_pid);
 	klog_print(" for I/O\n");

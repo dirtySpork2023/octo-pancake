@@ -71,10 +71,6 @@ unsigned int getDeviceNumber (unsigned int interruptLine) {
 }
 
 /*
- * non so se ho sbagliato io a fare merge
- * funzionava da dio prima che lo fixxavi
- * ma se vuoi usare il bit shifting invece dello switch fai pure 
- * 
 unsigned int getDeviceNumber (unsigned int interruptLine) {
 	unsigned int intdevBitMap = 0x10000040; // Interrupt Line ? Interrupting Devices Bit Map
 
@@ -84,18 +80,12 @@ unsigned int getDeviceNumber (unsigned int interruptLine) {
 	
 	for (int i = 0; i < 8; i++) {
 		if(intdevBitMap & mask) { // the last 8 bits represent the device number
-        	case DEV0ON: return 0;
-     		case DEV1ON: return 1;
-        	case DEV2ON: return 2;
-        	case DEV3ON: return 3;
-        	case DEV4ON: return 4;
-			case DEV5ON: return 5;
-			case DEV6ON: return 6;
-			case DEV7ON: return 7;
+        	return i;
 		}
 		mask = mask << 1;
 	}
 	// if all cases fail, default to 0
+	klog_print("ERR getDeviceNumber failed");
 	return 0;
 }*/
 
@@ -145,7 +135,7 @@ void deviceInterrupt(int cause){
 		*((unsigned int *)(devAddrBase + 0x4)) = ACK;
 	}
 
-	#ifdef DEBUG then	
+	#ifdef DEBUG
 	klog_print("dev ");
 	klog_print_dec(devNumber);
 	klog_print(" of ");
