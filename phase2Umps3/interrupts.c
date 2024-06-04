@@ -56,7 +56,7 @@ unsigned int getDeviceNumber (unsigned int interruptLine) {
     unsigned int intdevBitMap = 0x10000040; // Interrupt Line ? Interrupting Devices Bit Map
 
     intdevBitMap = intdevBitMap + ((interruptLine - 3) * 0x04);
-    //find the device number [Tip: to calculate the device number you can use a switch among constan    ts DEVxON]
+    //find the device number
 	switch(intdevBitMap & 0x000000FF) { // the last 8 bits represent the device number
         case DEV0ON: return 0;
         case DEV1ON: return 1;
@@ -70,9 +70,9 @@ unsigned int getDeviceNumber (unsigned int interruptLine) {
 	}
 }
 
-/*
+/* 
 unsigned int getDeviceNumber (unsigned int interruptLine) {
-	unsigned int intdevBitMap = 0x10000040; // Interrupt Line ? Interrupting Devices Bit Map
+	unsigned int intdevBitMap = 0x10000040;
 
 	intdevBitMap = intdevBitMap + ((interruptLine - 3) * 0x04);
 	//find the device number [Tip: to calculate the device number you can use a switch among constants DEVxON]
@@ -115,16 +115,24 @@ void deviceInterrupt(int cause){
 	
 	unsigned int devStatus;
 	if(interruptLine == TERMINT){
-		// terminal device has two command and two status registers
+		// terminal device has two command and two status registers that operate independently and concurrently
 		// both must be handled before acknowledging the interrupt
-		// TODO adesso è hard coded solo per trasmettere
 		
-		// save off the status code from the device’s register
-		// from bits 0-7 of TRANSM_STATUS register (base+0x8)
-		devStatus = *((unsigned int *)(devAddrBase + 0x8)) & 0x000000FF; 
-		// acknowledge the interrupt
-		// TRANSM_COMMAND = (base) + 0xc
-		*((unsigned int *)(devAddrBase + 0xc)) = ACK;
+		// transmitter subdevice
+		devStatus = *((unsigned int *)(devAddrBase + 0x8)) & 0x000000FF;
+		if (devStatus == OKCHARTRANS) {
+			// TRANSM_COMMAND = (base) + 0xc
+			*((unsigned int *)(devAddrBase + 0xc)) = ACK;
+		} else {
+			// receiver subdevice
+			devStatus = *((unsigned int *)(devAddrBase + 0x0)) & 0x000000FF;
+			if (devStatus == CHARRECV) {
+				// RECV_COMMAND = (base) + 0x4
+				*((unsigned int *)(devAddrBase + 0x4)) = ACK;
+			}
+		}
+
+		
 	}else{
 		// save off the status code from the device’s register
 		// STATUS = (base) + 0x0
@@ -163,49 +171,4 @@ void deviceInterrupt(int cause){
 		breakPoint();
 	}
 
-	/*
-	//find interrupt lines active in order of priority
-	if(cause & DISKINTERRUPT) {
-		// find the address for this device's device register
-		devNumber = getDeviceNumber(DISKINT);
-		// devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
-		devAddrBase = DEVADDR + ((DISKINT - 3) * 0x80) + (devNumber * 0x10);
-
-		// save off the status code from the device’s device register
-		// (base) + 0x0
-		devStatus = *((unsigned int *)devAddrBase);
-
-		//acknowledge the interrupt (COMMAND is found at address (base) + 0x4)
-		*((unsigned int *)(devAddrBase + 0x4)) = ACK;
-
-		requester = devQueue[DISKINT][devNumber];	
-	    devQueue[DISKINT][devNumber] = NULL;
-		if(requester != NULL){
-			requester->p_s.reg_v0 = devStatus;
-			sendMessage(requester, devStatus);
-			insertProcQ(&readyQueue, requester);
-		}
-		LDST((state_t *)BIOSDATAPAGE);
-	}
-
-	if(cause & FLASHINTERRUPT){
-		devNumber = getDeviceNumber(FLASHINT);
-		devAddrBase = DEVADDR + ((FLASHINT - 3) * 0x80) + (devNumber * 0x10);
-		devStatus = *((unsigned int *)devAddrBase);
-		*((unsigned int *)(devAddrBase + 0x4)) = ACK;
-		// ...
-	}
-
-	if(cause & PRINTINTERRUPT){
-		devNumber = getDeviceNumber(PRNTINT);
-		devAddrBase = 0x10000054 + ((PRNTINT - 3) * 0x80) + (devNumber * 0x10);
-		devStatus = *((unsigned int *)devAddrBase);
-		*((unsigned int *)(devAddrBase + 0x4)) = ACK;
-		// ...
-		
-	}
-	if(cause & TERMINTERRUPT){
-		// terminal devices have different formats
-		
-	}*/
 }
