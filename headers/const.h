@@ -7,7 +7,7 @@
  *
  ****************************************************************************/
 
-#include <umps3/umps/const.h>
+#include <umps/const.h>
 
 /* Number of semaphore's device */
 #define SEMDEVLEN 49
@@ -24,8 +24,6 @@
 #define TODLOADDR     0x1000001C
 #define INTERVALTMR   0x10000020
 #define TIMESCALEADDR 0x10000024
-#define DEVADDR       0x10000054
-#define TERMADDR      0x10000254
 
 /* Memory related constants */
 #define KSEG0        0x00000000
@@ -42,14 +40,17 @@
 
 /* Mikeyg Added constants */
 
-#define MAXPROC 40
-#define MAXMESSAGES 40
+#define MAXPROC 50
+#define MAXMESSAGES 50
 
 #define ANYMESSAGE 0
 #define MSGNOGOOD -1
 #define DEST_NOT_EXIST -2
 #define SENDMESSAGE -1
 #define RECEIVEMESSAGE -2
+
+#define SENDMSG 1
+#define RECEIVEMSG 2
 
 #define CREATEPROCESS 1
 #define TERMPROCESS   2
@@ -58,6 +59,11 @@
 #define CLOCKWAIT     5
 #define GETSUPPORTPTR 6
 #define GETPROCESSID  7
+
+#define GET_TOD 1
+#define TERMINATE 2
+#define WRITEPRINTER 3
+#define WRITETERMINAL 4
 
 /* Status register constants */
 #define ALLOFF      0x00000000
@@ -84,6 +90,7 @@
 #define BREAKEXCEPTION 9
 #define PRIVINSTR      10
 #define CAUSESHIFT     2
+
 
 /* EntryLO register (NDVG) constants */
 #define DIRTYON  0x00000400
