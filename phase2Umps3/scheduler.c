@@ -51,8 +51,9 @@ void scheduler(){
 	#endif
 
 	/* load round-robin timeslice into Processor's Local Timer */
-	setTIMER(TIMESLICE);
-	
+	setTIMER(TIMESLICE * TIMESCALEADDR);
+	//TODO errore "nello scheduler il timeslice non è stato moltiplicato per il TIMESCALEADDR"	
+
 	/* load the processor state of the current process */
 	LDST(&current_process->p_s);
 }
