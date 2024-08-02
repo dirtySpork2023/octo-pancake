@@ -9,11 +9,25 @@ extern pcb_PTR ssi_pcb;
 extern struct list_head readyQueue;
 extern struct list_head receiveMessageQueue;
 
-/* to be replaced in phase 3 */
 void uTLB_RefillHandler(void){
-	setENTRYHI(0x80000000);
+	/* setENTRYHI(0x80000000);
 	setENTRYLO(0x00000000);
 	TLBWR();
+	LDST((state_t*) 0x0FFFF000); */
+
+	// processor state located at the start of BIOS Data Page 
+	state_t* BIOSstate = (state_t*)0x0FFFF000;
+	// prendo solo i primi 20 bit (VPN)
+	unsigned int p = (BIOSstate->entry_hi & 0xFFFFF000) >> 12;
+	
+	pteEntry_t pageTableEntry = current_process->p_supportStruct->sup_privatePgTbl[p];
+
+	// write this page table entry to the TLB
+	setENTRYHI(pageTableEntry.pte_entryHI);
+	setENTRYLO(pageTableEntry.pte_entryLO);
+	TLBWR();
+
+	// return control to the current process
 	LDST((state_t*) 0x0FFFF000);
 }
 
