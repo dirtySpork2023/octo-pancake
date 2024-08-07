@@ -23,7 +23,7 @@ void initSwapStructs() {
 
 
 // The Pager
-int TLB_exception_handler() {
+void TLB_exception_handler() {
 
     ssi_payload_t support_str_payload = {
         .service_code = GETSUPPORTPTR,
@@ -34,12 +34,13 @@ int TLB_exception_handler() {
     SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)&support_str_payload, 0);
     SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&supStruct), 0);
 
-    state_t* excState = supStruct->sup_exceptState[0].cause;
+	
+    state_t* excState = &supStruct->sup_exceptState[0];
     // if it's a TLB-Modification we treat it as a program trap
-    if (excState == 1) {
+    if (excState->cause == 1) {
         // if its in mutual exclusion release it (sendMessage)
         
-        // TODO Section 9 in sysSupport.c
+        // TODO Program trap, Section 9 in sysSupport.c
     } 
     // gain mutual exclusion over the swap table
     
