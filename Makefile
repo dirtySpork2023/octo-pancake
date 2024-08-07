@@ -31,6 +31,7 @@ VPATH = $(UMPS3_DATA_DIR)
 # Object files
 PHASE1 = ./phase1/pcb.o ./phase1/msg.o
 PHASE2 = ./phase2Umps3/initialize.o ./phase2Umps3/scheduler.o ./phase2Umps3/exceptions.o ./phase2Umps3/interrupts.o ./phase2Umps3/ssi.o
+PHASE3 = ./phase3Umps3/initProc.o ./phase3Umps3/sst.o ./phase3Umps3/sysSupport.o ./phase3Umps3/vmSupport.o
 
 .PHONY : all clean
 
@@ -39,11 +40,11 @@ all : kernel.core.umps
 kernel.core.umps : kernel
 	umps3-elf2umps -k $<
 
-kernel : $(PHASE1) $(PHASE2) klog.o ./phase2Umps3/p2test.o crtso.o libumps.o
+kernel : $(PHASE1) $(PHASE2) $(PHASE3) klog.o ./phase2Umps3/p2test.o crtso.o libumps.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 clean :
-	-rm -f *.o ./phase1/*.o ./phase2Umps3/*.o kernel kernel.*.umps
+	-rm -f *.o ./phase1/*.o ./phase2Umps3/*.o ./phase3Umps3/*.o kernel kernel.*.umps
 
 # Pattern rule for assembly modules
 %.o : %.S
