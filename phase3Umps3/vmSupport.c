@@ -12,51 +12,62 @@ int swapMutex = 1;
 static int index = 0;
 
 void initSwapStructs() {
-    // swap table (RAMSTART + (32 * PAGESIZE)); 
+	// swap table (RAMSTART + (32 * PAGESIZE)); 
+	swap_table = (memaddr)(RAMSTART + (32 * PAGESIZE));
 
-    for (int i = 0; i < POOLSIZE; i++) {
-        // ...
-        swap_table[i]->sw_asid = NOPROC; // frame unoccupied
-    }
+	for (int i = 0; i < POOLSIZE; i++) {
+		// ...
+		swap_table[i]->sw_asid = NOPROC; // frame unoccupied
+	}
 }
 /* TODO P and V  ? */
 
 
 // The Pager
+// TLB entry found but invalid =>
 void TLB_exception_handler() {
 
-    ssi_payload_t support_str_payload = {
-        .service_code = GETSUPPORTPTR,
-        .arg = NULL,
-    };
-    support_t* supStruct;
+	ssi_payload_t support_str_payload = {
+		.service_code = GETSUPPORTPTR,
+		.arg = NULL,
+	};
+	support_t* supStruct;
 
-    SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)&support_str_payload, 0);
-    SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&supStruct), 0);
+	SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)&support_str_payload, 0);
+	SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&supStruct), 0);
 
 	
-    state_t* excState = &supStruct->sup_exceptState[0];
-    // if it's a TLB-Modification we treat it as a program trap
-    if (excState->cause == 1) {
-        // if its in mutual exclusion release it (sendMessage)
-        
-        // TODO Program trap, Section 9 in sysSupport.c
-    } 
-    // gain mutual exclusion over the swap table
-    
-    // missing page number
-    unsigned int p = (excState->entry_hi & GETPAGENO) >> VPNSHIFT;
+	state_t* excState = &supStruct->sup_exceptState[0];
+	// if it's a TLB-Modification we treat it as a program trap
+	if (excState->cause == 1) {
+		// if its in mutual exclusion release it (sendMessage)
+		
+		// TODO Program trap, Section 9 in sysSupport.c
+	}
+	
+	// gain mutual exclusion over the swap table
+	
+	// missing page number
+	unsigned int p = (excState->entry_hi & GETPAGENO) >> VPNSHIFT;
 
-    int i = index;
-    index = (index + 1) % POOLSIZE;
+	static int i = index;
+	index = (index + 1) % POOLSIZE;
  
-    // if frame i is occupied
-    if (swap_table[i]->sw_asid != NOPROC) {
-        // mark it as non valid means V bit is off
-        swap_table[i]->sw_pte->pte_entryLO = swap_table[i]->sw_pte->pte_entryLO & 0xFFFFFEFF;
-        uTLB_RefillHandler();
+	// if frame i is occupied
+	if (swap_table[i]->sw_asid != NOPROC) {
+		// operations done atomically by disabling interrupts
+		//setSTATUS();
+		
+		// mark it as non valid means V bit is off
+		swap_table[i]->sw_pte->pte_entryLO &= 0xFFFFFEFF;
+		
+		//update the TLB
 
-    }
+		//re-enable interrupts
+		//setSTATUS();
+		
+		//update flash drive
+	}
 
     // ...
 

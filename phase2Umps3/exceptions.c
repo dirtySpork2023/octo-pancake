@@ -18,6 +18,7 @@ void uTLB_RefillHandler(void){
 	// processor state located at the start of BIOS Data Page 
 	state_t* BIOSstate = (state_t*)BIOSDATAPAGE;
 	// prendo solo i primi 20 bit (VPN)
+	// required Page number
 	unsigned int p = (BIOSstate->entry_hi & GETPAGENO) >> VPNSHIFT;
 	
 	pteEntry_t pageTableEntry = current_process->p_supportStruct->sup_privatePgTbl[p];
