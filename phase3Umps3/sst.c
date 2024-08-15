@@ -62,18 +62,10 @@ void SST(memaddr func){
 // number of microseconds since startup
 // SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
 unsigned int getTOD(){
-    /* 
-    getTime non e' il tempo usato da ogni process invece che il tempo trascorso totale?
-    STCK(time); // STCK(T) which takes an unsigned integer as its input parameter and populates it with the value of the low-order word of the TOD clock divided by the Time Scale
-    */
+	if( *TODHIADDR != 0 ) klog_print("low order word not sufficient for getTOD\n");
+		
 	unsigned int time;
-	ssi_payload_t get_time_payload = {
-		.service_code = GETTIME,
-		.arg = NULL,
-	};
-	SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&get_time_payload), 0);
-	SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&time), 0);
-	
+	STCK(time); // value of the low-order word of the TOD clock divided by the Time Scale
 	return time;
 }
 

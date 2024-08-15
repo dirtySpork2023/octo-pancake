@@ -21,6 +21,7 @@
 /* timer, timescale, TOD-LO and other bus regs */
 #define RAMBASEADDR   0x10000000
 #define RAMBASESIZE   0x10000004
+#define TODHIADDR	  0x1000001D
 #define TODLOADDR     0x1000001C
 #define INTERVALTMR   0x10000020
 #define TIMESCALEADDR 0x10000024
