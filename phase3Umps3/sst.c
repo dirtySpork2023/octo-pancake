@@ -1,4 +1,4 @@
-#include "headers/sst.h"
+#include "./headers/sst.h"
 
 // system service thread
 void SST(memaddr func){
@@ -62,6 +62,10 @@ void SST(memaddr func){
 // number of microseconds since startup
 // SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
 unsigned int getTOD(){
+    /* 
+    getTime non e' il tempo usato da ogni process invece che il tempo trascorso totale?
+    STCK(time); // STCK(T) which takes an unsigned integer as its input parameter and populates it with the value of the low-order word of the TOD clock divided by the Time Scale
+    */
 	unsigned int time;
 	ssi_payload_t get_time_payload = {
 		.service_code = GETTIME,
@@ -122,7 +126,7 @@ int writePrinter(sst_print_t* s){
 	return 0;
 }
 
-void writeTerminal(){
+int writeTerminal(){
 
 }
 
