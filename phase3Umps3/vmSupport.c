@@ -38,7 +38,8 @@ void V(pcb_PTR sender) {
 // exception codes 1-3 are passed up to here
 // The Pager
 // TLB entry found but invalid =>
-void TLB_exception_handler() {
+// pageFaultExceptionHandler
+void TLB_exception_handlvr() {
 
 	ssi_payload_t support_str_payload = {
 		.service_code = GETSUPPORTPTR,
