@@ -13,7 +13,7 @@ void SST(memaddr func){
     childState.status |= IEPBITON | CAUSEINTMASK | TEBITON;
 
 	/*
- support_t {
+support_t {
     int        sup_asid;                        process ID
     state_t    sup_exceptState[2];              old state exceptions
     context_t  sup_exceptContext[2];            new contexts for passing up
@@ -47,13 +47,25 @@ void SST(memaddr func){
 		// should be support level message?	
 		SYSCALL(RECEIVEMESSAGE, child_pcb, (unsigned int)(&payload), 0);
 		
-		if(payload.service_code == GET_TOD) answer = getTOD();
-		else if(payload.service_code == TERMINATE) terminate();
-		else if(payload.service_code == WRITEPRINTER) answer = writePrinter(payload.arg);
-		else if(payload.service_code == WRITETERMINAL) answer = writeTerminal(payload.arg);
+		if(payload.service_code == GET_TOD)
+			answer = getTOD();
+		else if(payload.service_code == TERMINATE)
+			terminate();
+		else if(payload.service_code == WRITEPRINTER)
+			answer = writeString(payload.arg, (devregtr *)(PRNT0ADDR + /*ASID * 0x10*/ ));
+		else if(payload.service_code == WRITETERMINAL)
+			answer = writeString(payload.arg, (devregtr *)(TERM0ADDR + /*ASID * 0x10*/ ));
 		else {
 			klog_print("invalid SST service\n");
 		}
+
+		/*
+		 * printer intLineNo = 6
+		 * terminal intLineNo = 7
+		 * DevNo = ASID (0-7)
+		 *                /---   TERM0ADDR or PRNT0ADDR    ---\     
+		 * devaddrbiase = 0x1000.0054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
+		 */
 
 		SYSCALL(SENDMESSAGE, child_pcb, answer, 0);
 	}
@@ -84,15 +96,15 @@ void terminate(){
 
 // write string to printer (or terminal) of same number as child ASID
 // SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
-int writePrinter(sst_print_t* s){
+unsigned int writeString(sst_print_t* s, devregtr* base){
 	typedef unsigned int devregtr;
 
-	devregtr *base = (devregtr *)(TERM0ADDR);
+	devregtr *base = (devregtr *)(TERM0ADDR /* +ASID+devregsize */ );
 	devregtr *command = base + 3;
     devregtr status;
-
+	
 	for(int i=0; i<s->length; i++){
-		if(*s->string == EOS) klog_print("printing EOS");
+		if(*s->string == EOS) klog_print("printing EOS\n");
 		devregtr value = PRINTCHR | (((devregtr)*s->string) << 8);
 		ssi_do_io_t do_io = {
 			.commandAddr = command,
@@ -105,21 +117,14 @@ int writePrinter(sst_print_t* s){
 		SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
 		SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
 		
-		// can this if be removed?
 		if ((status & TERMSTATMASK) != RECVD)
 			PANIC();
 
 		s->string++;
 	}
 
-
-
 	//send empty response to communicate completion of the write
 	return 0;
-}
-
-int writeTerminal(){
-
 }
 
 /*
