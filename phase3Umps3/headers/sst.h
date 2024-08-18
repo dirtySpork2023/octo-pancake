@@ -5,10 +5,10 @@
 #include <umps3/umps/types.h>
 #include "../../headers/const.h"
 #include "../../headers/types.h"
-
-#include "./headers/vmSupport.h"
-#include "./headers/sysSupport.h"
 #include "../../phase2Umps3/p2test.c" // for the constants used
+
+#include "./vmSupport.h"
+#include "./sysSupport.h"
 
 #define TERM0ADDR 0x10000254
 #define PRNT0ADDR 0x100001D4 // 0x1000.0054 + 3 * 0x80

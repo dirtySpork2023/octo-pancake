@@ -1,4 +1,12 @@
+#include "./headers/sysSupport.h"
 #define EXST supportStruct.sup_exceptState[GENERALEXCEPT]
+
+
+void klog_print();
+void klog_print_dec();
+void breakPoint();
+extern pcb_PTR current_process;
+
 
 // exception codes 4-7, 9-12, syscalls(8)  are passed up to here
 void generalExceptionHandler(){
@@ -25,10 +33,9 @@ void syscallHandler(){
 	if(EXST.reg_a0 == SENDMSG){
 		// USYS1
 		// SYSCALL(SENDMSG, (unsigned int)destination, (unsigned int)payload, 0);
-		/*if(EXST.reg_a1 == SST)
-			EXST.reg_a1 == PARENT;
+		/*
 		if(EXST.reg_a1 == PARENT)
-			EXST.reg_a1 == currentProcess->p_parent ?? si puo usare current process? */
+			EXST.reg_a1 == currentProcess->p_parent ma si puo usare current process? */
 		
 		SYSCALL(SENDMESSAGE, EXST.reg_a1, EXST.reg_a2, 0);
 	}else if(EXST.reg_a0 == RECEIVEMSG){

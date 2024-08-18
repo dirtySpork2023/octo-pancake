@@ -1,29 +1,28 @@
 #include "./headers/sst.h"
 
+void klog_print();
+void klog_print_dec();
+void breakPoint();
+extern pcb_PTR current_process;
+
 // system service thread
 void SST(memaddr func){
-	state_t childState;
-	support_t childSupport;
 	pcb_PTR child_pcb;
 	
 	// initialize the corresponding U-proc that will execute func
+	state_t childState;
     STST(&childState);
     childState.reg_sp = childState.reg_sp - QPAGE;
     childState.pc_epc = func;
     childState.status |= IEPBITON | CAUSEINTMASK | TEBITON;
 
-	/*
-support_t {
-    int        sup_asid;                        process ID
-    state_t    sup_exceptState[2];              old state exceptions
-    context_t  sup_exceptContext[2];            new contexts for passing up
-    pteEntry_t sup_privatePgTbl[USERPGTBLSIZE]; user page table
-    struct list_head s_list;
-} support_t;
-
-	// TODO initialize support struct
-	childSupport.sup_asid =
-	*/
+	support_t childSupport;
+	childSupport.sup_asid = current_process->p_supportStruct.sup_asid;
+	// sup_exceptState will fill by itself when needed (perhaps)
+	childSupport.sup_exceptContext[GENERALEXCEPT] = (memaddr) generalExceptionHandler;
+	childSupport.sup_exceptContext[PGFAULTEXCEPT] = (memaddr) TLB_exception_handlvr;
+	// sup_privatePgTbl[USERPGTBLSIZE]	
+	LIST_HEAD(childSupport.s_list);
 
 	ssi_create_process_t ssi_create_process = {
         .state = &childState,
@@ -38,23 +37,22 @@ support_t {
 
 
 	// wait for service requests and manage them
-	sst_payload_t payload = NULL;
+	sst_payload_t payload;
 	unsigned int answer;
 
 	while(TRUE){
 		// I suppose requests can only be syncronous
 	
-		// should be support level message?	
-		SYSCALL(RECEIVEMESSAGE, child_pcb, (unsigned int)(&payload), 0);
+		SYSCALL(RECEIVEMSG, child_pcb, (unsigned int)(&payload), 0);
 		
 		if(payload.service_code == GET_TOD)
 			answer = getTOD();
 		else if(payload.service_code == TERMINATE)
 			terminate();
 		else if(payload.service_code == WRITEPRINTER)
-			answer = writeString(payload.arg, (devregtr *)(PRNT0ADDR + /*ASID * 0x10*/ ));
+			answer = writeString(payload.arg, (devregtr *)(PRNT0ADDR + 0/*ASID * 0x10*/ ));
 		else if(payload.service_code == WRITETERMINAL)
-			answer = writeString(payload.arg, (devregtr *)(TERM0ADDR + /*ASID * 0x10*/ ));
+			answer = writeString(payload.arg, (devregtr *)(TERM0ADDR + 0/*ASID * 0x10*/ ));
 		else {
 			klog_print("invalid SST service\n");
 		}
@@ -63,18 +61,19 @@ support_t {
 		 * printer intLineNo = 6
 		 * terminal intLineNo = 7
 		 * DevNo = ASID (0-7)
-		 *                /---   TERM0ADDR or PRNT0ADDR    ---\     
+		 *                /---   TERM0ADDR or PRNT0ADDR    ---\
 		 * devaddrbiase = 0x1000.0054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
 		 */
 
-		SYSCALL(SENDMESSAGE, child_pcb, answer, 0);
+		SYSCALL(SENDMSG, child_pcb, answer, 0);
 	}
 }
 
 // number of microseconds since startup
 // SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
 unsigned int getTOD(){
-	if( *TODHIADDR != 0 ) klog_print("low order word not sufficient for getTOD\n");
+	unsigned int *hiTOD = (memaddr *)TODHIADDR;
+	if( *hiTOD != 0 ) klog_print("low order word not sufficient for getTOD\n");
 		
 	unsigned int time;
 	STCK(time); // value of the low-order word of the TOD clock divided by the Time Scale
@@ -99,7 +98,6 @@ void terminate(){
 unsigned int writeString(sst_print_t* s, devregtr* base){
 	typedef unsigned int devregtr;
 
-	devregtr *base = (devregtr *)(TERM0ADDR /* +ASID+devregsize */ );
 	devregtr *command = base + 3;
     devregtr status;
 	

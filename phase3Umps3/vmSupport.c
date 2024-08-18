@@ -1,5 +1,8 @@
 #include "./headers/vmSupport.h"
 
+void klog_print();
+void klog_print_dec();
+void breakPoint();
 extern pcb_PTR current_process;
 pcb_PTR ssi_pcb;
 extern int process_count;
@@ -51,7 +54,7 @@ void TLB_exception_handlvr() {
 	SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&supStruct), 0);
 
 	
-	state_t* excState = &supStruct->sup_exceptState[0];
+	state_t* excState = &supStruct->sup_exceptState[PGFAULTEXCEPT];
 	// if it's a TLB-Modification we treat it as a program trap
 	if (excState->cause == TLBMOD) {
 		// if its in mutual exclusion release it (sendMessage)
