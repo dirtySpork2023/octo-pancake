@@ -33,14 +33,14 @@ void syscallHandler(){
 	if(EXST.reg_a0 == SENDMSG){
 		// USYS1
 		// SYSCALL(SENDMSG, (unsigned int)destination, (unsigned int)payload, 0);
-		/*
 		if(EXST.reg_a1 == PARENT)
-			EXST.reg_a1 == currentProcess->p_parent ma si puo usare current process? */
+			EXST.reg_a1 == currentProcess->p_parent;
 		
 		SYSCALL(SENDMESSAGE, EXST.reg_a1, EXST.reg_a2, 0);
 	}else if(EXST.reg_a0 == RECEIVEMSG){
 		// USYS2
 		// SYSCALL(RECEIVEMSG, (unsigned int)sender, (unsigned int)payload, 0);
+		
 		SYSCALL(RECEIVEMESSAGE, EXST.reg_a1, EXST.reg_a2, 0);
 	}else{
 		klog_print("ERR strange Usyscall");
