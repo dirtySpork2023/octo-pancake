@@ -8,8 +8,12 @@ static int index = 0;
 
 void initSwapStructs() {
 	// swap table (RAMSTART + (32 * PAGESIZE)); 
-    // inizializzare ogni indice?
-	swap_table[0] = (memaddr)(RAMSTART + (32 * PAGESIZE));
+
+    swapPCB->p_s.pc_epc = (memaddr)waitsignal;
+    swapPCB->p_s.reg_t9 = (memaddr)waitsignal;
+
+    
+	// swap_table[0] = (memaddr)(RAMSTART + (32 * PAGESIZE));
 
     swapMutex = 1;
 	for (int i = 0; i < POOLSIZE; i++) {
@@ -17,23 +21,44 @@ void initSwapStructs() {
 	}
 }
 
-void P(pcb_PTR sender) {
-    // ...
+// ho dei dubbi
+void waitsignal() {
+    unsigned int payload = NULL;
+	pcb_PTR sender;
 
-    SYSCALL(SENDMSG, (unsigned int)swapPCB, (unsigned int)0, 0);
+    while(TRUE) {
+        sender = (pcb_PTR)SYSCALL(RECEIVEMSG, ANYMESSAGE, (unsigned int)(&payload), 0);
+        if (&payload == 3) P(sender);
+        else if (&payload == 4) V(sender);
+    }
+}
+
+void P(pcb_PTR sender) {
+    if (swapMutex > 0) {
+        swapMutex--;
+    } else {
+        insertProcQ(&receiveMessageQueue, &sender);
+        // wait? ...
+
+    }
+    SYSCALL(SENDMSG, (unsigned int)swapPCB, 0, 0);
 }
 
 void V(pcb_PTR sender) {
-    // ...
+    if (emptyProcQ(&receiveMessageQueue)) {
+        swapMutex++;
 
-    SYSCALL(SENDMSG, (unsigned int)swapPCB, (unsigned int)0, 0);
+    } else {
+        // sveglia ? ...
+        sender = removeProcQ(&receiveMessageQueue);
+    }
+    SYSCALL(SENDMSG, (unsigned int)swapPCB, 0, 0);
 }
 
 
 // exception codes 1-3 are passed up to here
-// The Pager
 // TLB entry found but invalid =>
-// TLB_exception_handlvr
+// TLB_exception_handler
 void pageFaultExceptionHandler() {
 
 	ssi_payload_t support_str_payload = {
@@ -52,10 +77,13 @@ void pageFaultExceptionHandler() {
 		// if its in mutual exclusion release it (sendMessage)
 		
 		// TODO Program trap, Section 9 in sysSupport.c
+        programTrapsHandler();
 	}
 	
 	// gain mutual exclusion over the swap table
-	
+	SYSCALL(SENDMSG, (unsigned int)swapPCB, 3, 0);
+
+
 	// missing page number
 	unsigned int p = (excState->entry_hi & GETPAGENO) >> VPNSHIFT;
 
@@ -66,7 +94,7 @@ void pageFaultExceptionHandler() {
 	// if frame i is occupied
 	if (swap_table[i]->sw_asid != NOPROC) {
 		// operations done atomically by disabling interrupts
-		//setSTATUS();
+	    setSTATUS(DISABLEINTS);
 		
 		// mark it as non valid means V bit is off
 		swap_table[i]->sw_pte->pte_entryLO &= 0xFFFFFEFF;
@@ -78,17 +106,18 @@ void pageFaultExceptionHandler() {
         TLBCLR();
 
 		//re-enable interrupts
-		//setSTATUS();
+		setSTATUS(IECON);
 		
 		//update flash drive
         // 1
+        
 
         // 2, doIO service
         // DATA0 (base) + 0x8
         unsigned int response;
 
         ssi_do_io_t do_io_struct = {
-            //.commandAddr = , 
+            .commandAddr = , 
             .commandValue = FLASHWRITE,
         };
         ssi_payload_t payload = {
@@ -100,11 +129,22 @@ void pageFaultExceptionHandler() {
 		SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&response), 0);
         
         // if errors, treat as program trap
-        if (response >= 4) {
-            trapExcHandler();
+        if (response == 2 || response >= 4) {
+            programTrapsHandler();
         }
 	}
     // read the content of cp backing store
+    unsigned int response;
+
+    ssi_do_io_t do_io_struct = {
+        //.commandAddr = , 
+        .commandValue = FLASHREAD,
+    };
+    //...
+
+    if (response == 2 || response >= 4) {
+        programTrapsHandler();
+    }
 
     // update the swap pool table's entry i
     // swap_table[i]->sw_pte = ;
@@ -117,8 +157,9 @@ void pageFaultExceptionHandler() {
     // update tlb
     TLBCLR(); // to modify when all is done
 
-    // release mutual exclusion (TODO)
-    SYSCALL(SENDMSG, (unsigned int)swapPCB, (unsigned int)0, 0);
+
+    // release mutual exclusion
+    SYSCALL(SENDMSG, (unsigned int)swapPCB, 4, 0);
 
     LDST(&current_process->p_s);
 }

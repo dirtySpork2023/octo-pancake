@@ -14,6 +14,8 @@
 #define TERM0ADDR 0x10000254
 #define PRNT0ADDR 0x100001D4 // 0x1000.0054 + 3 * 0x80
 
+extern pcb_PTR current_process;
+
 void SST();
 unsigned int getTOD();
 void terminate();

@@ -3,7 +3,7 @@
 // system service thread
 void SST(){
 	pcb_PTR child_pcb;
-	unsigned int asid = current_process->p_supportStruct.sup_asid;
+	unsigned int asid = current_process->p_supportStruct->sup_asid;
 	
 	// initialize the corresponding U-proc
 	state_t childState;
@@ -20,7 +20,7 @@ void SST(){
 
 
 	// wait for service requests and manage them
-	sst_payload_t payload;
+	ssi_payload_t payload;
 	unsigned int answer;
 
 	while(TRUE){

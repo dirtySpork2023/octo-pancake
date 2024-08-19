@@ -28,8 +28,8 @@ void initSupportStruct(support_t *supportStruct, unsigned int asid){
 	supportStruct->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pageFaultExceptionHandler;
 	supportStruct->sup_exceptContext[GENERALEXCEPT].status = ALLOFF | IEPBITON | CAUSEINTMASK | TEBITON;
 	supportStruct->sup_exceptContext[PGFAULTEXCEPT].status = ALLOFF | IEPBITON | CAUSEINTMASK | TEBITON;
-	supportStruct->sup_exceptContext[GENERALEXCEPT].stackPtr = &(supportStruct.sup_stackGen[499]);
-	supportStruct->sup_exceptContext[PGFAULTEXCEPT].stackPtr = &(supportStruct.sup_stackGen[499]);
+	supportStruct->sup_exceptContext[GENERALEXCEPT].stackPtr = &(supportStruct->sup_stackGen[499]);
+	supportStruct->sup_exceptContext[PGFAULTEXCEPT].stackPtr = &(supportStruct->sup_stackGen[499]);
 	// sup_privatePgTbl[USERPGTBLSIZE] ? TODO
 }
 

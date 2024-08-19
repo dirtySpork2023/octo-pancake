@@ -6,6 +6,13 @@
 #include "../../headers/const.h"
 #include "../../headers/types.h"
 
+#include "./sysSupport.h"
+#include "./vmSupport.h"
+#include "../../phase2Umps3/p2test.c"
+
+extern pcb_PTR ssi_pcb;
+extern pcb_PTR child_pcb;
+
 void newProc(state_t *procState, support_t *procSupport);
 
 void test();
