@@ -1,13 +1,5 @@
 #include "./headers/vmSupport.h"
 
-void klog_print();
-void klog_print_dec();
-void breakPoint();
-extern pcb_PTR current_process;
-pcb_PTR ssi_pcb;
-extern int process_count;
-extern struct list_head receiveMessageQueue;
-
 struct swap_t* swap_table[POOLSIZE];
 pcb_PTR swapPCB;
 int swapMutex;
@@ -41,8 +33,8 @@ void V(pcb_PTR sender) {
 // exception codes 1-3 are passed up to here
 // The Pager
 // TLB entry found but invalid =>
-// pageFaultExceptionHandler
-void TLB_exception_handlvr() {
+// TLB_exception_handlvr
+void pageFaultExceptionHandler() {
 
 	ssi_payload_t support_str_payload = {
 		.service_code = GETSUPPORTPTR,

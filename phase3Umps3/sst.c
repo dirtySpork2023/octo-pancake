@@ -1,39 +1,22 @@
 #include "./headers/sst.h"
 
-void klog_print();
-void klog_print_dec();
-void breakPoint();
-extern pcb_PTR current_process;
-
 // system service thread
-void SST(memaddr func){
+void SST(){
 	pcb_PTR child_pcb;
+	unsigned int asid = current_process->p_supportStruct.sup_asid;
 	
-	// initialize the corresponding U-proc that will execute func
+	// initialize the corresponding U-proc
 	state_t childState;
-    STST(&childState);
-    childState.reg_sp = childState.reg_sp - QPAGE;
-    childState.pc_epc = func;
-    childState.status |= IEPBITON | CAUSEINTMASK | TEBITON;
+    STST(&childState); // copy of SST state
+    childState.reg_sp = USERSTACKTOP;
+    childState.pc_epc = UPROCSTARTADDR;
+	childState.reg_t9 = UPROCSTARTADDR;
+    childState.status |= USERPON | IEPBITON | CAUSEINTMASK | TEBITON;
+	childState.entry_hi = asid << ASIDSHIFT;
 
 	support_t childSupport;
-	childSupport.sup_asid = current_process->p_supportStruct.sup_asid;
-	// sup_exceptState will fill by itself when needed (perhaps)
-	childSupport.sup_exceptContext[GENERALEXCEPT] = (memaddr) generalExceptionHandler;
-	childSupport.sup_exceptContext[PGFAULTEXCEPT] = (memaddr) TLB_exception_handlvr;
-	// sup_privatePgTbl[USERPGTBLSIZE]	
-	LIST_HEAD(childSupport.s_list);
-
-	ssi_create_process_t ssi_create_process = {
-        .state = &childState,
-        .support = &childSupport,
-    };
-    ssi_payload_t payload = {
-        .service_code = CREATEPROCESS,
-        .arg = &ssi_create_process,
-    };
-    SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)&payload, 0);
-    SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&child_pcb), 0);
+	initSupportStruct(&childSupport, asid);
+	newProc(&childState, &childSupport);
 
 
 	// wait for service requests and manage them
@@ -83,14 +66,10 @@ unsigned int getTOD(){
 // terminate SST and child after sending message to test
 // SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
 void terminate(){
-	// TODO message to test
+	// notify test process
+	SYSCALL(SENDMESSAGE, PARENT, 0, 0);
 
-	ssi_payload_t term_process_payload = {
-        .service_code = TERMPROCESS,
-        .arg = (void *)NULL, //kill self
-    };
-    SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&term_process_payload), 0);
-    SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, 0, 0);
+	suicide();
 }
 
 // write string to printer (or terminal) of same number as child ASID

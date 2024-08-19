@@ -3,6 +3,7 @@
 void klog_print();
 void klog_print_dec();
 void breakPoint();
+void killProcess();
 extern struct list_head pcbFree_h;
 extern pcb_PTR current_process;
 extern pcb_PTR ssi_pcb;

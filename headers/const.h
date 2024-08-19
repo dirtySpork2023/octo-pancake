@@ -209,6 +209,7 @@
 #define START_DEVREG		0x10000054
 
 #define SSIADDRESS (pcb_PTR)NULL
+#define PARENT 0
 // exception state
 #define EXST ((state_t *) BIOSDATAPAGE)
 
