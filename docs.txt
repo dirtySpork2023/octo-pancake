@@ -1,0 +1,22 @@
+Memory:
+
++---RAMTOP
+| test stack
++---RAMTOP - PAGESIZE
+| support stack for general exceptions
++---RAMTOP - 2*PAGESIZE
+| support stack for page fault exeptions
++---RAMTOP - 3*PAGESIZE
+| swap mutex stack?
+|
+	unused
+|
++---
+| swap pool
++---0x2002.0000
+| OS code
++---0x2000.1000
+| kernel stack
++---0x2000.0000
+| BIOS region
++---0x0000.0000

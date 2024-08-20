@@ -105,6 +105,7 @@
 /* EntryHI register constants */
 #define GETPAGENO     0x3FFFF000
 #define GETSHAREFLAG  0xC0000000
+#define GETASID       0x00000FC0
 #define VPNSHIFT      12
 #define ASIDSHIFT     6
 #define SHAREDSEGFLAG 30
@@ -209,7 +210,10 @@
 #define START_DEVREG		0x10000054
 
 #define SSIADDRESS (pcb_PTR)NULL
-#define PARENT 0
+#define PARENT (pcb_PTR)NULL // non c'e conflitto ma nel caso basta modificare SSIADDRESS
+#define GETMUTEX 1
+#define RELEASEMUTEX 2
+
 // exception state
 #define EXST ((state_t *) BIOSDATAPAGE)
 

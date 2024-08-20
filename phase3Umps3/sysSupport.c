@@ -1,6 +1,4 @@
 #include "./headers/sysSupport.h"
-#define EXST supportStruct.sup_exceptState[GENERALEXCEPT]
-
 
 // exception codes 4-7, 9-12, syscalls(8)  are passed up to here
 void generalExceptionHandler(){
@@ -12,35 +10,30 @@ void generalExceptionHandler(){
 	SYSCALL(SENDMESSAGE, SSIADDRESS, (unsigned int)&payload, 0);
 	SYSCALL(RECEIVEMESSAGE, SSIADDRESS, &supportStruct, 0);
 	
-	unsigned int cause = EXST.cause;
+	unsigned int cause = supportStruct->sup_exceptState[GENERALEXCEPT].cause;
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
 
 	if(excCode == SYSEXCEPTION)
-		syscallHandler();
+		syscallHandler(supportStruct->sup_exceptState[GENERALEXCEPT]);
 	else
 		programTrapsHander();
 }
 
-void syscallHandler(){
-	// destination can be PARENT, SST, (SSIADDRESS, pcb_ptr)
-	
-	if(EXST.reg_a0 == SENDMSG){
+void syscallHandler(state_t exst){
+	if(exst.reg_a0 == SENDMSG){
 		// USYS1
 		// SYSCALL(SENDMSG, (unsigned int)destination, (unsigned int)payload, 0);
-		if(EXST.reg_a1 == PARENT)
-			EXST.reg_a1 == current_process->p_parent;
+		if(exst.reg_a1 == PARENT)
+			exst.reg_a1 = current_process->p_parent;
 		
-		SYSCALL(SENDMESSAGE, EXST.reg_a1, EXST.reg_a2, 0);
-	}else if(EXST.reg_a0 == RECEIVEMSG){
+		SYSCALL(SENDMESSAGE, exst.reg_a1, exst.reg_a2, 0);
+	}else if(exst.reg_a0 == RECEIVEMSG){
 		// USYS2
 		// SYSCALL(RECEIVEMSG, (unsigned int)sender, (unsigned int)payload, 0);
 		
-		SYSCALL(RECEIVEMESSAGE, EXST.reg_a1, EXST.reg_a2, 0);
+		SYSCALL(RECEIVEMESSAGE, exst.reg_a1, exst.reg_a2, 0);
 	}else{
 		klog_print("ERR strange Usyscall");
 	}
-	
-
-
 }
 void programTrapsHander(){}

@@ -8,18 +8,23 @@
 
 #include "./sysSupport.h"
 #include "./vmSupport.h"
+#include "./sst.h"
 #include "../../phase2Umps3/p2test.c"
-
-extern pcb_PTR ssi_pcb;
-extern pcb_PTR child_pcb;
-
-void newProc(state_t *procState, support_t *procSupport);
-
-void test();
 
 void klog_print();
 void klog_print_dec();
 void breakPoint();
 extern pcb_PTR current_process;
+
+// instantiatorProcess
+void test();
+
+// SSI create process
+pcb_PTR newProc(state_t *procState, support_t *procSupport);
+
+// SSI kill self
+void suicide(void);
+
+void initSupportStruct(support_t *supportStruct, unsigned int asid);
 
 #endif

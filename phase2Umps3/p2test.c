@@ -177,7 +177,7 @@ pcb_t *create_process(state_t *s)
 /*                 p1 test -- the root process                       */
 /*                                                                   */
 /*********************************************************************/
-void test()
+void testOld()
 {
 	test_pcb = current_process;
 

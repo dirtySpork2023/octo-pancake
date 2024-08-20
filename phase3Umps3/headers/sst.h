@@ -26,4 +26,19 @@ void klog_print_dec();
 void breakPoint();
 extern pcb_PTR current_process;
 
+// system service thread
+void SST();
+
+// number of microseconds since startup
+// SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
+unsigned int getTOD();
+
+// terminate SST and child after sending message to test
+// SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
+void terminate();
+
+// write string to printer (or terminal) of same number as child ASID
+// SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
+unsigned int writeString(sst_print_t* s, devregtr* base);
+
 #endif

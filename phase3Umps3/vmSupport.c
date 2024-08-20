@@ -1,26 +1,32 @@
 #include "./headers/vmSupport.h"
 
 struct swap_t* swap_table[POOLSIZE];
-pcb_PTR swapPCB;
-int swapMutex;
-
-static int index = 0;
 
 void initSwapStructs() {
 	// swap table (RAMSTART + (32 * PAGESIZE)); 
 
-    swapPCB->p_s.pc_epc = (memaddr)waitsignal;
-    swapPCB->p_s.reg_t9 = (memaddr)waitsignal;
-
-    
 	// swap_table[0] = (memaddr)(RAMSTART + (32 * PAGESIZE));
 
-    swapMutex = 1;
 	for (int i = 0; i < POOLSIZE; i++) {
 		swap_table[i]->sw_asid = NOPROC; // frame unoccupied
 	}
 }
 
+void swapMutex(){
+	unsigned int msg;
+	pcb_PTR sender;
+	while(TRUE){
+		sender = SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, &msg, 0);
+		if(msg = RELEASEMUTEX)
+			continue;
+		SYSCALL(SENDMESSAGE, sender, 0, 0);
+		// mutex is given here
+		SYSCALL(RECEIVEMESSAGE, sender, &msg, 0);
+		if(msg != RELEASEMUTEX) klog_print("mutex error\n");
+	}
+}
+
+/*
 // ho dei dubbi
 void waitsignal() {
     unsigned int payload = NULL;
@@ -41,7 +47,7 @@ void P(pcb_PTR sender) {
         // wait? ...
 
     }
-    SYSCALL(SENDMSG, (unsigned int)swapPCB, 0, 0);
+    SYSCALL(SENDMSG, (unsigned int)swap_pcb, 0, 0);
 }
 
 void V(pcb_PTR sender) {
@@ -52,9 +58,8 @@ void V(pcb_PTR sender) {
         // sveglia ? ...
         sender = removeProcQ(&receiveMessageQueue);
     }
-    SYSCALL(SENDMSG, (unsigned int)swapPCB, 0, 0);
-}
-
+    SYSCALL(SENDMSG, (unsigned int)swap_pcb, 0, 0);
+}*/
 
 // exception codes 1-3 are passed up to here
 // TLB entry found but invalid =>
@@ -67,9 +72,9 @@ void pageFaultExceptionHandler() {
 	};
 	support_t* supStruct;
 
-	SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)&support_str_payload, 0);
-	SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&supStruct), 0);
-
+	SYSCALL(SENDMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)&support_str_payload, 0);
+	SYSCALL(RECEIVEMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)(&supStruct), 0);
+	
 	
 	state_t* excState = &supStruct->sup_exceptState[PGFAULTEXCEPT];
 	// if it's a TLB-Modification we treat it as a program trap
@@ -81,13 +86,14 @@ void pageFaultExceptionHandler() {
 	}
 	
 	// gain mutual exclusion over the swap table
-	SYSCALL(SENDMSG, (unsigned int)swapPCB, 3, 0);
-
+	SYSCALL(SENDMESSAGE, (unsigned int)swap_pcb, GETMUTEX, 0); // ask for mutex
+	SYSCALL(RECEIVEMESSAGE, (unsigned int)swap_pcb, 0, 0); // wait for it
 
 	// missing page number
 	unsigned int p = (excState->entry_hi & GETPAGENO) >> VPNSHIFT;
 
-	static int i;
+	static int index = 0;
+	int i;
     i = index;
 	index = (index + 1) % POOLSIZE;
  
@@ -125,8 +131,8 @@ void pageFaultExceptionHandler() {
             .arg = &do_io_struct,
         };
 
-        SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
-		SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&response), 0);
+        SYSCALL(SENDMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)(&payload), 0);
+		SYSCALL(RECEIVEMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)(&response), 0);
         
         // if errors, treat as program trap
         if (response == 2 || response >= 4) {
@@ -157,9 +163,8 @@ void pageFaultExceptionHandler() {
     // update tlb
     TLBCLR(); // to modify when all is done
 
-
     // release mutual exclusion
-    SYSCALL(SENDMSG, (unsigned int)swapPCB, 4, 0);
+    SYSCALL(SENDMESSAGE, (unsigned int)swap_pcb, RELEASEMUTEX, 0);
 
     LDST(&current_process->p_s);
 }

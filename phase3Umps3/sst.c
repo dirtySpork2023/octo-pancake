@@ -1,14 +1,13 @@
 #include "./headers/sst.h"
 
-// system service thread
 void SST(){
 	pcb_PTR child_pcb;
-	unsigned int asid = current_process->p_supportStruct->sup_asid;
+	unsigned int asid = (current_process->p_s.entry_hi & GETASID) >> ASIDSHIFT;
 	
 	// initialize the corresponding U-proc
 	state_t childState;
-    STST(&childState); // copy of SST state
-    childState.reg_sp = USERSTACKTOP;
+    // init other vars to zero
+	childState.reg_sp = USERSTACKTOP;
     childState.pc_epc = UPROCSTARTADDR;
 	childState.reg_t9 = UPROCSTARTADDR;
     childState.status |= USERPON | IEPBITON | CAUSEINTMASK | TEBITON;
@@ -16,17 +15,17 @@ void SST(){
 
 	support_t childSupport;
 	initSupportStruct(&childSupport, asid);
-	newProc(&childState, &childSupport);
-
-
+	child_pcb = newProc(&childState, &childSupport);
+	
+	
 	// wait for service requests and manage them
 	ssi_payload_t payload;
 	unsigned int answer;
-
+	
 	while(TRUE){
 		// I suppose requests can only be syncronous
 	
-		SYSCALL(RECEIVEMSG, child_pcb, (unsigned int)(&payload), 0);
+		SYSCALL(RECEIVEMESSAGE, child_pcb, (unsigned int)(&payload), 0);
 		
 		if(payload.service_code == GET_TOD)
 			answer = getTOD();
@@ -48,12 +47,10 @@ void SST(){
 		 * devaddrbiase = 0x1000.0054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
 		 */
 
-		SYSCALL(SENDMSG, child_pcb, answer, 0);
+		SYSCALL(SENDMESSAGE, child_pcb, answer, 0);
 	}
 }
 
-// number of microseconds since startup
-// SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
 unsigned int getTOD(){
 	unsigned int *hiTOD = (memaddr *)TODHIADDR;
 	if( *hiTOD != 0 ) klog_print("low order word not sufficient for getTOD\n");
@@ -63,17 +60,14 @@ unsigned int getTOD(){
 	return time;
 }
 
-// terminate SST and child after sending message to test
-// SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
 void terminate(){
 	// notify test process
 	SYSCALL(SENDMESSAGE, PARENT, 0, 0);
 
 	suicide();
+	klog_print("I should be dead\n");
 }
 
-// write string to printer (or terminal) of same number as child ASID
-// SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
 unsigned int writeString(sst_print_t* s, devregtr* base){
 	typedef unsigned int devregtr;
 
@@ -81,7 +75,7 @@ unsigned int writeString(sst_print_t* s, devregtr* base){
     devregtr status;
 	
 	for(int i=0; i<s->length; i++){
-		if(*s->string == EOS) klog_print("printing EOS\n");
+		if(*s->string == EOS) klog_print("err, printing EOS\n");
 		devregtr value = PRINTCHR | (((devregtr)*s->string) << 8);
 		ssi_do_io_t do_io = {
 			.commandAddr = command,
