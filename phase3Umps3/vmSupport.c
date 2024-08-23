@@ -100,10 +100,11 @@ void pageFaultExceptionHandler() {
 	// if frame i is occupied
 	if (swap_table[i]->sw_asid != NOPROC) {
 		// operations done atomically by disabling interrupts
-	    setSTATUS(DISABLEINTS);
+	    unsigned int status = getSTATUS();
+		setSTATUS(status & DISABLEINTS);
 		
 		// mark it as non valid means V bit is off
-		swap_table[i]->sw_pte->pte_entryLO &= 0xFFFFFEFF;
+		swap_table[i]->sw_pte->pte_entryLO &= 0xFFFFFDFF; //== ~VALIDON
 		
 		//update the TLB
         /* TODO after all other aspects of the Support Level are completed/debugged).
@@ -112,7 +113,7 @@ void pageFaultExceptionHandler() {
         TLBCLR();
 
 		//re-enable interrupts
-		setSTATUS(IECON);
+		setSTATUS(status);
 		
 		//update flash drive
         // 1
@@ -123,7 +124,7 @@ void pageFaultExceptionHandler() {
         unsigned int response;
 
         ssi_do_io_t do_io_struct = {
-            .commandAddr = , 
+            //.commandAddr = , 
             .commandValue = FLASHWRITE,
         };
         ssi_payload_t payload = {
