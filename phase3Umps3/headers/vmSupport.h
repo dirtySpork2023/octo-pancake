@@ -21,6 +21,7 @@ extern pcb_PTR swap_pcb;
 void initSwapStructs();
 void swapMutex();
 void pageFaultExceptionHandler();
+void flashDev(unsigned int cmd, unsigned int frameNo, unsigned int pageNo);
 
 
 #endif

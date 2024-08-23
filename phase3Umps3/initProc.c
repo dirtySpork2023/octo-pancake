@@ -20,7 +20,7 @@ void test(){
 	swapState.reg_sp = ramtop - 3*PAGESIZE; 
 	swapState.pc_epc = (memaddr)swapMutex;
     swapState.reg_t9 = (memaddr)swapMutex;
-    swapState.status = ALLOFF | IEPBITON | CAUSEINTMASK | TEBITON; // interrupts enabled?
+    swapState.status = ALLOFF | IEPON | IMON | TEBITON; // interrupts enabled?
 	swap_pcb = newProc(&swapState, NULL);
 
 
@@ -29,7 +29,7 @@ void test(){
 	sstState.reg_sp = swapState.reg_sp; 
 	sstState.pc_epc = (memaddr)SST;
     sstState.reg_t9 = (memaddr)SST;
-    sstState.status = ALLOFF | IEPBITON | CAUSEINTMASK | TEBITON;
+    sstState.status = ALLOFF | IEPON | IMON | TEBITON;
 	
 	for(unsigned int asid=0; asid<UPROCMAX; asid++){
 		sstState.reg_sp = sstState.reg_sp - QPAGE; 
@@ -81,8 +81,8 @@ void initSupportStruct(support_t *supportStruct, unsigned int asid){
 	supportStruct->sup_asid = asid;
 	supportStruct->sup_exceptContext[GENERALEXCEPT].pc = (memaddr) generalExceptionHandler;
 	supportStruct->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pageFaultExceptionHandler;
-	supportStruct->sup_exceptContext[GENERALEXCEPT].status = ALLOFF | IEPBITON | CAUSEINTMASK | TEBITON;
-	supportStruct->sup_exceptContext[PGFAULTEXCEPT].status = ALLOFF | IEPBITON | CAUSEINTMASK | TEBITON;
+	supportStruct->sup_exceptContext[GENERALEXCEPT].status = ALLOFF | IEPON | IMON | TEBITON;
+	supportStruct->sup_exceptContext[PGFAULTEXCEPT].status = ALLOFF | IEPON | IMON | TEBITON;
 	supportStruct->sup_exceptContext[GENERALEXCEPT].stackPtr = supportStack - PAGESIZE; // &(supportStruct->sup_stackGen[499]);
 	supportStruct->sup_exceptContext[PGFAULTEXCEPT].stackPtr = supportStack - 2 * PAGESIZE; // &(supportStruct->sup_stackGen[499]);
 	// sup_privatePgTbl[USERPGTBLSIZE] ? TODO

@@ -13,5 +13,6 @@ extern pcb_PTR current_process;
 
 void generalExceptionHandler();
 void syscallHandler();
+void programTrapsHandler();
 
 #endif

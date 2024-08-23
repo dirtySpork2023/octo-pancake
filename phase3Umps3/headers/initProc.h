@@ -9,7 +9,7 @@
 #include "./sysSupport.h"
 #include "./vmSupport.h"
 #include "./sst.h"
-#include "../../phase2Umps3/p2test.c"
+//#include "../../phase2Umps3/p2test.c"
 
 void klog_print();
 void klog_print_dec();

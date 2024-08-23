@@ -16,21 +16,19 @@ void uTLB_RefillHandler(void){
 	TLBWR();
 	LDST((state_t*) 0x0FFFF000); */
 
-	// processor state located at the start of BIOS Data Page 
-	state_t* BIOSstate = (state_t*)BIOSDATAPAGE;
 	// prendo solo i primi 20 bit (VPN)
 	// required Page number
-	unsigned int p = (BIOSstate->entry_hi & GETPAGENO) >> VPNSHIFT;
+	unsigned int p = (EXST->entry_hi & GETPAGENO) >> VPNSHIFT;
 	
 	pteEntry_t pageTableEntry = current_process->p_supportStruct->sup_privatePgTbl[p];
 
 	// write this page table entry to the TLB
 	setENTRYHI(pageTableEntry.pte_entryHI);
 	setENTRYLO(pageTableEntry.pte_entryLO);
-	TLBWR();
+	TLBWR(); // random index
 
 	// return control to the current process
-	LDST((state_t*) BIOSDATAPAGE);
+	LDST(EXST);
 }
 
 /* redirects exceptions to the correct handler */

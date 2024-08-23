@@ -40,7 +40,7 @@ all : kernel.core.umps
 kernel.core.umps : kernel
 	umps3-elf2umps -k $<
 
-kernel : $(PHASE1) $(PHASE2) $(PHASE3) klog.o ./phase2Umps3/p2test.o crtso.o libumps.o
+kernel : $(PHASE1) $(PHASE2) $(PHASE3) klog.o crtso.o libumps.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 clean :

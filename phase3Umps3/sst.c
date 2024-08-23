@@ -10,7 +10,7 @@ void SST(){
 	childState.reg_sp = USERSTACKTOP;
     childState.pc_epc = UPROCSTARTADDR;
 	childState.reg_t9 = UPROCSTARTADDR;
-    childState.status |= USERPON | IEPBITON | CAUSEINTMASK | TEBITON;
+    childState.status |= USERPON | IEPON | IMON | TEBITON;
 	childState.entry_hi = asid << ASIDSHIFT;
 
 	support_t childSupport;
@@ -32,9 +32,9 @@ void SST(){
 		else if(payload.service_code == TERMINATE)
 			terminate();
 		else if(payload.service_code == WRITEPRINTER)
-			answer = writeString(payload.arg, (devregtr *)(PRNT0ADDR + 0/*ASID * 0x10*/ ));
+			answer = writeString(payload.arg, (devreg_t *)(PRNT0ADDR + 0/*ASID * 0x10*/ ));
 		else if(payload.service_code == WRITETERMINAL)
-			answer = writeString(payload.arg, (devregtr *)(TERM0ADDR + 0/*ASID * 0x10*/ ));
+			answer = writeString(payload.arg, (devreg_t *)(TERM0ADDR + 0/*ASID * 0x10*/ ));
 		else {
 			klog_print("invalid SST service\n");
 		}
@@ -68,7 +68,7 @@ void terminate(){
 	klog_print("I should be dead\n");
 }
 
-unsigned int writeString(sst_print_t* s, devregtr* base){
+unsigned int writeString(sst_print_t* s, devreg_t* base){
 	typedef unsigned int devregtr;
 
 	devregtr *command = base + 3;
@@ -85,8 +85,8 @@ unsigned int writeString(sst_print_t* s, devregtr* base){
 			.service_code = DOIO,
 			.arg = &do_io,
 		};
-		SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
-		SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
+		SYSCALL(SENDMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)(&payload), 0);
+		SYSCALL(RECEIVEMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)(&status), 0);
 		
 		if ((status & TERMSTATMASK) != RECVD)
 			PANIC();

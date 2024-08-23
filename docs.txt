@@ -1,5 +1,7 @@
 Memory:
 
+RAMTOP will range from 0x2000.8000 to 0x2020.0000
+
 +---RAMTOP
 | test stack
 +---RAMTOP - PAGESIZE
