@@ -2,6 +2,7 @@
 
 // pagesize is 4096
 #define QPAGE 1024
+#define DEBUG
 
 // phase 3 global variables
 pcb_PTR swap_pcb, sst_pcb[UPROCMAX];

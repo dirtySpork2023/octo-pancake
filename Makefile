@@ -31,7 +31,7 @@ VPATH = $(UMPS3_DATA_DIR)
 # Object files
 PHASE1 = ./phase1/pcb.o ./phase1/msg.o
 PHASE2 = ./phase2Umps3/initialize.o ./phase2Umps3/scheduler.o ./phase2Umps3/exceptions.o ./phase2Umps3/interrupts.o ./phase2Umps3/ssi.o
-PHASE3 = ./phase3Umps3/initProc.o ./phase3Umps3/sst.o ./phase3Umps3/sysSupport.o ./phase3Umps3/vmSupport.o
+PHASE3 = ./testers/print.c ./phase3Umps3/initProc.o ./phase3Umps3/sst.o ./phase3Umps3/sysSupport.o ./phase3Umps3/vmSupport.o
 
 .PHONY : all clean
 

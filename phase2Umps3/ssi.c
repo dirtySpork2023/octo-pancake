@@ -12,25 +12,81 @@ extern pcb_PTR devQueue[DEVINTNUM][DEVPERINT];
 extern int process_count;
 extern int softBlockCount;
 
+static void createProcess(ssi_create_process_PTR arg, pcb_PTR sender){
+	pcb_PTR newChild = allocPcb();
+	if(newChild == NULL){
+		/* no free PCBs available */
+		sender->p_s.reg_v0 = NOPROC;
+	}else{
+		copyState(arg->state, &newChild->p_s);
+		newChild->p_supportStruct = arg->support;
+		insertChild(sender, newChild);
+		insertProcQ(&readyQueue, newChild);
+		process_count++;
+		SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)newChild, 0);
+	}
+}
+
 static void getSupportStruct(pcb_PTR sender){
 	SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)sender->p_supportStruct, 0);
 }
 
-void initSSI(){
-	systemServiceInterface();
+static void killCall(void* arg, pcb_PTR sender){
+	killProcess(arg, sender);
+	if(arg != NULL)
+		SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
 }
 
-void systemServiceInterface(){
-	ssi_payload_PTR payload = NULL;
-	pcb_PTR sender;
+static void doIO(ssi_do_io_PTR arg, pcb_PTR sender){
+	// calculating interrupt line and device number from commandAddr	
+	int device = ((unsigned int)arg->commandAddr - DEVADDR) / DEVREGSIZE;	
+	int intLineNo = device / DEVPERINT;
+	int devNo = device % DEVPERINT;
+	softBlockCount++;
+
+	devQueue[intLineNo][devNo] = outAnyProcQ(sender);
+
+	#ifdef DEBUG
+	klog_print("blocked pcb ");
+	klog_print_dec(sender->p_pid);
+	klog_print(" for I/O\n");
+	#endif
+
+	*arg->commandAddr = arg->commandValue;
+}
+
+static void getTime(pcb_PTR sender){
+	SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)sender->p_time, 0);
+}
+
+static void waitForClock(pcb_PTR sender){
+	insertProcQ(&pseudoClockQueue, outAnyProcQ(sender));
+	softBlockCount++;
+	SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
+}
+
+static void getPID(void* arg, pcb_PTR sender){
+/*	unsigned int reply;
 	
-	while(TRUE){
-		sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)(&payload), 0);
-		SSIRequest(sender, payload->service_code, payload->arg);
+	if( arg==0 ){
+		reply = sender->p_pid;
+	}else if( sender->p_parent==NULL ){
+		reply = 0;
+	}else{
+		reply = sender->p_parent->p_pid;
 	}
+
+	SYSCALL(SENDMESSAGE, (unsigned int)sender, reply, 0);*/
+
+	if( arg==0 )
+		SYSCALL(SENDMESSAGE, (unsigned int)sender, sender->p_pid, 0);
+	else if( sender->p_parent==NULL )
+		SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
+	else
+		SYSCALL(SENDMESSAGE, (unsigned int)sender, sender->p_parent->p_pid, 0);
 }
 
-void SSIRequest(pcb_t* sender, int service, void* arg){
+static void SSIRequest(pcb_t* sender, int service, void* arg){
 	#ifdef DEBUG
 	klog_print("SSI request ");
 	klog_print_dec(service);
@@ -51,18 +107,13 @@ void SSIRequest(pcb_t* sender, int service, void* arg){
 	}
 }
 
-void createProcess(ssi_create_process_PTR arg, pcb_PTR sender){
-	pcb_PTR newChild = allocPcb();
-	if(newChild == NULL){
-		/* no free PCBs available */
-		sender->p_s.reg_v0 = NOPROC;
-	}else{
-		copyState(arg->state, &newChild->p_s);
-		newChild->p_supportStruct = arg->support;
-		insertChild(sender, newChild);
-		insertProcQ(&readyQueue, newChild);
-		process_count++;
-		SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)newChild, 0);
+void SSI(){
+	ssi_payload_PTR payload = NULL;
+	pcb_PTR sender;
+	
+	while(TRUE){
+		sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)(&payload), 0);
+		SSIRequest(sender, payload->service_code, payload->arg);
 	}
 }
 
@@ -76,12 +127,6 @@ pcb_PTR outDevQ(pcb_PTR doomed){
 		}
 	}
 	return NULL;
-}
-
-void killCall(void* arg, pcb_PTR sender){
-	killProcess(arg, sender);
-	if(arg != NULL)
-		SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
 }
 
 void killProcess(pcb_PTR doomed, pcb_PTR sender){
@@ -123,53 +168,4 @@ void killProcess(pcb_PTR doomed, pcb_PTR sender){
 
 	process_count--;
 	freePcb(doomed);
-}
-
-void doIO(ssi_do_io_PTR arg, pcb_PTR sender){
-	// calculating interrupt line and device number from commandAddr	
-	int device = ((unsigned int)arg->commandAddr - DEVADDR) / DEVREGSIZE;	
-	int intLineNo = device / DEVPERINT;
-	int devNo = device % DEVPERINT;
-	softBlockCount++;
-
-	devQueue[intLineNo][devNo] = outAnyProcQ(sender);
-
-	#ifdef DEBUG
-	klog_print("blocked pcb ");
-	klog_print_dec(sender->p_pid);
-	klog_print(" for I/O\n");
-	#endif
-
-	*arg->commandAddr = arg->commandValue;
-}
-
-void getTime(pcb_PTR sender){
-	SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)sender->p_time, 0);
-}
-
-void waitForClock(pcb_PTR sender){
-	insertProcQ(&pseudoClockQueue, outAnyProcQ(sender));
-	softBlockCount++;
-	SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
-}
-
-void getPID(void* arg, pcb_PTR sender){
-/*	unsigned int reply;
-	
-	if( arg==0 ){
-		reply = sender->p_pid;
-	}else if( sender->p_parent==NULL ){
-		reply = 0;
-	}else{
-		reply = sender->p_parent->p_pid;
-	}
-
-	SYSCALL(SENDMESSAGE, (unsigned int)sender, reply, 0);*/
-
-	if( arg==0 )
-		SYSCALL(SENDMESSAGE, (unsigned int)sender, sender->p_pid, 0);
-	else if( sender->p_parent==NULL )
-		SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
-	else
-		SYSCALL(SENDMESSAGE, (unsigned int)sender, sender->p_parent->p_pid, 0);
 }

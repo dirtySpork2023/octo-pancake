@@ -5,6 +5,7 @@
 #include "headers/exceptions.h"
 #include "headers/ssi.h"
 
+#define DEBUG
 extern void test();
 
 /*	counter of all started but not yet terminated processes
@@ -64,8 +65,8 @@ int main(){
 	insertProcQ(&readyQueue, ssi_pcb);
 	process_count++;
 	ssi_pcb->p_s.status = ALLOFF | IEPON | IMON;
-	ssi_pcb->p_s.pc_epc = (memaddr) initSSI;
-	ssi_pcb->p_s.reg_t9 = (memaddr) initSSI;
+	ssi_pcb->p_s.pc_epc = (memaddr) SSI;
+	ssi_pcb->p_s.reg_t9 = (memaddr) SSI;
 	RAMTOP(ssi_pcb->p_s.reg_sp); // stack pointer = RAMTOP
 
 	// second process

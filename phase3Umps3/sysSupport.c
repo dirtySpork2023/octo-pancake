@@ -27,11 +27,14 @@ void usyscallHandler(state_t exst){
 		
 		SYSCALL(RECEIVEMESSAGE, exst.reg_a1, exst.reg_a2, 0);
 	}else{
-		klog_print("ERR strange Usyscall");
+		klog_print("ERR strange Usyscall\n");
 	}
 }
 
 void programTrapsHandler(){
 	SYSCALL(SENDMESSAGE, (unsigned int)swap_pcb, RELEASEMUTEX, 0);
-	suicide();
+	//suicide();
+	//terminate();
+	klog_print("support program trap\n");
+	breakPoint();
 }
