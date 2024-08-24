@@ -12,6 +12,9 @@ extern pcb_PTR devQueue[DEVINTNUM][DEVPERINT];
 extern int process_count;
 extern int softBlockCount;
 
+static void getSupportStruct(pcb_PTR sender){
+	SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)sender->p_supportStruct, 0);
+}
 
 void initSSI(){
 	systemServiceInterface();
@@ -148,10 +151,6 @@ void waitForClock(pcb_PTR sender){
 	insertProcQ(&pseudoClockQueue, outAnyProcQ(sender));
 	softBlockCount++;
 	SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
-}
-
-void getSupportStruct(pcb_PTR sender){
-	SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)sender->p_supportStruct, 0);
 }
 
 void getPID(void* arg, pcb_PTR sender){

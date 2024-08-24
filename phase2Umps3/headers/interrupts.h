@@ -6,6 +6,7 @@
 #include "../../headers/types.h"
 #include "../../phase1/headers/pcb.h"
 #include "scheduler.h"
+#include "exceptions.h"
 
 void interruptHandler(int cause);
 

@@ -8,7 +8,7 @@ pcb_PTR swap_pcb, sst_pcb[UPROCMAX];
 
 void test(){
 	state_t swapState, sstState;
-	support_t sstSupport;
+	//support_t sstSupport;
 	unsigned int ramtop;
 	RAMTOP(ramtop);
 
@@ -86,4 +86,17 @@ void initSupportStruct(support_t *supportStruct, unsigned int asid){
 	supportStruct->sup_exceptContext[GENERALEXCEPT].stackPtr = supportStack - PAGESIZE; // &(supportStruct->sup_stackGen[499]);
 	supportStruct->sup_exceptContext[PGFAULTEXCEPT].stackPtr = supportStack - 2 * PAGESIZE; // &(supportStruct->sup_stackGen[499]);
 	// sup_privatePgTbl[USERPGTBLSIZE] ? TODO
+}
+
+support_t *getSupportStruct(){
+	ssi_payload_t support_str_payload = {
+		.service_code = GETSUPPORTPTR,
+		.arg = NULL,
+	};
+	support_t *supportStruct;
+
+	SYSCALL(SENDMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)&support_str_payload, 0);
+	SYSCALL(RECEIVEMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)(&supportStruct), 0);
+	
+	return supportStruct;
 }

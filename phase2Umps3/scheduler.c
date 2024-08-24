@@ -50,8 +50,10 @@ void scheduler(){
 	klog_print("] ");
 	#endif
 
+
 	/* load round-robin timeslice into Processor's Local Timer */
-	setTIMER(TIMESLICE * TIMESCALEADDR);
+	
+	setTIMER(TIMESLICE * (*(unsigned int *)TIMESCALEADDR));
 	//TODO errore "nello scheduler il timeslice non è stato moltiplicato per il TIMESCALEADDR"	
 
 	/* load the processor state of the current process */

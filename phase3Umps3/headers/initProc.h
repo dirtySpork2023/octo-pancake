@@ -9,7 +9,6 @@
 #include "./sysSupport.h"
 #include "./vmSupport.h"
 #include "./sst.h"
-//#include "../../phase2Umps3/p2test.c"
 
 void klog_print();
 void klog_print_dec();
@@ -26,5 +25,7 @@ pcb_PTR newProc(state_t *procState, support_t *procSupport);
 void suicide(void);
 
 void initSupportStruct(support_t *supportStruct, unsigned int asid);
+
+support_t *getSupportStruct();
 
 #endif

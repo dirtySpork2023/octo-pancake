@@ -209,8 +209,8 @@
 /* Inizio indirizzo di device registers */
 #define START_DEVREG		0x10000054
 
-#define SSIADDRESS (pcb_PTR)NULL
-#define PARENT (pcb_PTR)NULL // non c'e conflitto ma nel caso basta modificare SSIADDRESS
+#define SSIADDRESS 0
+#define PARENT 0 // non c'e conflitto ma nel caso basta modificare SSIADDRESS
 #define GETMUTEX 1
 #define RELEASEMUTEX 2
 

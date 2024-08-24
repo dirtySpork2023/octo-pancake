@@ -10,7 +10,8 @@ void SST(){
 	childState.reg_sp = USERSTACKTOP;
     childState.pc_epc = UPROCSTARTADDR;
 	childState.reg_t9 = UPROCSTARTADDR;
-    childState.status |= USERPON | IEPON | IMON | TEBITON;
+    STST(&childState.status);
+	childState.status |= USERPON | IEPON | IMON | TEBITON;
 	childState.entry_hi = asid << ASIDSHIFT;
 
 	support_t childSupport;
@@ -25,7 +26,7 @@ void SST(){
 	while(TRUE){
 		// I suppose requests can only be syncronous
 	
-		SYSCALL(RECEIVEMESSAGE, child_pcb, (unsigned int)(&payload), 0);
+		SYSCALL(RECEIVEMESSAGE, (unsigned int)child_pcb, (unsigned int)(&payload), 0);
 		
 		if(payload.service_code == GET_TOD)
 			answer = getTOD();
@@ -47,7 +48,7 @@ void SST(){
 		 * devaddrbiase = 0x1000.0054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
 		 */
 
-		SYSCALL(SENDMESSAGE, child_pcb, answer, 0);
+		SYSCALL(SENDMESSAGE, (unsigned int)child_pcb, answer, 0);
 	}
 }
 
@@ -69,14 +70,13 @@ void terminate(){
 }
 
 unsigned int writeString(sst_print_t* s, devreg_t* base){
-	typedef unsigned int devregtr;
 
-	devregtr *command = base + 3;
-    devregtr status;
-	
+	unsigned int *command = (unsigned int *)base + 3;
+	if(command == &base->dtp.command) klog_print("use devreg_t");
+
 	for(int i=0; i<s->length; i++){
 		if(*s->string == EOS) klog_print("err, printing EOS\n");
-		devregtr value = PRINTCHR | (((devregtr)*s->string) << 8);
+		unsigned int value = PRINTCHR | (((unsigned int)*s->string) << 8);
 		ssi_do_io_t do_io = {
 			.commandAddr = command,
 			.commandValue = value,
@@ -85,8 +85,9 @@ unsigned int writeString(sst_print_t* s, devreg_t* base){
 			.service_code = DOIO,
 			.arg = &do_io,
 		};
-		SYSCALL(SENDMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)(&payload), 0);
-		SYSCALL(RECEIVEMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)(&status), 0);
+    	unsigned int status;
+		SYSCALL(SENDMESSAGE, SSIADDRESS, (unsigned int)(&payload), 0);
+		SYSCALL(RECEIVEMESSAGE, SSIADDRESS, (unsigned int)(&status), 0);
 		
 		if ((status & TERMSTATMASK) != RECVD)
 			PANIC();

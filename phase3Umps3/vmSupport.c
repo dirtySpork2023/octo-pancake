@@ -13,12 +13,12 @@ void swapMutex(){
 	unsigned int msg;
 	pcb_PTR sender;
 	while(TRUE){
-		sender = SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, &msg, 0);
-		if(msg = RELEASEMUTEX)
+		sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)&msg, 0);
+		if(msg == RELEASEMUTEX)
 			continue;
-		SYSCALL(SENDMESSAGE, sender, 0, 0);
+		SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
 		// mutex is given here
-		SYSCALL(RECEIVEMESSAGE, sender, &msg, 0);
+		SYSCALL(RECEIVEMESSAGE, (unsigned int)sender, (unsigned int)&msg, 0);
 		if(msg != RELEASEMUTEX) klog_print("mutex error\n");
 	}
 }
@@ -27,22 +27,12 @@ void swapMutex(){
 // TLB entry found but invalid =>
 // TLB_exception_handler
 void pageFaultExceptionHandler() {
-
-	ssi_payload_t support_str_payload = {
-		.service_code = GETSUPPORTPTR,
-		.arg = NULL,
-	};
-	support_t* supStruct;
-
-	SYSCALL(SENDMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)&support_str_payload, 0);
-	SYSCALL(RECEIVEMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)(&supStruct), 0);
-	
+	support_t* supStruct = getSupportStruct();	
 	state_t* excState = &supStruct->sup_exceptState[PGFAULTEXCEPT];
+
 	// if it's a TLB-Modification we treat it as a program trap
 	if (excState->cause == TLBMOD) {
-		SYSCALL(SENDMESSAGE, (unsigned int)swap_pcb, RELEASEMUTEX, 0); // useless
-		
-		// TODO Program trap, Section 9 in sysSupport.c
+		SYSCALL(SENDMESSAGE, (unsigned int)swap_pcb, RELEASEMUTEX, 0); // probably useless
         programTrapsHandler();
 	}
 	
@@ -86,16 +76,15 @@ void pageFaultExceptionHandler() {
 
     // update the swap pool table's entry i
     swap_table[i].sw_pageNo = p;
-    swap_table[i].sw_asid = current_process->p_supportStruct->sup_asid;
-    swap_table[i].sw_pte = &current_process->p_supportStruct->sup_privatePgTbl[p]; // p == pageNo == block number del flash drive [1-32]
+    swap_table[i].sw_asid = supStruct->sup_asid;
+    swap_table[i].sw_pte = &supStruct->sup_privatePgTbl[p]; // p == pageNo == block number del flash drive [1-32]
 
 	// operations done atomically by disabling interrupts
 	unsigned int status = getSTATUS();
 	setSTATUS(status & DISABLEINTS);
     
 	// update the process' page table
-    current_process->p_supportStruct->sup_privatePgTbl[p].pte_entryLO = (i << VPNSHIFT) + VALIDON; // + DIRTYON pandOS assumes all frames to be dirty
-
+    supStruct->sup_privatePgTbl[p].pte_entryLO = (i << VPNSHIFT) + VALIDON; // + DIRTYON pandOS assumes all frames to be dirty
     // update tlb
     TLBCLR(); // to modify when all is done
 
@@ -105,15 +94,15 @@ void pageFaultExceptionHandler() {
     // release mutual exclusion
     SYSCALL(SENDMESSAGE, (unsigned int)swap_pcb, RELEASEMUTEX, 0);
 
-    LDST(EXST);
+    LDST(excState);
 }
 
 //	if cmd is FLASHREAD reads from pageNo and writes to frameNo
 // 	if cmd is FLASHWRITE reads from frameNo and write to pageNo
 void flashDev(unsigned int cmd, unsigned int frameNo, unsigned int pageNo){
 	// devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
-	unsigned int devAddrBase = START_DEVREG + (4-3)*0x80 + swap_table[frameNo].sw_asid*0x10;
-	// value of DATA0 = address of physical frameNo
+	unsigned int *devAddrBase = (memaddr *)START_DEVREG + (4-3)*0x80 + swap_table[frameNo].sw_asid*0x10;
+	// DATA0 = address of physical frameNo
 	memaddr *dataAddr = devAddrBase + 0x8;
 	*dataAddr = swapPoolStart + (frameNo * PAGESIZE);
 

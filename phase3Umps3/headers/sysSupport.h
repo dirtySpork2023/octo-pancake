@@ -6,13 +6,15 @@
 #include "../../headers/const.h"
 #include "../../headers/types.h"
 
+#include "./initProc.h"
+
 void klog_print();
 void klog_print_dec();
 void breakPoint();
 extern pcb_PTR current_process;
 
 void generalExceptionHandler();
-void syscallHandler();
+void usyscallHandler();
 void programTrapsHandler();
 
 #endif
