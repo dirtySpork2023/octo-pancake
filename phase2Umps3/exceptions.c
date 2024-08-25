@@ -98,7 +98,7 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 	msg->m_payload = *payload;
 	
 	if(searchProcQ(&pcbFree_h, dest) == dest){
-		//klog_print("ERR: dest pcb dead\n");
+		klog_print("ERR: dest pcb dead\n");
 		return DEST_NOT_EXIST;
 	}
 	/*if(dest != ssi_pcb && sender != ssi_pcb)
@@ -123,7 +123,7 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 	/* assuming ANYMESSAGE == NULL */
 	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);
 	if(msg == NULL){
-/*		klog_print("blocking recv ");
+		/*klog_print("blocking recv ");
 		klog_print_dec(current_process->p_pid);
 		klog_print("\n");*/
 		copyState(EXST, &current_process->p_s);

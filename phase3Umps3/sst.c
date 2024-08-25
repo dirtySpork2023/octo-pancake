@@ -33,8 +33,10 @@ static unsigned int writeString(sst_print_t* s, devreg_t* base){
 		SYSCALL(SENDMESSAGE, SSIADDRESS, (unsigned int)(&payload), 0);
 		SYSCALL(RECEIVEMESSAGE, SSIADDRESS, (unsigned int)(&status), 0);
 		
-		if ((status & TERMSTATMASK) != RECVD)
-			PANIC();
+		if ((status & TERMSTATMASK) != RECVD){
+			klog_print("ERR: doIo status");
+			breakPoint();
+		}
 
 		s->string++;
 	}
@@ -46,7 +48,10 @@ static unsigned int writeString(sst_print_t* s, devreg_t* base){
 void SST(){
 	pcb_PTR child_pcb;
 	unsigned int asid = (current_process->p_s.entry_hi & GETASID) >> ASIDSHIFT;
-	
+	klog_print("SST");
+	klog_print_dec(asid);	
+	klog_print(" here\n");
+
 	// initialize the corresponding U-proc
 	state_t childState;
     // init other vars to zero
@@ -61,6 +66,11 @@ void SST(){
 	initSupportStruct(&childSupport, asid);
 	child_pcb = newProc(&childState, &childSupport);
 	
+	#ifdef DEBUG
+	klog_print("SST");
+	klog_print_dec(asid);
+	klog_print(" ready");	
+	#endif
 	
 	// wait for service requests and manage them
 	ssi_payload_t payload;
@@ -76,11 +86,15 @@ void SST(){
 		else if(payload.service_code == TERMINATE)
 			terminate();
 		else if(payload.service_code == WRITEPRINTER)
-			answer = writeString(payload.arg, (devreg_t *)(PRNT0ADDR + asid * 0x10 ));
-		else if(payload.service_code == WRITETERMINAL)
-			answer = writeString(payload.arg, (devreg_t *)(TERM0ADDR + asid * 0x10 ));
+		{klog_print("print");
+			klog_print_dec(asid);
+			klog_print("\n");
+			answer = writeString(payload.arg, (devreg_t *)(PRNT0ADDR + (asid-1) * 0x10 ));
+		}else if(payload.service_code == WRITETERMINAL)
+			answer = writeString(payload.arg, (devreg_t *)(TERM0ADDR + (asid-1) * 0x10 ));
 		else {
-			klog_print("invalid SST service\n");
+			klog_print("ERR: invalid SST service\n");
+			breakPoint();
 		}
 
 		/*

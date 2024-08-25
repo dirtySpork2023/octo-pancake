@@ -10,6 +10,7 @@ void initSwapStructs() {
 }
 
 void swapMutex(){
+	klog_print("swap pcb here\n");
 	unsigned int msg;
 	pcb_PTR sender;
 	while(TRUE){

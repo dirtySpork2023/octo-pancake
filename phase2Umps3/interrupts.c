@@ -103,7 +103,7 @@ void deviceInterrupt(int cause){
 		interruptLine = TERMINT;
 	else{
 		/* interrupt lines 0 and 5*/
-		klog_print("ERROR interrupts.c\n");
+		klog_print("ERR interrupts.c\n");
 		breakPoint();
 	}
 	

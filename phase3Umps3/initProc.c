@@ -2,7 +2,6 @@
 
 // pagesize is 4096
 #define QPAGE 1024
-#define DEBUG
 
 // phase 3 global variables
 pcb_PTR swap_pcb, sst_pcb[UPROCMAX];
@@ -23,7 +22,8 @@ void test(){
     swapState.reg_t9 = (memaddr)swapMutex;
     swapState.status = ALLOFF | IEPON | IMON | TEBITON; // interrupts enabled?
 	swap_pcb = newProc(&swapState, NULL);
-
+	
+	klog_print("swap pcb initialized\n");
 
 	// create SST processes
 	STST(&sstState);

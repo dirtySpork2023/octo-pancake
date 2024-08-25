@@ -5,7 +5,6 @@
 #include "headers/exceptions.h"
 #include "headers/ssi.h"
 
-#define DEBUG
 extern void test();
 
 /*	counter of all started but not yet terminated processes

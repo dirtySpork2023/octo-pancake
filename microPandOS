@@ -8,35 +8,35 @@
     "devices": {
         "flash0": {
             "enabled": true,
-            "file": "/home/zbarba/octo-pancake/testers/fibEight.umps"
+            "file": "/home/zbarba/octo-pancake/testers/printerTest.umps"
         },
         "flash1": {
             "enabled": true,
-            "file": "/home/zbarba/octo-pancake/testers/fibEleven.umps"
+            "file": "/home/zbarba/octo-pancake/testers/terminalTest1.umps"
         },
         "flash2": {
             "enabled": true,
-            "file": "/home/zbarba/octo-pancake/testers/printerTest.umps"
+            "file": "/home/zbarba/octo-pancake/testers/terminalTest2.umps"
         },
         "flash3": {
             "enabled": true,
-            "file": "/home/zbarba/octo-pancake/testers/terminalTest1.umps"
+            "file": "/home/zbarba/octo-pancake/testers/terminalTest3.umps"
         },
         "flash4": {
             "enabled": true,
-            "file": "/home/zbarba/octo-pancake/testers/terminalTest2.umps"
+            "file": "/home/zbarba/octo-pancake/testers/terminalTest4.umps"
         },
         "flash5": {
             "enabled": true,
-            "file": "/home/zbarba/octo-pancake/testers/terminalTest3.umps"
+            "file": "/home/zbarba/octo-pancake/testers/todTest.umps"
         },
         "flash6": {
             "enabled": true,
-            "file": "/home/zbarba/octo-pancake/testers/terminalTest4.umps"
+            "file": "/home/zbarba/octo-pancake/testers/fibEight.umps"
         },
         "flash7": {
             "enabled": true,
-            "file": "/home/zbarba/octo-pancake/testers/todTest.umps"
+            "file": "/home/zbarba/octo-pancake/testers/fibEleven.umps"
         },
         "terminal0": {
             "enabled": true,

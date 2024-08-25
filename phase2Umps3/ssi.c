@@ -66,18 +66,6 @@ static void waitForClock(pcb_PTR sender){
 }
 
 static void getPID(void* arg, pcb_PTR sender){
-/*	unsigned int reply;
-	
-	if( arg==0 ){
-		reply = sender->p_pid;
-	}else if( sender->p_parent==NULL ){
-		reply = 0;
-	}else{
-		reply = sender->p_parent->p_pid;
-	}
-
-	SYSCALL(SENDMESSAGE, (unsigned int)sender, reply, 0);*/
-
 	if( arg==0 )
 		SYSCALL(SENDMESSAGE, (unsigned int)sender, sender->p_pid, 0);
 	else if( sender->p_parent==NULL )
