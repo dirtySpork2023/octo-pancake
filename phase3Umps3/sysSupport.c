@@ -20,11 +20,13 @@ void usyscallHandler(state_t exst){
 		if(exst.reg_a1 == PARENT)
 			exst.reg_a1 = (unsigned int)current_process->p_parent;
 		
+		klog_print("U-sent\n");
 		SYSCALL(SENDMESSAGE, exst.reg_a1, exst.reg_a2, 0);
 	}else if(exst.reg_a0 == RECEIVEMSG){
 		// USYS2
 		// SYSCALL(RECEIVEMSG, (unsigned int)sender, (unsigned int)payload, 0);
 		
+		klog_print("U-rcvd\n");
 		SYSCALL(RECEIVEMESSAGE, exst.reg_a1, exst.reg_a2, 0);
 	}else{
 		klog_print("ERR strange Usyscall\n");

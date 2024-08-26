@@ -39,6 +39,12 @@ void exceptionHandler(void){
 	unsigned int cause = getCAUSE();
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
 
+	#ifdef DEBUG
+	klog_print("excCode");
+	klog_print_dec(excCode);
+	klog_print("\n");
+	#endif
+
 	if(excCode == IOINTERRUPTS)
 		interruptHandler(cause);
 	else if(excCode == SYSEXCEPTION)
@@ -160,6 +166,7 @@ void passUpOrDie(int except_type, state_t *exceptionState) {
 		current_process = NULL;
 		scheduler();
 	}else{ // PassUp
+		klog_print("passUp");
 		copyState(exceptionState, &(current_process->p_supportStruct)->sup_exceptState[except_type]); 
         context_t info_to_pass = (current_process->p_supportStruct)->sup_exceptContext[except_type]; // passing up the support info
         LDCXT(info_to_pass.stackPtr, info_to_pass.status, info_to_pass.pc);                   // to the support level
