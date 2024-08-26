@@ -11,7 +11,6 @@ extern struct list_head pseudoClockQueue;
 extern pcb_PTR devQueue[DEVINTNUM][DEVPERINT];
 
 void interruptHandler(int cause){	
-
 	if(cause & LOCALTIMERINT) {
 		processorLocalTimer();
 	}else if(cause & TIMERINTERRUPT) {
@@ -90,6 +89,8 @@ unsigned int getDeviceNumber (unsigned int interruptLine) {
 }*/
 
 void deviceInterrupt(int cause){
+	
+	klog_print("devInterrupt\n");
 
 	// TODO priority within same interrupt line ?
 	unsigned int interruptLine;	

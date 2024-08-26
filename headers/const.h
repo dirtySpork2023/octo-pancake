@@ -217,6 +217,6 @@
 // exception state
 #define EXST ((state_t *) BIOSDATAPAGE)
 
-#define DEBUG
+//#define DEBUG
 
 #endif

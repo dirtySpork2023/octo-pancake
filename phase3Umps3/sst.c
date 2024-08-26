@@ -20,10 +20,9 @@ static unsigned int writeString(sst_print_t* s, devreg_t* base){
 
 	for(int i=0; i<s->length; i++){
 		if(*s->string == EOS) klog_print("err, printing EOS\n");
-		unsigned int value = PRINTCHR | (((unsigned int)*s->string) << 8);
 		ssi_do_io_t do_io = {
-			.commandAddr = command,
-			.commandValue = value,
+			.commandAddr = &base->dtp.command,
+			.commandValue = PRINTCHR | (((unsigned int)*s->string) << 8),
 		};
 		ssi_payload_t payload = {
 			.service_code = DOIO,
@@ -48,17 +47,14 @@ static unsigned int writeString(sst_print_t* s, devreg_t* base){
 void SST(){
 	pcb_PTR child_pcb;
 	unsigned int asid = (current_process->p_s.entry_hi & GETASID) >> ASIDSHIFT;
-	klog_print("SST");
-	klog_print_dec(asid);	
-	klog_print(" here\n");
+	klog_print("SST started\n");
 
 	// initialize the corresponding U-proc
 	state_t childState;
-    // init other vars to zero
+    STST(&childState);
 	childState.reg_sp = USERSTACKTOP;
     childState.pc_epc = UPROCSTARTADDR;
 	childState.reg_t9 = UPROCSTARTADDR;
-    STST(&childState.status);
 	childState.status |= USERPON | IEPON | IMON | TEBITON;
 	childState.entry_hi = asid << ASIDSHIFT;
 
@@ -66,6 +62,7 @@ void SST(){
 	initSupportStruct(&childSupport, asid);
 	child_pcb = newProc(&childState, &childSupport);
 	
+	klog_print("child created\n");
 	#ifdef DEBUG
 	klog_print("SST");
 	klog_print_dec(asid);
@@ -85,14 +82,17 @@ void SST(){
 			answer = getTOD();
 		else if(payload.service_code == TERMINATE)
 			terminate();
-		else if(payload.service_code == WRITEPRINTER)
-		{klog_print("print");
+		else if(payload.service_code == WRITEPRINTER){
+			klog_print("prnt");
 			klog_print_dec(asid);
 			klog_print("\n");
 			answer = writeString(payload.arg, (devreg_t *)(PRNT0ADDR + (asid-1) * 0x10 ));
-		}else if(payload.service_code == WRITETERMINAL)
+		}else if(payload.service_code == WRITETERMINAL){
+			klog_print("term");
+			klog_print_dec(asid);
+			klog_print("\n");
 			answer = writeString(payload.arg, (devreg_t *)(TERM0ADDR + (asid-1) * 0x10 ));
-		else {
+		}else{
 			klog_print("ERR: invalid SST service\n");
 			breakPoint();
 		}

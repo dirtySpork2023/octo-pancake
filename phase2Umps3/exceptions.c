@@ -39,12 +39,6 @@ void exceptionHandler(void){
 	unsigned int cause = getCAUSE();
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
 
-	#ifdef DEBUG
-	klog_print("excCode");
-	klog_print_dec(excCode);
-	klog_print("\n");
-	#endif
-
 	if(excCode == IOINTERRUPTS)
 		interruptHandler(cause);
 	else if(excCode == SYSEXCEPTION)
