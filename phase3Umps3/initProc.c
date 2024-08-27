@@ -43,13 +43,13 @@ void test(){
 
 
 	// terminate after all SST have terminated
-	int uProcCount = 8;
+	int uProcCount = UPROCMAX;
 	while(uProcCount > 0){
 		SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
 		uProcCount--;
 	}
 	klog_print("test terminated\n");
-	suicide();	
+	suicide();
 }
 
 pcb_PTR newProc(state_t *procState, support_t *procSupport){
@@ -86,7 +86,16 @@ void initSupportStruct(support_t *supportStruct, unsigned int asid){
 	supportStruct->sup_exceptContext[PGFAULTEXCEPT].status = ALLOFF | IEPON | IMON | TEBITON;
 	supportStruct->sup_exceptContext[GENERALEXCEPT].stackPtr = supportStack - PAGESIZE; // &(supportStruct->sup_stackGen[499]);
 	supportStruct->sup_exceptContext[PGFAULTEXCEPT].stackPtr = supportStack - 2 * PAGESIZE; // &(supportStruct->sup_stackGen[499]);
+	
 	// sup_privatePgTbl[USERPGTBLSIZE] ? TODO
+	pteEntry_t tmp;
+	tmp.pte_entryHI = 0x80000000 + asid;
+	tmp.pte_entryLO = ALLOFF | DIRTYON;
+	for(int i=0; i<USERPGTBLSIZE; i++){
+		tmp.pte_entryHI += (1 << VPNSHIFT);
+		supportStruct->sup_privatePgTbl[i] = tmp;
+	}
+	supportStruct->sup_privatePgTbl[31].pte_entryHI = (0xBFFFF << VPNSHIFT) + asid;
 }
 
 support_t *getSupportStruct(){

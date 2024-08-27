@@ -43,29 +43,26 @@ static unsigned int writeString(sst_print_t* s, devreg_t* base){
 }
 
 void SST(){
-	pcb_PTR child_pcb;
 	unsigned int asid = (current_process->p_s.entry_hi & GETASID) >> ASIDSHIFT;
+	
 	klog_print("SST started\n");
-	breakPoint();
-	// initialize the corresponding U-proc
+	
+	// initialize U-proc
 	state_t childState;
     STST(&childState);
 	childState.reg_sp = USERSTACKTOP;
     childState.pc_epc = UPROCSTARTADDR;
 	childState.reg_t9 = UPROCSTARTADDR;
-	childState.status = ALLOFF | USERPON | IEPON | IMON | TEBITON;
+	childState.status |= USERPON | IEPON | IMON | TEBITON;
 	childState.entry_hi = asid << ASIDSHIFT;
 
 	support_t childSupport;
 	initSupportStruct(&childSupport, asid);
-	breakPoint();	
-	child_pcb = newProc(&childState, &childSupport);
+
+	pcb_PTR child_pcb = newProc(&childState, &childSupport);
 	
-	klog_print("child created\n");
 	#ifdef DEBUG
-	klog_print("SST");
-	klog_print_dec(asid);
-	klog_print(" ready");	
+	klog_print("child created\n");
 	#endif
 	
 	// wait for service requests and manage them
@@ -111,6 +108,8 @@ void SST(){
 void terminate(){
 	// notify test process
 	SYSCALL(SENDMESSAGE, PARENT, 0, 0);
+	
+	// TODO clear tlb entries
 
 	suicide();
 	klog_print("I should be dead\n");

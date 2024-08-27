@@ -9,8 +9,9 @@ RAMTOP will range from 0x2000.8000 to 0x2020.0000
 +---RAMTOP - 2*PAGESIZE
 | support stack for page fault exeptions
 +---RAMTOP - 3*PAGESIZE
-| swap mutex stack?
-|
+| each SST and mutex process have 1/4 of a PAGESIZE
++---
+
 	unused
 |
 +---
