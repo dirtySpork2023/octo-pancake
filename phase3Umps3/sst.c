@@ -46,7 +46,7 @@ void SST(){
 	pcb_PTR child_pcb;
 	unsigned int asid = (current_process->p_s.entry_hi & GETASID) >> ASIDSHIFT;
 	klog_print("SST started\n");
-
+	breakPoint();
 	// initialize the corresponding U-proc
 	state_t childState;
     STST(&childState);
@@ -58,6 +58,7 @@ void SST(){
 
 	support_t childSupport;
 	initSupportStruct(&childSupport, asid);
+	breakPoint();	
 	child_pcb = newProc(&childState, &childSupport);
 	
 	klog_print("child created\n");

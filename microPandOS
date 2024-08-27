@@ -8,27 +8,27 @@
     "devices": {
         "flash0": {
             "enabled": true,
-            "file": "/home/zbarba/octo-pancake/testers/printerTest.umps"
+            "file": "/home/zbarba/octo-pancake/testers/todTest.umps"
         },
         "flash1": {
             "enabled": true,
-            "file": "/home/zbarba/octo-pancake/testers/terminalTest1.umps"
+            "file": "/home/zbarba/octo-pancake/testers/printerTest.umps"
         },
         "flash2": {
             "enabled": true,
-            "file": "/home/zbarba/octo-pancake/testers/terminalTest2.umps"
+            "file": "/home/zbarba/octo-pancake/testers/terminalTest1.umps"
         },
         "flash3": {
             "enabled": true,
-            "file": "/home/zbarba/octo-pancake/testers/terminalTest3.umps"
+            "file": "/home/zbarba/octo-pancake/testers/terminalTest2.umps"
         },
         "flash4": {
             "enabled": true,
-            "file": "/home/zbarba/octo-pancake/testers/terminalTest4.umps"
+            "file": "/home/zbarba/octo-pancake/testers/terminalTest3.umps"
         },
         "flash5": {
             "enabled": true,
-            "file": "/home/zbarba/octo-pancake/testers/todTest.umps"
+            "file": "/home/zbarba/octo-pancake/testers/terminalTest4.umps"
         },
         "flash6": {
             "enabled": true,

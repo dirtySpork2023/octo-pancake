@@ -7,7 +7,6 @@
 #include "h/types.h"
 
 void main() {
-	klog_print("printerTest.c started\n");
 	print(WRITETERMINAL, "printTest is ok\n");
 	print(WRITEPRINTER, "printTest is ok\n");
 	/* Terminate normally */

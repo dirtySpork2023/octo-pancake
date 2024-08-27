@@ -89,8 +89,10 @@ unsigned int getDeviceNumber (unsigned int interruptLine) {
 }*/
 
 void deviceInterrupt(int cause){
-	
+
+	#ifdef DEBUG	
 	klog_print("devInterrupt\n");
+	#endif
 
 	// TODO priority within same interrupt line ?
 	unsigned int interruptLine;	

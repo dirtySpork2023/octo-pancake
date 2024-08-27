@@ -38,7 +38,7 @@ void exceptionHandler(void){
 	/* processor already set to kernel mode and disabled interrupts*/
 	unsigned int cause = getCAUSE();
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
-
+	
 	if(excCode == IOINTERRUPTS)
 		interruptHandler(cause);
 	else if(excCode == SYSEXCEPTION)
