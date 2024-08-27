@@ -3,9 +3,7 @@
 // number of microseconds since startup
 // SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
 static unsigned int getTOD(){
-	unsigned int *hiTOD = (memaddr *)TODHIADDR;
-	if( *hiTOD != 0 ) klog_print("low order word not sufficient for getTOD\n");
-		
+	// low order word is sufficient, TODHIADDR is not considered	
 	unsigned int time;
 	STCK(time); // value of the low-order word of the TOD clock divided by the Time Scale
 	return time;
@@ -55,7 +53,7 @@ void SST(){
 	childState.reg_sp = USERSTACKTOP;
     childState.pc_epc = UPROCSTARTADDR;
 	childState.reg_t9 = UPROCSTARTADDR;
-	childState.status |= USERPON | IEPON | IMON | TEBITON;
+	childState.status = ALLOFF | USERPON | IEPON | IMON | TEBITON;
 	childState.entry_hi = asid << ASIDSHIFT;
 
 	support_t childSupport;

@@ -28,6 +28,7 @@ void swapMutex(){
 // TLB entry found but invalid =>
 // TLB_exception_handler
 void pageFaultExceptionHandler() {
+	klog_print("pager\n");
 	support_t* supStruct = getSupportStruct();	
 	state_t* excState = &supStruct->sup_exceptState[PGFAULTEXCEPT];
 
