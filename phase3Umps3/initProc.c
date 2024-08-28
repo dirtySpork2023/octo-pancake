@@ -1,8 +1,5 @@
 #include "./headers/initProc.h"
 
-// pagesize is 4096
-#define QPAGE 1024
-
 // phase 3 global variables
 pcb_PTR swap_pcb, sst_pcb[UPROCMAX];
 
@@ -17,7 +14,7 @@ void test(){
 	initSwapStructs();
 	
 	STST(&swapState);
-	swapState.reg_sp = ramtop - 3*PAGESIZE; 
+	swapState.reg_sp = ramtop - 4*PAGESIZE; 
 	swapState.pc_epc = (memaddr)swapMutex;
     swapState.reg_t9 = (memaddr)swapMutex;
     swapState.status = ALLOFF | IEPON | IMON | TEBITON; // interrupts enabled?
@@ -77,15 +74,15 @@ void suicide(void){
 }
 
 void initSupportStruct(support_t *supportStruct, unsigned int asid){ 
-	unsigned int supportStack;
-	RAMTOP(supportStack);
+	unsigned int ramtop;
+	RAMTOP(ramtop);
 	supportStruct->sup_asid = asid;
 	supportStruct->sup_exceptContext[GENERALEXCEPT].pc = (memaddr) generalExceptionHandler;
 	supportStruct->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pageFaultExceptionHandler;
 	supportStruct->sup_exceptContext[GENERALEXCEPT].status = ALLOFF | IEPON | IMON | TEBITON;
 	supportStruct->sup_exceptContext[PGFAULTEXCEPT].status = ALLOFF | IEPON | IMON | TEBITON;
-	supportStruct->sup_exceptContext[GENERALEXCEPT].stackPtr = supportStack - PAGESIZE; // &(supportStruct->sup_stackGen[499]);
-	supportStruct->sup_exceptContext[PGFAULTEXCEPT].stackPtr = supportStack - 2 * PAGESIZE; // &(supportStruct->sup_stackGen[499]);
+	supportStruct->sup_exceptContext[GENERALEXCEPT].stackPtr = ramtop - 2 * PAGESIZE; // &(supportStruct->sup_stackGen[499]);
+	supportStruct->sup_exceptContext[PGFAULTEXCEPT].stackPtr = ramtop - 3 * PAGESIZE; // &(supportStruct->sup_stackGen[499]);
 	
 	// sup_privatePgTbl[USERPGTBLSIZE] ? TODO
 	pteEntry_t tmp;
@@ -96,6 +93,13 @@ void initSupportStruct(support_t *supportStruct, unsigned int asid){
 		supportStruct->sup_privatePgTbl[i] = tmp;
 	}
 	supportStruct->sup_privatePgTbl[31].pte_entryHI = (0xBFFFF << VPNSHIFT) + asid;
+/*	for(int i=0; i<USERPGTBLSIZE; i++){
+		klog_print("EntryHI = ");
+		klog_print_hex(supportStruct->sup_privatePgTbl[i].pte_entryHI);
+		klog_print("\nEntryLO = ");
+		klog_print_hex(supportStruct->sup_privatePgTbl[i].pte_entryLO);
+		klog_print("\n");
+	}*/
 }
 
 support_t *getSupportStruct(){

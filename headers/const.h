@@ -208,7 +208,7 @@
 
 /* Inizio indirizzo di device registers */
 #define START_DEVREG		0x10000054
-
+#define QPAGE 1024
 #define SSIADDRESS 0
 #define PARENT 0 // non c'e conflitto ma nel caso basta modificare SSIADDRESS
 #define GETMUTEX 1

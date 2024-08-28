@@ -2,15 +2,25 @@ Memory:
 
 RAMTOP will range from 0x2000.8000 to 0x2020.0000
 
-+---RAMTOP
-| test stack
-+---RAMTOP - PAGESIZE
-| support stack for general exceptions
-+---RAMTOP - 2*PAGESIZE
-| support stack for page fault exeptions
-+---RAMTOP - 3*PAGESIZE
-| each SST and mutex process have 1/4 of a PAGESIZE
-+---
+each cell is a frame (PAGESIZE)
++ RAMTOP
+|	SSI stack
++ RAMTOP - PAGESIZE
+|	test stack
++ RAMTOP - 2*PAGESIZE
+|	support stack for general exceptions
++ RAMTOP - 3*PAGESIZE
+|	support stack for page fault exeptions
++ RAMTOP - 4*PAGESIZE
+|	mutex process stack
++ RAMTOP - 4*PAGESIZE - QPAGE
+|	first sst stack
++
+
++ RAMTOP 6*PAGESIZE - QPAGE
+|	last sst stack
++ RAMTOP 6,5 * PAGESIZE
+|
 
 	unused
 |

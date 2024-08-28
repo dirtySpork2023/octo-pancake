@@ -75,8 +75,8 @@ int main(){
 	root->p_s.status = ALLOFF | IEPON | IMON | TEBITON;
 	root->p_s.pc_epc = (memaddr) test;
 	root->p_s.reg_t9 = (memaddr) test;
-	RAMTOP(root->p_s.reg_sp); // stack pointer = RAMTOP - 2*PAGESIZE
-	root->p_s.reg_sp -= 2*PAGESIZE;
+	RAMTOP(root->p_s.reg_sp); // stack pointer = RAMTOP - PAGESIZE
+	root->p_s.reg_sp -= PAGESIZE;
 
 	scheduler();
 	return 0;
