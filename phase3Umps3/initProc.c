@@ -84,13 +84,9 @@ void initSupportStruct(support_t *supportStruct, unsigned int asid){
 	supportStruct->sup_exceptContext[GENERALEXCEPT].stackPtr = ramtop - 2 * PAGESIZE; // &(supportStruct->sup_stackGen[499]);
 	supportStruct->sup_exceptContext[PGFAULTEXCEPT].stackPtr = ramtop - 3 * PAGESIZE; // &(supportStruct->sup_stackGen[499]);
 	
-	// sup_privatePgTbl[USERPGTBLSIZE] ? TODO
-	pteEntry_t tmp;
-	tmp.pte_entryHI = 0x80000000 + asid;
-	tmp.pte_entryLO = ALLOFF | DIRTYON;
 	for(int i=0; i<USERPGTBLSIZE; i++){
-		tmp.pte_entryHI += (1 << VPNSHIFT);
-		supportStruct->sup_privatePgTbl[i] = tmp;
+		supportStruct->sup_privatePgTbl[i].pte_entryHI = KUSEG + (i << VPNSHIFT) + asid;
+		supportStruct->sup_privatePgTbl[i].pte_entryLO = ALLOFF | DIRTYON; // valid off
 	}
 	supportStruct->sup_privatePgTbl[31].pte_entryHI = (0xBFFFF << VPNSHIFT) + asid;
 /*	for(int i=0; i<USERPGTBLSIZE; i++){
