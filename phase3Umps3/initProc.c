@@ -5,10 +5,12 @@ pcb_PTR swap_pcb, sst_pcb[UPROCMAX];
 
 void test(){
 	state_t swapState, sstState;
-	//support_t sstSupport;
 	unsigned int ramtop;
 	RAMTOP(ramtop);
 
+	//installed terminals and printers
+	klog_print_hex(0x70000000 + *((memaddr *)(0x1000002C + 0x0C)));
+	klog_print_hex(0x60000000 + *((memaddr *)(0x1000002C + 0x10)));
 
 	// create swap process
 	initSwapStructs();
@@ -20,24 +22,25 @@ void test(){
     swapState.status = ALLOFF | IEPON | IMON | TEBITON; // interrupts enabled?
 	swap_pcb = newProc(&swapState, NULL);
 	
-	klog_print("swap pcb initialized\n");
-
 	// create SST processes
 	STST(&sstState);
 	sstState.reg_sp = swapState.reg_sp; 
 	sstState.pc_epc = (memaddr)SST;
     sstState.reg_t9 = (memaddr)SST;
     sstState.status = ALLOFF | IEPON | IMON | TEBITON;
-	
+
+	//temprorary for debug
+	support_t supportSST;
+	initSupportStruct(&supportSST, 1);
+
 	for(unsigned int asid=0; asid<UPROCMAX; asid++){
 		sstState.reg_sp = sstState.reg_sp - QPAGE; 
 		sstState.entry_hi = (asid+1) << ASIDSHIFT; // ASID starts from 1
-		sst_pcb[asid] = newProc(&sstState, NULL);
+		sst_pcb[asid] = newProc(&sstState, &supportSST);
 	}
 
 
 	// TODO init each peripheral device
-
 
 	// terminate after all SST have terminated
 	int uProcCount = UPROCMAX;

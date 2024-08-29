@@ -6,7 +6,8 @@ void generalExceptionHandler(){
 	
 	unsigned int cause = supportStruct->sup_exceptState[GENERALEXCEPT].cause;
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
-
+	
+	klog_print("supExeption");
 	if(excCode == SYSEXCEPTION)
 		usyscallHandler(supportStruct->sup_exceptState[GENERALEXCEPT]);
 	else

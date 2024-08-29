@@ -22,6 +22,9 @@ void uTLB_RefillHandler(void){
 	
 	pteEntry_t pageTableEntry = current_process->p_supportStruct->sup_privatePgTbl[p];
 
+	// entryHI addresses already set
+	// entryLO has valid bit OFF
+
 	// write this page table entry to the TLB
 	setENTRYHI(pageTableEntry.pte_entryHI);
 	setENTRYLO(pageTableEntry.pte_entryLO);
