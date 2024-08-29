@@ -19,7 +19,9 @@ void uTLB_RefillHandler(void){
 	// prendo solo i primi 20 bit (VPN)
 	// required Page number
 	unsigned int p = (EXST->entry_hi & GETPAGENO) >> VPNSHIFT;
-	
+	klog_print("refillP=");
+	klog_print_dec(p);
+		
 	pteEntry_t pageTableEntry = current_process->p_supportStruct->sup_privatePgTbl[p];
 
 	// entryHI addresses already set

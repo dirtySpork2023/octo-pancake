@@ -36,8 +36,7 @@ void usyscallHandler(state_t exst){
 
 void programTrapsHandler(){
 	SYSCALL(SENDMESSAGE, (unsigned int)swap_pcb, RELEASEMUTEX, 0);
-	//suicide();
-	//terminate();
 	klog_print("support program trap\n");
-	breakPoint();
+	suicide();
+	//terminate(); TODO ?
 }
