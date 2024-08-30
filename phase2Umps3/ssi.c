@@ -13,6 +13,10 @@ extern int process_count;
 extern int softBlockCount;
 
 static void createProcess(ssi_create_process_PTR arg, pcb_PTR sender){
+	#ifdef DEBUG_SSI
+	klog_print("SSI createProcess\n");
+	#endif
+	
 	pcb_PTR newChild = allocPcb();
 	if(newChild == NULL){
 		/* no free PCBs available */
@@ -28,10 +32,18 @@ static void createProcess(ssi_create_process_PTR arg, pcb_PTR sender){
 }
 
 static void getSupportStruct(pcb_PTR sender){
+	#ifdef DEBUG_SSI
+	klog_print("SSI getSupportStruct\n");
+	#endif
+	
 	SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)sender->p_supportStruct, 0);
 }
 
 static void killCall(void* arg, pcb_PTR sender){
+	#ifdef DEBUG_SSI
+	klog_print("SSI kill\n");
+	#endif
+	
 	killProcess(arg, sender);
 	if(arg != NULL)
 		SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
@@ -47,7 +59,7 @@ static void doIO(ssi_do_io_PTR arg, pcb_PTR sender){
 	devQueue[intLineNo][devNo] = outAnyProcQ(sender);
 
 	#ifdef DEBUG
-	klog_print("blocked pcb ");
+	klog_print("SSI blocked pcb ");
 	klog_print_dec(sender->p_pid);
 	klog_print(" for I/O\n");
 	#endif
@@ -56,16 +68,28 @@ static void doIO(ssi_do_io_PTR arg, pcb_PTR sender){
 }
 
 static void getTime(pcb_PTR sender){
+	#ifdef DEBUG_SSI
+	klog_print("SSI getTime\n");
+	#endif
+	
 	SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)sender->p_time, 0);
 }
 
 static void waitForClock(pcb_PTR sender){
+	#ifdef DEBUG_SSI
+	klog_print("SSI waitForClock\n");
+	#endif
+	
 	insertProcQ(&pseudoClockQueue, outAnyProcQ(sender));
 	softBlockCount++;
 	SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
 }
 
 static void getPID(void* arg, pcb_PTR sender){
+	#ifdef DEBUG_SSI
+	klog_print("SSI getPID\n");
+	#endif
+	
 	if( arg==0 )
 		SYSCALL(SENDMESSAGE, (unsigned int)sender, sender->p_pid, 0);
 	else if( sender->p_parent==NULL )
@@ -75,13 +99,6 @@ static void getPID(void* arg, pcb_PTR sender){
 }
 
 static void SSIRequest(pcb_t* sender, int service, void* arg){
-	#ifdef DEBUG
-	klog_print("SSI request ");
-	klog_print_dec(service);
-	klog_print("\n");
-	#endif
-
-	// TODO make if statements
 	if(		service == CREATEPROCESS) createProcess(arg, sender);
 	else if(service == TERMPROCESS	) killCall(arg, sender);
 	else if(service == DOIO			) doIO(arg, sender);

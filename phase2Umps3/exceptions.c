@@ -2,6 +2,7 @@
 
 void klog_print();
 void klog_print_dec();
+void klog_print_hex();
 void breakPoint();
 void killProcess();
 extern struct list_head pcbFree_h;
@@ -15,23 +16,20 @@ void uTLB_RefillHandler(void){
 	setENTRYLO(0x00000000);
 	TLBWR();
 	LDST((state_t*) 0x0FFFF000); */
-
+	
 	// prendo solo i primi 20 bit (VPN)
 	// required Page number
 	unsigned int p = (EXST->entry_hi & GETPAGENO) >> VPNSHIFT;
-	klog_print("refillP=");
-	klog_print_dec(p);
-		
+
+	if(p >= MAXPAGES) p = MAXPAGES-1; // stack page
+	
 	pteEntry_t pageTableEntry = current_process->p_supportStruct->sup_privatePgTbl[p];
-
-	// entryHI addresses already set
-	// entryLO has valid bit OFF
-
+	
 	// write this page table entry to the TLB
 	setENTRYHI(pageTableEntry.pte_entryHI);
 	setENTRYLO(pageTableEntry.pte_entryLO);
 	TLBWR(); // random index
-
+	
 	// return control to the current process
 	LDST(EXST);
 }
@@ -43,7 +41,7 @@ void exceptionHandler(void){
 	/* processor already set to kernel mode and disabled interrupts*/
 	unsigned int cause = getCAUSE();
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
-	
+
 	if(excCode == IOINTERRUPTS)
 		interruptHandler(cause);
 	else if(excCode == SYSEXCEPTION)
@@ -59,6 +57,10 @@ void exceptionHandler(void){
 }
 
 void syscallHandler(void){
+	#ifdef DEBUG_EXEP
+	klog_print("syscall exception\n");
+	#endif
+	
 	if((int)EXST->reg_a0 >= 1)
 		passUpOrDie(GENERALEXCEPT, EXST);
 
@@ -165,7 +167,6 @@ void passUpOrDie(int except_type, state_t *exceptionState) {
 		current_process = NULL;
 		scheduler();
 	}else{ // PassUp
-		klog_print("passUp");
 		copyState(exceptionState, &(current_process->p_supportStruct)->sup_exceptState[except_type]); 
         context_t info_to_pass = (current_process->p_supportStruct)->sup_exceptContext[except_type]; // passing up the support info
         LDCXT(info_to_pass.stackPtr, info_to_pass.status, info_to_pass.pc);                   // to the support level

@@ -23,8 +23,4 @@ extern pcb_PTR current_process;
 // system service thread
 void SST();
 
-// terminate SST and child after sending message to test
-// SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
-void terminate();
-
 #endif

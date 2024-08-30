@@ -60,6 +60,5 @@ void scheduler(){
 	//TODO errore "nello scheduler il timeslice non è stato moltiplicato per il TIMESCALEADDR"	
 
 	/* load the processor state of the current process */
-	breakPoint();
 	LDST(&current_process->p_s);
 }

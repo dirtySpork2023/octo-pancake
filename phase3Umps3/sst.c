@@ -9,10 +9,26 @@ static unsigned int getTOD(){
 	return time;
 }
 
+// terminate SST and child after sending message to test
+// SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
+static void terminate(){
+	// notify test process
+	SYSCALL(SENDMESSAGE, PARENT, 0, 0);
+	
+	// TODO clear tlb entries
+
+	suicide();
+	klog_print("I should be dead\n");
+}
+
 // write string to printer (or terminal) of same number as child ASID
 // SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
 static unsigned int writeString(sst_print_t* s, devreg_t* base){
-
+	#ifdef DEBUG
+	klog_print("prnt");
+	//klog_print_dec(asid);
+	klog_print("\n");
+	#endif
 	unsigned int *command = (unsigned int *)base + 3;
 	if(command == &base->dtp.command) klog_print("use devreg_t");
 
@@ -42,12 +58,7 @@ static unsigned int writeString(sst_print_t* s, devreg_t* base){
 	return 0;
 }
 
-void SST(){
-	unsigned int asid = (current_process->p_s.entry_hi & GETASID) >> ASIDSHIFT;
-	
-	klog_print("SST started\n");
-	
-	// initialize U-proc
+static pcb_PTR initChild(unsigned int asid){
 	state_t childState;
     STST(&childState);
 	childState.reg_sp = USERSTACKTOP;
@@ -56,61 +67,35 @@ void SST(){
 	childState.status |= USERPON | IEPON | IMON | TEBITON;
 	childState.entry_hi = asid << ASIDSHIFT;
 
-	support_t childSupport;
+	support_t childSupport; // deallocated?
 	initSupportStruct(&childSupport, asid);
 
-	pcb_PTR child_pcb = newProc(&childState, &childSupport);
-	
-	#ifdef DEBUG
-	klog_print("child created\n");
-	#endif
-	
-	// wait for service requests and manage them
-	ssi_payload_t payload;
-	unsigned int answer;
-	
-	while(TRUE){
-		// I suppose requests can only be syncronous
-	
-		SYSCALL(RECEIVEMESSAGE, (unsigned int)child_pcb, (unsigned int)(&payload), 0);
-		
-		if(payload.service_code == GET_TOD)
-			answer = getTOD();
-		else if(payload.service_code == TERMINATE)
-			terminate();
-		else if(payload.service_code == WRITEPRINTER){
-			klog_print("prnt");
-			klog_print_dec(asid);
-			klog_print("\n");
-			answer = writeString(payload.arg, (devreg_t *)(PRNT0ADDR + (asid-1) * 0x10 ));
-		}else if(payload.service_code == WRITETERMINAL){
-			klog_print("term");
-			klog_print_dec(asid);
-			klog_print("\n");
-			answer = writeString(payload.arg, (devreg_t *)(TERM0ADDR + (asid-1) * 0x10 ));
-		}else{
-			klog_print("ERR: invalid SST service\n");
-			breakPoint();
-		}
-
-		/*
-		 * printer intLineNo = 6
-		 * terminal intLineNo = 7
-		 * DevNo = ASID (0-7)
-		 *                /---   TERM0ADDR or PRNT0ADDR    ---\
-		 * devaddrbiase = 0x1000.0054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
-		 */
-
-		SYSCALL(SENDMESSAGE, (unsigned int)child_pcb, answer, 0);
-	}
+	return newProc(&childState, &childSupport);
 }
 
-void terminate(){
-	// notify test process
-	SYSCALL(SENDMESSAGE, PARENT, 0, 0);
-	
-	// TODO clear tlb entries
+static unsigned int SSTrequest(unsigned int service, void *arg, unsigned int asid){
+	if(		service == GET_TOD) return getTOD();
+	else if(service == TERMINATE) terminate();
+	else if(service == WRITEPRINTER) return writeString(arg, (devreg_t *)(PRNT0ADDR + (asid-1) * 0x10 ));
+	else if(service == WRITETERMINAL) return writeString(arg, (devreg_t *)(TERM0ADDR + (asid-1) * 0x10 ));
+	else{
+		klog_print_hex(service);
+		klog_print("ERR: invalid SST service\n");
+		breakPoint();
+	}
+	return 0;
+}
 
-	suicide();
-	klog_print("I should be dead\n");
+void SST(){
+	unsigned int asid = (current_process->p_s.entry_hi & GETASID) >> ASIDSHIFT;
+	pcb_PTR child_pcb = initChild(asid);
+	
+	// wait for service requests and manage them
+	ssi_payload_PTR payload = NULL;
+	unsigned int answer;
+	while(TRUE){
+		SYSCALL(RECEIVEMESSAGE, (unsigned int)child_pcb, (unsigned int)(&payload), 0);
+		answer = SSTrequest(payload->service_code, payload->arg, asid);
+		SYSCALL(SENDMESSAGE, (unsigned int)child_pcb, answer, 0);
+	}
 }

@@ -64,11 +64,11 @@ void klog_print_dec(unsigned int num) {
 void klog_print_hex(unsigned int num) {
     const char digits[] = "0123456789ABCDEF";
 
-    do {
+    for(int i=0; i<8; i++) {
         klog_buffer[klog_line_index][klog_char_index] = digits[num % 16];
         num /= 16;
         next_char();
-    } while (num > 0);
+    }
 }
 
 

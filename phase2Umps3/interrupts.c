@@ -29,6 +29,10 @@ void interruptHandler(int cause){
 }
 
 void processorLocalTimer(){
+	#ifdef DEBUG_EXEP
+	klog_print("PLT exeption\n");
+	#endif
+	
 	if(current_process == NULL){
 		klog_print("ERR localTimer\n");
 		breakPoint();
@@ -42,6 +46,10 @@ void processorLocalTimer(){
 }
 
 void intervalTimer(){
+	#ifdef DEBUG_EXEP
+	klog_print("intervalTimer exeption\n");
+	#endif
+	
 	/* re-set with 100 milliseconds */
 	LDIT(PSECOND);
 	/*	unlock all pcbs in pseudoClockQueue */
@@ -51,7 +59,7 @@ void intervalTimer(){
 	}
 }
 
-unsigned int getDeviceNumber (unsigned int interruptLine) {
+static unsigned int getDeviceNumber (unsigned int interruptLine) {
     unsigned int intdevBitMap = 0x10000040; // Interrupt Line ? Interrupting Devices Bit Map
 
     intdevBitMap = intdevBitMap + ((interruptLine - 3) * 0x04);
@@ -89,8 +97,9 @@ unsigned int getDeviceNumber (unsigned int interruptLine) {
 }*/
 
 void deviceInterrupt(int cause){
-
-	#ifdef DEBUG	
+	#ifdef DEBUG_EXEP
+	klog_print("deviceInterrupt exeption\n");
+	#elifdef DEBUG
 	klog_print("devInterrupt\n");
 	#endif
 
@@ -115,23 +124,29 @@ void deviceInterrupt(int cause){
 	//ho creato DEVADDR ma mi sono accordo adesso che esiste anche START_DEVREG
 	// devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
 	unsigned int devAddrBase = START_DEVREG + ((interruptLine - 3) * 0x80) + (devNumber * 0x10);
-	
+	devreg_t *device = (devreg_t *)devAddrBase;
+
 	unsigned int devStatus;
 	if(interruptLine == TERMINT){
 		// terminal device has two command and two status registers that operate independently and concurrently
-		// both must be handled before acknowledging the interrupt
+		// both must be handled before acknowledging the interrupt TODO?
 		
 		// transmitter subdevice
-		devStatus = *((unsigned int *)(devAddrBase + 0x8)) & 0x000000FF;
+		//devStatus = *((unsigned int *)(devAddrBase + 0x8)) & 0x000000FF;
+		devStatus = device->term.transm_status & 0x000000FF;
+
 		if (devStatus == OKCHARTRANS) {
 			// TRANSM_COMMAND = (base) + 0xc
-			*((unsigned int *)(devAddrBase + 0xc)) = ACK;
+			//*((unsigned int *)(devAddrBase + 0xc)) = ACK;
+			device->term.transm_command = ACK;
 		} else {
 			// receiver subdevice
-			devStatus = *((unsigned int *)(devAddrBase + 0x0)) & 0x000000FF;
+			//devStatus = *((unsigned int *)(devAddrBase + 0x0)) & 0x000000FF;
+			devStatus = device->term.recv_status & 0x000000FF;
 			if (devStatus == CHARRECV) {
 				// RECV_COMMAND = (base) + 0x4
-				*((unsigned int *)(devAddrBase + 0x4)) = ACK;
+				//*((unsigned int *)(devAddrBase + 0x4)) = ACK;
+				device->term.recv_command = ACK;
 			}
 		}
 
@@ -139,11 +154,12 @@ void deviceInterrupt(int cause){
 	}else{
 		// save off the status code from the device’s register
 		// STATUS = (base) + 0x0
-		devStatus = *((unsigned int *)devAddrBase);
-	
+		//devStatus = *((unsigned int *)devAddrBase);
+		devStatus = device->dtp.status;
 		// acknowledge the interrupt
 		// COMMAND = (base) + 0x4)
-		*((unsigned int *)(devAddrBase + 0x4)) = ACK;
+		//*((unsigned int *)(devAddrBase + 0x4)) = ACK;
+		device->dtp.command = ACK;
 	}
 
 	#ifdef DEBUG

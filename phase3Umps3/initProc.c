@@ -8,9 +8,15 @@ void test(){
 	unsigned int ramtop;
 	RAMTOP(ramtop);
 
-	//installed terminals and printers
+	//installed devs
+	#ifdef DEBUG
 	klog_print_hex(0x70000000 + *((memaddr *)(0x1000002C + 0x0C)));
 	klog_print_hex(0x60000000 + *((memaddr *)(0x1000002C + 0x10)));
+	klog_print_hex(0x40000000 + *((memaddr *)(0x1000002C + 0x04)));
+	devreg_t *flashDev = (devreg_t *)(START_DEVREG + (4-3)*0x80 + 0*0x10);
+	klog_print_dec(flashDev->dtp.status);
+	#endif
+
 
 	// create swap process
 	initSwapStructs();
@@ -40,7 +46,7 @@ void test(){
 	}
 
 
-	// TODO init each peripheral device
+	// TODO init each peripheral device ?
 
 	// terminate after all SST have terminated
 	int uProcCount = UPROCMAX;
@@ -82,23 +88,18 @@ void initSupportStruct(support_t *supportStruct, unsigned int asid){
 	supportStruct->sup_asid = asid;
 	supportStruct->sup_exceptContext[GENERALEXCEPT].pc = (memaddr) generalExceptionHandler;
 	supportStruct->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pageFaultExceptionHandler;
-	supportStruct->sup_exceptContext[GENERALEXCEPT].status = ALLOFF | IEPON | IMON | TEBITON;
-	supportStruct->sup_exceptContext[PGFAULTEXCEPT].status = ALLOFF | IEPON | IMON | TEBITON;
+	supportStruct->sup_exceptContext[GENERALEXCEPT].status = IEPON | IMON | TEBITON;
+	supportStruct->sup_exceptContext[PGFAULTEXCEPT].status = IEPON | IMON | TEBITON;
 	supportStruct->sup_exceptContext[GENERALEXCEPT].stackPtr = ramtop - 2 * PAGESIZE; // &(supportStruct->sup_stackGen[499]);
 	supportStruct->sup_exceptContext[PGFAULTEXCEPT].stackPtr = ramtop - 3 * PAGESIZE; // &(supportStruct->sup_stackGen[499]);
 	
-	for(int i=0; i<USERPGTBLSIZE; i++){
-		supportStruct->sup_privatePgTbl[i].pte_entryHI = KUSEG + (i << VPNSHIFT) + asid;
-		supportStruct->sup_privatePgTbl[i].pte_entryLO = ALLOFF | DIRTYON; // valid off
+	int i;
+	for(i=0; i<USERPGTBLSIZE-1; i++){
+		supportStruct->sup_privatePgTbl[i].pte_entryHI = KUSEG + (i << VPNSHIFT) + (asid << ASIDSHIFT);
+		supportStruct->sup_privatePgTbl[i].pte_entryLO = DIRTYON; // valid off
 	}
-	supportStruct->sup_privatePgTbl[31].pte_entryHI = (0xBFFFF << VPNSHIFT) + asid;
-/*	for(int i=0; i<USERPGTBLSIZE; i++){
-		klog_print("EntryHI = ");
-		klog_print_hex(supportStruct->sup_privatePgTbl[i].pte_entryHI);
-		klog_print("\nEntryLO = ");
-		klog_print_hex(supportStruct->sup_privatePgTbl[i].pte_entryLO);
-		klog_print("\n");
-	}*/
+	supportStruct->sup_privatePgTbl[i].pte_entryHI = 0xBFFFF000 + (asid << ASIDSHIFT);
+	supportStruct->sup_privatePgTbl[i].pte_entryLO = DIRTYON; // valid off
 }
 
 support_t *getSupportStruct(){

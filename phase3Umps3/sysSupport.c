@@ -7,7 +7,6 @@ void generalExceptionHandler(){
 	unsigned int cause = supportStruct->sup_exceptState[GENERALEXCEPT].cause;
 	unsigned int excCode = (cause & GETEXECCODE) >> CAUSESHIFT;
 	
-	klog_print("supExeption");
 	if(excCode == SYSEXCEPTION)
 		usyscallHandler(supportStruct->sup_exceptState[GENERALEXCEPT]);
 	else
@@ -37,6 +36,10 @@ void usyscallHandler(state_t exst){
 void programTrapsHandler(){
 	SYSCALL(SENDMESSAGE, (unsigned int)swap_pcb, RELEASEMUTEX, 0);
 	klog_print("support program trap\n");
-	suicide();
-	//terminate(); TODO ?
+
+	ssi_payload_t payload = {
+		.service_code = TERMINATE,
+		.arg = NULL,
+	};
+	SYSCALL(SENDMSG, PARENT, (unsigned int)(&payload), 0);
 }

@@ -218,5 +218,7 @@
 #define EXST ((state_t *) BIOSDATAPAGE)
 
 #define DEBUG
+#define DEBUG_SSI
+//#define DEBUG_EXEP
 
 #endif
