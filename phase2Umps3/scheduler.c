@@ -44,7 +44,7 @@ void scheduler(){
 
 	current_process = removeProcQ(&readyQueue);
 
-	#ifdef DEBUG
+	#ifdef DEBUG_SCHEDULER
 	unsigned int asid = (current_process->p_s.entry_hi & GETASID) >> ASIDSHIFT;
 	klog_print("[");
 	klog_print_dec(asid);

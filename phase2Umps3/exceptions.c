@@ -20,8 +20,16 @@ void uTLB_RefillHandler(void){
 	// prendo solo i primi 20 bit (VPN)
 	// required Page number
 	unsigned int p = (EXST->entry_hi & GETPAGENO) >> VPNSHIFT;
-
 	if(p >= MAXPAGES) p = MAXPAGES-1; // stack page
+	
+	#ifdef DEBUG_TLB
+	klog_print("refillP=");
+	klog_print_dec(p);
+	unsigned int addr = (current_process->p_supportStruct->sup_privatePgTbl[p].pte_entryHI & GETPAGENO) >> VPNSHIFT;
+	klog_print("\naddr=");
+	klog_print_dec(addr);
+	klog_print("\n");
+	#endif
 	
 	pteEntry_t pageTableEntry = current_process->p_supportStruct->sup_privatePgTbl[p];
 	
@@ -29,7 +37,7 @@ void uTLB_RefillHandler(void){
 	setENTRYHI(pageTableEntry.pte_entryHI);
 	setENTRYLO(pageTableEntry.pte_entryLO);
 	TLBWR(); // random index
-	
+
 	// return control to the current process
 	LDST(EXST);
 }

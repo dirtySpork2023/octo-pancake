@@ -1,5 +1,7 @@
 #include "./headers/sst.h"
 
+pcb_PTR child_pcb;
+
 // number of microseconds since startup
 // SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
 static unsigned int getTOD(){
@@ -11,12 +13,13 @@ static unsigned int getTOD(){
 
 // terminate SST and child after sending message to test
 // SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
-static void terminate(){
+static void terminate(unsigned int asid){
 	// notify test process
 	SYSCALL(SENDMESSAGE, PARENT, 0, 0);
 	
 	// TODO clear tlb entries
-
+	cleanSwapTable(asid);
+	
 	suicide();
 	klog_print("I should be dead\n");
 }
@@ -73,13 +76,15 @@ static pcb_PTR initChild(unsigned int asid){
 	return newProc(&childState, &childSupport);
 }
 
-static unsigned int SSTrequest(unsigned int service, void *arg, unsigned int asid){
+static unsigned int SSTrequest(unsigned int asid, unsigned int service, void *arg){
+	klog_print("SST request ");
+	klog_print_dec(service);
+	klog_print("\n");
 	if(		service == GET_TOD) return getTOD();
-	else if(service == TERMINATE) terminate();
+	else if(service == TERMINATE) terminate(asid);
 	else if(service == WRITEPRINTER) return writeString(arg, (devreg_t *)(PRNT0ADDR + (asid-1) * 0x10 ));
 	else if(service == WRITETERMINAL) return writeString(arg, (devreg_t *)(TERM0ADDR + (asid-1) * 0x10 ));
 	else{
-		klog_print_hex(service);
 		klog_print("ERR: invalid SST service\n");
 		breakPoint();
 	}
@@ -95,7 +100,7 @@ void SST(){
 	unsigned int answer;
 	while(TRUE){
 		SYSCALL(RECEIVEMESSAGE, (unsigned int)child_pcb, (unsigned int)(&payload), 0);
-		answer = SSTrequest(payload->service_code, payload->arg, asid);
+		answer = SSTrequest(asid, payload->service_code, payload->arg);
 		SYSCALL(SENDMESSAGE, (unsigned int)child_pcb, answer, 0);
 	}
 }

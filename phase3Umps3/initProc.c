@@ -8,14 +8,14 @@ void test(){
 	unsigned int ramtop;
 	RAMTOP(ramtop);
 
-	//installed devs
+	/*/installed devs
 	#ifdef DEBUG
 	klog_print_hex(0x70000000 + *((memaddr *)(0x1000002C + 0x0C)));
 	klog_print_hex(0x60000000 + *((memaddr *)(0x1000002C + 0x10)));
 	klog_print_hex(0x40000000 + *((memaddr *)(0x1000002C + 0x04)));
 	devreg_t *flashDev = (devreg_t *)(START_DEVREG + (4-3)*0x80 + 0*0x10);
 	klog_print_dec(flashDev->dtp.status);
-	#endif
+	#endif*/
 
 
 	// create swap process

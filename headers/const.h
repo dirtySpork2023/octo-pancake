@@ -201,7 +201,7 @@
 #define BACKINGSTORE FLASHBACK
 
 #define UPROCMAX 1
-#define POOLSIZE (UPROCMAX * 2)
+#define POOLSIZE 16 //(UPROCMAX * 2)
 /* End of Mikeyg constants */
 
 #define CHARRECV			5		/* Character received*/
@@ -218,7 +218,10 @@
 #define EXST ((state_t *) BIOSDATAPAGE)
 
 #define DEBUG
+#define DEBUG_SCHEDULER
 #define DEBUG_SSI
+//#define DEBUG_IO
 //#define DEBUG_EXEP
+#define DEBUG_TLB
 
 #endif

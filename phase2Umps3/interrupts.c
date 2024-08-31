@@ -99,8 +99,6 @@ unsigned int getDeviceNumber (unsigned int interruptLine) {
 void deviceInterrupt(int cause){
 	#ifdef DEBUG_EXEP
 	klog_print("deviceInterrupt exeption\n");
-	#elifdef DEBUG
-	klog_print("devInterrupt\n");
 	#endif
 
 	// TODO priority within same interrupt line ?
@@ -162,7 +160,7 @@ void deviceInterrupt(int cause){
 		device->dtp.command = ACK;
 	}
 
-	#ifdef DEBUG
+	#ifdef DEBUG_IO
 	klog_print("dev ");
 	klog_print_dec(devNumber);
 	klog_print(" of ");

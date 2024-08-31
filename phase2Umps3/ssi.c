@@ -50,6 +50,10 @@ static void killCall(void* arg, pcb_PTR sender){
 }
 
 static void doIO(ssi_do_io_PTR arg, pcb_PTR sender){
+	#ifdef DEBUG_SSI
+	klog_print("SSI doIO\n");
+	#endif
+
 	// calculating interrupt line and device number from commandAddr	
 	int device = ((unsigned int)arg->commandAddr - DEVADDR) / DEVREGSIZE;	
 	int intLineNo = device / DEVPERINT;
@@ -58,7 +62,7 @@ static void doIO(ssi_do_io_PTR arg, pcb_PTR sender){
 
 	devQueue[intLineNo][devNo] = outAnyProcQ(sender);
 
-	#ifdef DEBUG
+	#ifdef DEBUG_IO
 	klog_print("SSI blocked pcb ");
 	klog_print_dec(sender->p_pid);
 	klog_print(" for I/O\n");
