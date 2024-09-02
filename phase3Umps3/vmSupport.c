@@ -58,7 +58,7 @@ void pageFaultExceptionHandler() {
 
 	// missing page number
 	unsigned int p = (excState->entry_hi & GETPAGENO) >> VPNSHIFT;
-	if(p >= MAXPAGES) p = MAXPAGES-1; // stack page
+	p = p>31 ? 31 : p;
 
 	#ifdef DEBUG_TLB
 	klog_print("page fault = ");
@@ -75,7 +75,7 @@ void pageFaultExceptionHandler() {
 	klog_print_dec(f);
 	klog_print("\n");
 	#endif
-
+	
 	// if frame f is occupied
 	if (swap_table[f].sw_asid != NOPROC) {
 		klog_print("clearing occupied frame\n");
@@ -105,12 +105,12 @@ void pageFaultExceptionHandler() {
     // update the swap pool table's entry i
     swap_table[f].sw_pageNo = p;
     swap_table[f].sw_asid = supStruct->sup_asid;
-    swap_table[f].sw_pte = &supStruct->sup_privatePgTbl[p]; // p == pageNo == block number del flash drive [1-32]
+    swap_table[f].sw_pte = &supStruct->sup_privatePgTbl[p];
 
 	disableInterrups();
 
 	// update the process' page table
-	supStruct->sup_privatePgTbl[p].pte_entryLO = (swapPoolStart + f * PAGESIZE) + VALIDON;
+	supStruct->sup_privatePgTbl[p].pte_entryLO = (swapPoolStart + f * PAGESIZE) | VALIDON | DIRTYON;
     // update tlb
     TLBCLR(); // to modify when all is done
 
@@ -126,23 +126,21 @@ void pageFaultExceptionHandler() {
 // 	if cmd is FLASHWRITE writes to pageNo and reads from frameNo
 void flashDev(unsigned int cmd, unsigned int pageNo, unsigned int frameNo, unsigned int asid){
 	#ifdef DEBUG_TLB
-		if(cmd == FLASHWRITE)
-			klog_print("flashWrite VPN=");
-		else
-			klog_print("flasRead VPN=");
-		klog_print_dec(pageNo);
-		klog_print(" PFN=");
-		klog_print_dec(frameNo);
-		klog_print("\n");
-		
+	if(cmd == FLASHWRITE)
+		klog_print("flashWrite VPN=");
+	else
+		klog_print("flashRead VPN=");
+	klog_print_dec(pageNo);
+	klog_print(" PFN=");
+	klog_print_dec(frameNo);
+	klog_print("\n");	
 	#endif
-
-
+	
 	// devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
 	devreg_t *flashDev = (devreg_t *)(START_DEVREG + (FLASHINT-3)*0x80 + (asid-1)*0x10);
 	// DATA0 = address of physical frame
 	flashDev->dtp.data0 = swapPoolStart + (frameNo * PAGESIZE);
-
+	
 	ssi_do_io_t do_io_struct = {
 		.commandAddr = &flashDev->dtp.command,
 		// block number in high order three bytes and the command to write/read in the lower order byte
@@ -153,12 +151,14 @@ void flashDev(unsigned int cmd, unsigned int pageNo, unsigned int frameNo, unsig
 		.arg = &do_io_struct,
 	};
 	unsigned int response;
-
+	
 	SYSCALL(SENDMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)(&payload), 0);
 	SYSCALL(RECEIVEMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)(&response), 0);
 	
 	// if errors, treat as program trap
-	if (response == 2 || response >= 4) {
+	if (response == 2 || response >= 4){
+		klog_print("ERR: flashRead\n");
+		klog_print_dec(response);
 		programTrapsHandler();
 	}
 }

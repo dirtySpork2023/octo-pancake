@@ -26,20 +26,33 @@ static void terminate(unsigned int asid){
 
 // write string to printer (or terminal) of same number as child ASID
 // SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
-static unsigned int writeString(sst_print_t* s, devreg_t* base){
+static unsigned int writeString(sst_print_t* s, devreg_t* dev){
 	#ifdef DEBUG
 	klog_print("prnt");
 	//klog_print_dec(asid);
 	klog_print("\n");
 	#endif
-	unsigned int *command = (unsigned int *)base + 3;
-	if(command == &base->dtp.command) klog_print("use devreg_t");
+
+	unsigned int *cmdAddr, cmdValue;
+	if(dev < (devreg_t *)TERM0ADDR)
+		cmdAddr = &dev->dtp.command;
+	else
+		cmdAddr = &dev->term.transm_command;
+
 
 	for(int i=0; i<s->length; i++){
-		if(*s->string == EOS) klog_print("err, printing EOS\n");
+		if(*s->string == EOS) klog_print("ERR: printing EOS\n");
+		
+		if(dev < (devreg_t *)TERM0ADDR){
+			cmdValue = PRINTCHR;
+			dev->dtp.data0 = (unsigned int)*s->string;
+		}else{
+			cmdValue = (((unsigned int)*s->string) << 8) | PRINTCHR;
+		}
+
 		ssi_do_io_t do_io = {
-			.commandAddr = &base->dtp.command,
-			.commandValue = PRINTCHR | (((unsigned int)*s->string) << 8),
+			.commandAddr = cmdAddr,
+			.commandValue = cmdValue,
 		};
 		ssi_payload_t payload = {
 			.service_code = DOIO,
@@ -50,7 +63,9 @@ static unsigned int writeString(sst_print_t* s, devreg_t* base){
 		SYSCALL(RECEIVEMESSAGE, SSIADDRESS, (unsigned int)(&status), 0);
 		
 		if ((status & TERMSTATMASK) != RECVD){
-			klog_print("ERR: doIo status");
+			klog_print("ERR: doIo status ");
+			klog_print_dec(status & TERMSTATMASK);
+			klog_print("\n");
 			breakPoint();
 		}
 

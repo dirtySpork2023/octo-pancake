@@ -9,7 +9,6 @@
 #include "../klog.c"
 
 void main() {
-	klog_print("TOD test\n");
 	print(WRITETERMINAL, "TOD Test starts\n");
 	print(WRITETERMINAL, "TOD Test concluded\n");
 	ssi_payload_t tod_payload = {

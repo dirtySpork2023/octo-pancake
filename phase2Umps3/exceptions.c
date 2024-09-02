@@ -23,11 +23,8 @@ void uTLB_RefillHandler(void){
 	if(p >= MAXPAGES) p = MAXPAGES-1; // stack page
 	
 	#ifdef DEBUG_TLB
-	klog_print("refillP=");
+	klog_print("refill page = ");
 	klog_print_dec(p);
-	unsigned int addr = (current_process->p_supportStruct->sup_privatePgTbl[p].pte_entryHI & GETPAGENO) >> VPNSHIFT;
-	klog_print("\naddr=");
-	klog_print_dec(addr);
 	klog_print("\n");
 	#endif
 	
