@@ -35,7 +35,9 @@ static unsigned int writeString(sst_print_t* s, devreg_t* dev){
 	#endif
 
 	unsigned int *cmdAddr, cmdValue;
-	if(dev < (devreg_t *)TERM0ADDR)
+	int isPrinter = (dev < (devreg_t *)TERM0ADDR);
+
+	if(isPrinter)
 		cmdAddr = &dev->dtp.command;
 	else
 		cmdAddr = &dev->term.transm_command;
@@ -64,11 +66,10 @@ static unsigned int writeString(sst_print_t* s, devreg_t* dev){
     	unsigned int status;
 		SYSCALL(SENDMESSAGE, SSIADDRESS, (unsigned int)(&payload), 0);
 		SYSCALL(RECEIVEMESSAGE, SSIADDRESS, (unsigned int)(&status), 0);
-		
-		if ((status & TERMSTATMASK) != RECVD){
-			klog_print_dec(status & TERMSTATMASK);
-			klog_print("ERR: doIo status ");
-			klog_print("\n");
+	
+		if((isPrinter && status!=1) || (status&TERMSTATMASK) != RECVD){
+			klog_print("ERR: doIo status\n");
+			klog_print_dec(status);
 			breakPoint();
 		}
 
