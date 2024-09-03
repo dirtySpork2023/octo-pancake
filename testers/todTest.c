@@ -6,8 +6,6 @@
 #include "h/print.h"
 #include "h/types.h"
 
-#include "../klog.c"
-
 void main() {
 	print(WRITETERMINAL, "TOD Test starts\n");
 	print(WRITETERMINAL, "TOD Test concluded\n");

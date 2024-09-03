@@ -1,6 +1,7 @@
 #include "./headers/sst.h"
 
 pcb_PTR child_pcb;
+support_t childSupport;
 
 // number of microseconds since startup
 // SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
@@ -27,9 +28,9 @@ static void terminate(unsigned int asid){
 // write string to printer (or terminal) of same number as child ASID
 // SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
 static unsigned int writeString(sst_print_t* s, devreg_t* dev){
-	#ifdef DEBUG
-	klog_print("prnt");
-	//klog_print_dec(asid);
+	#ifdef DEBUG_SST
+	klog_print("out: ");
+	klog_print(s->string);
 	klog_print("\n");
 	#endif
 
@@ -39,9 +40,11 @@ static unsigned int writeString(sst_print_t* s, devreg_t* dev){
 	else
 		cmdAddr = &dev->term.transm_command;
 
-
 	for(int i=0; i<s->length; i++){
-		if(*s->string == EOS) klog_print("ERR: printing EOS\n");
+		if(*s->string == '\0'){
+			klog_print("ERR: sst print too long\n");
+			break;
+		}
 		
 		if(dev < (devreg_t *)TERM0ADDR){
 			cmdValue = PRINTCHR;
@@ -63,8 +66,8 @@ static unsigned int writeString(sst_print_t* s, devreg_t* dev){
 		SYSCALL(RECEIVEMESSAGE, SSIADDRESS, (unsigned int)(&status), 0);
 		
 		if ((status & TERMSTATMASK) != RECVD){
-			klog_print("ERR: doIo status ");
 			klog_print_dec(status & TERMSTATMASK);
+			klog_print("ERR: doIo status ");
 			klog_print("\n");
 			breakPoint();
 		}
@@ -85,16 +88,18 @@ static pcb_PTR initChild(unsigned int asid){
 	childState.status |= USERPON | IEPON | IMON | TEBITON;
 	childState.entry_hi = asid << ASIDSHIFT;
 
-	support_t childSupport; // deallocated?
 	initSupportStruct(&childSupport, asid);
 
 	return newProc(&childState, &childSupport);
 }
 
 static unsigned int SSTrequest(unsigned int asid, unsigned int service, void *arg){
+	#ifdef DEBUG_SST
 	klog_print("SST request ");
 	klog_print_dec(service);
 	klog_print("\n");
+	#endif
+
 	if(		service == GET_TOD) return getTOD();
 	else if(service == TERMINATE) terminate(asid);
 	else if(service == WRITEPRINTER) return writeString(arg, (devreg_t *)(PRNT0ADDR + (asid-1) * 0x10 ));
@@ -114,7 +119,7 @@ void SST(){
 	ssi_payload_PTR payload = NULL;
 	unsigned int answer;
 	while(TRUE){
-		SYSCALL(RECEIVEMESSAGE, (unsigned int)child_pcb, (unsigned int)(&payload), 0);
+		SYSCALL(RECEIVEMSG, (unsigned int)child_pcb, (unsigned int)(&payload), 0);
 		answer = SSTrequest(asid, payload->service_code, payload->arg);
 		SYSCALL(SENDMESSAGE, (unsigned int)child_pcb, answer, 0);
 	}

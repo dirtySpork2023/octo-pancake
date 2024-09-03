@@ -1,3 +1,9 @@
+current tweaks to make debug easier
+-TLBCLR
+-only one test process
+-16 tlb entries
+-timeslice increased 10x
+
 Memory:
 
 RAMTOP will range from 0x2000.8000 to 0x2020.0000

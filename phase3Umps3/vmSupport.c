@@ -17,7 +17,9 @@ void cleanSwapTable(unsigned int asid){
 }
 
 void swapMutex(){
+	#ifdef DEBUG	
 	klog_print("swap pcb started\n");
+	#endif
 	unsigned int msg;
 	pcb_PTR sender;
 	while(TRUE){
@@ -27,7 +29,7 @@ void swapMutex(){
 		SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
 		// mutex is given here
 		SYSCALL(RECEIVEMESSAGE, (unsigned int)sender, (unsigned int)&msg, 0);
-		//if(msg != RELEASEMUTEX) klog_print("mutex usage error\n");
+		if(msg != RELEASEMUTEX) klog_print("mutex usage error\n");
 	}
 }
 
@@ -79,14 +81,11 @@ void pageFaultExceptionHandler() {
 	// if frame f is occupied
 	if (swap_table[f].sw_asid != NOPROC) {
 		klog_print("clearing occupied frame\n");
-		// logical page number k = swap_table[i].sw_pageNo
-		// process x = swap_table[i].sw_asid
 
 		disableInterrups();
 		
 		// mark it as non valid means V bit is off
 		swap_table[f].sw_pte->pte_entryLO &= ~VALIDON; // valid off
-		
 		//update the TLB
         /* TODO after all other aspects of the Support Level are completed/debugged).
         Probe the TLB (TLBP) to see if the newly updated TLB entry is indeed cached in the TLB. If so (Index.P is 0), 
@@ -97,7 +96,7 @@ void pageFaultExceptionHandler() {
 		
 		//update flash drive
 		
-		flashDev(FLASHWRITE, swap_table[f].sw_pageNo, f, supStruct->sup_asid);
+		flashDev(FLASHWRITE, swap_table[f].sw_pageNo, f, swap_table[f].sw_asid);
 	}
     // read the content of cp backing store
 	flashDev(FLASHREAD, p, f, supStruct->sup_asid);
@@ -157,8 +156,9 @@ void flashDev(unsigned int cmd, unsigned int pageNo, unsigned int frameNo, unsig
 	
 	// if errors, treat as program trap
 	if (response == 2 || response >= 4){
-		klog_print("ERR: flashRead\n");
+		klog_print("ERR: flashRead ");
 		klog_print_dec(response);
+		klog_print("\n");
 		programTrapsHandler();
 	}
 }

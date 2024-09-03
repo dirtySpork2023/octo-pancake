@@ -98,8 +98,8 @@ SYSCALL(SENDMESSAGE, (unsigned int)destination, (unsigned int)payload, 0);
 int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 	enforceKernelMode();
 	
-	if(dest == SSIADDRESS) dest = ssi_pcb;
-	
+	if(dest == (pcb_PTR)SSIADDRESS) dest = ssi_pcb;
+
 	msg_PTR msg = allocMsg();
 	if(msg == NULL){
 		klog_print("ERR: alloc msg failed\n");
@@ -131,6 +131,8 @@ SYSCALL(RECEIVEMESSAGE, (unsigned int)sender, (unsigned int)payload, 0);
 */
 pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 	enforceKernelMode();
+
+	if(sender == (pcb_PTR)SSIADDRESS) sender = ssi_pcb;
 	
 	/* assuming ANYMESSAGE == NULL */
 	msg_PTR msg = popMessage(&current_process->msg_inbox, sender);
@@ -161,8 +163,11 @@ pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
 
 void passUpOrDie(int except_type, state_t *exceptionState) {
 	//klog_print("passUpOrDie\n");
-   	if (current_process->p_supportStruct == NULL) { 
-        // Die (process termination)
+   	if (current_process->p_supportStruct == NULL) {
+		#ifdef DEBUG
+		klog_print("missing support struct\n");
+		#endif
+		// Die (process termination)
 		killProcess(current_process, current_process);
 		/* bisognerebbe usare sendMessage per essere più disponibili a interrupt ma così funziona sicuro
 		struct ssi_payload_t payload;

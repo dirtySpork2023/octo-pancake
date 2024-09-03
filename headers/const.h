@@ -158,7 +158,7 @@
 #define BYTELENGTH 8
 
 #define PSECOND    100000
-#define TIMESLICE  5000 /* length of proc's time slice	*/
+#define TIMESLICE  50000 /* length of proc's time slice	*/
 #define NEVER      0x7FFFFFFF
 #define SECOND     1000000
 #define STATESIZE  0x8C
@@ -209,8 +209,8 @@
 /* Inizio indirizzo di device registers */
 #define START_DEVREG		0x10000054
 #define QPAGE 1024
-#define SSIADDRESS 0
-#define PARENT 0 // non c'e conflitto ma nel caso basta modificare SSIADDRESS
+#define SSIADDRESS 1
+#define PARENT 0
 #define GETMUTEX 1
 #define RELEASEMUTEX 2
 
@@ -219,13 +219,14 @@
 
 #define TERMSTATMASK 0xFF
 #define TERM0ADDR 0x10000254
-#define PRNT0ADDR 0x100001D4 // 0x1000.0054 + 3 * 0x80
+#define PRNT0ADDR 0x100001D4
 
 #define DEBUG
 #define DEBUG_SCHEDULER
 #define DEBUG_SSI
 #define DEBUG_IO
 //#define DEBUG_EXEP
+#define DEBUG_SST
 #define DEBUG_TLB
 
 #endif

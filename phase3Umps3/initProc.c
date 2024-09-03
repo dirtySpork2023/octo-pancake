@@ -8,16 +8,6 @@ void test(){
 	unsigned int ramtop;
 	RAMTOP(ramtop);
 
-	/*/installed devs
-	#ifdef DEBUG
-	klog_print_hex(0x70000000 + *((memaddr *)(0x1000002C + 0x0C)));
-	klog_print_hex(0x60000000 + *((memaddr *)(0x1000002C + 0x10)));
-	klog_print_hex(0x40000000 + *((memaddr *)(0x1000002C + 0x04)));
-	devreg_t *flashDev = (devreg_t *)(START_DEVREG + (4-3)*0x80 + 0*0x10);
-	klog_print_dec(flashDev->dtp.status);
-	#endif*/
-
-
 	// create swap process
 	initSwapStructs();
 	
@@ -68,8 +58,8 @@ pcb_PTR newProc(state_t *procState, support_t *procSupport){
         .service_code = CREATEPROCESS,
         .arg = &ssi_create_process,
     };
-    SYSCALL(SENDMESSAGE, SSIADDRESS, (unsigned int)&payload, 0);
-    SYSCALL(RECEIVEMESSAGE, SSIADDRESS, (unsigned int)&newPCB, 0);
+    SYSCALL(SENDMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)&payload, 0);
+    SYSCALL(RECEIVEMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)&newPCB, 0);
 	return newPCB;
 }
 
@@ -78,8 +68,8 @@ void suicide(void){
         .service_code = TERMPROCESS,
         .arg = (void *)NULL, //kill self
     };
-    SYSCALL(SENDMESSAGE, SSIADDRESS, (unsigned int)(&term_process_payload), 0);
-    SYSCALL(RECEIVEMESSAGE, SSIADDRESS, 0, 0);
+    SYSCALL(SENDMESSAGE, (unsigned int)SSIADDRESS, (unsigned int)(&term_process_payload), 0);
+    SYSCALL(RECEIVEMESSAGE, (unsigned int)SSIADDRESS, 0, 0);
 }
 
 void initSupportStruct(support_t *supportStruct, unsigned int asid){ 
