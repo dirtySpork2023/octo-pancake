@@ -60,7 +60,7 @@ void pageFaultExceptionHandler() {
 
 	// missing page number
 	unsigned int p = (excState->entry_hi & GETPAGENO) >> VPNSHIFT;
-	p = p>31 ? 31 : p;
+	if(p >= MAXPAGES) p = MAXPAGES-1;
 
 	#ifdef DEBUG_TLB
 	klog_print("page fault = ");
@@ -111,8 +111,8 @@ void pageFaultExceptionHandler() {
 	// update the process' page table
 	supStruct->sup_privatePgTbl[p].pte_entryLO = (swapPoolStart + f * PAGESIZE) | VALIDON | DIRTYON;
     // update tlb
-    TLBCLR(); // to modify when all is done
-
+	updateTLB(&supStruct->sup_privatePgTbl[p]);
+	
 	enableInterrupts();
 	
     // release mutual exclusion
@@ -164,5 +164,11 @@ void flashDev(unsigned int cmd, unsigned int pageNo, unsigned int frameNo, unsig
 }
 
 void updateTLB(pteEntry_t *e){
-	TLBCLR();
+	setENTRYHI(e->pte_entryHI);
+	TLBP();
+	if((getINDEX() & PRESENTFLAG) == 0){
+		setENTRYHI(e->pte_entryHI);
+		setENTRYLO(e->pte_entryLO);
+		TLBWI();
+	}
 }

@@ -1,5 +1,4 @@
 current tweaks to make debug easier
--TLBCLR
 -only one test process
 
 Memory:
