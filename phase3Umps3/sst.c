@@ -120,7 +120,7 @@ void SST(){
 	ssi_payload_PTR payload = NULL;
 	unsigned int answer;
 	while(TRUE){
-		SYSCALL(RECEIVEMSG, (unsigned int)child_pcb, (unsigned int)(&payload), 0);
+		SYSCALL(RECEIVEMESSAGE, (unsigned int)child_pcb, (unsigned int)(&payload), 0);
 		answer = SSTrequest(asid, payload->service_code, payload->arg);
 		SYSCALL(SENDMESSAGE, (unsigned int)child_pcb, answer, 0);
 	}

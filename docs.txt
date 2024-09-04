@@ -19,14 +19,10 @@ each cell is a frame (PAGESIZE)
 |	support stack for page fault exeptions
 + RAMTOP - 4*PAGESIZE
 |	mutex process stack
-+ RAMTOP - 4*PAGESIZE - QPAGE
++ RAMTOP - 5*PAGESIZE
 |	first sst stack
 +
 
-+ RAMTOP 6*PAGESIZE - QPAGE
-|	last sst stack
-+ RAMTOP 6,5 * PAGESIZE
-|
 
 	unused
 |

@@ -15,7 +15,7 @@ void test(){
 	swapState.reg_sp = ramtop - 4*PAGESIZE; 
 	swapState.pc_epc = (memaddr)swapMutex;
     swapState.reg_t9 = (memaddr)swapMutex;
-    swapState.status = ALLOFF | IEPON | IMON | TEBITON; // interrupts enabled?
+    swapState.status = IEPON | IMON | TEBITON; // interrupts enabled?
 	swap_pcb = newProc(&swapState, NULL);
 	
 	// create SST processes
@@ -23,18 +23,23 @@ void test(){
 	sstState.reg_sp = swapState.reg_sp; 
 	sstState.pc_epc = (memaddr)SST;
     sstState.reg_t9 = (memaddr)SST;
-    sstState.status = ALLOFF | IEPON | IMON | TEBITON;
+    sstState.status = IEPON | IMON | TEBITON;
 
 	//temprorary for debug
 	support_t supportSST;
 	initSupportStruct(&supportSST, 1);
 
 	for(unsigned int asid=0; asid<UPROCMAX; asid++){
-		sstState.reg_sp = sstState.reg_sp - QPAGE; 
+		sstState.reg_sp = sstState.reg_sp - PAGESIZE; 
 		sstState.entry_hi = (asid+1) << ASIDSHIFT; // ASID starts from 1
 		sst_pcb[asid] = newProc(&sstState, &supportSST);
 	}
 
+	#ifdef DEBUG
+	klog_print("last stack page = ");
+	klog_print_hex(sstState.reg_sp - PAGESIZE);
+	klog_print("\n");
+	#endif
 
 	// TODO init each peripheral device ?
 

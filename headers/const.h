@@ -224,9 +224,9 @@
 #define DEBUG
 #define DEBUG_SCHEDULER
 #define DEBUG_SSI
-#define DEBUG_IO
+//#define DEBUG_IO
 //#define DEBUG_EXEP
 #define DEBUG_SST
-#define DEBUG_TLB
+//#define DEBUG_TLB
 
 #endif

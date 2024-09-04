@@ -5,36 +5,47 @@ void generalExceptionHandler(){
 	support_t* supportStruct = getSupportStruct();
 	unsigned int excCode = (supportStruct->sup_exceptState[GENERALEXCEPT].cause & GETEXECCODE) >> CAUSESHIFT;
 
+
 	if(excCode == SYSEXCEPTION)
-		usyscallHandler(supportStruct->sup_exceptState[GENERALEXCEPT]);
+		usyscallHandler(&supportStruct->sup_exceptState[GENERALEXCEPT]);
 	else{
 		programTrapsHandler();
 	}
 }
 
-void usyscallHandler(state_t exst){
-	if(exst.reg_a0 == SENDMSG){
+void usyscallHandler(state_t *exst){
+	#ifdef DEBUG
+	klog_print("usyscall\n");
+	#endif
+	
+	if(exst->reg_a0 == SENDMSG){
 		// USYS1
 		// SYSCALL(SENDMSG, (unsigned int)destination, (unsigned int)payload, 0);
+		if(exst->reg_a1 == PARENT) exst->reg_a1 = (unsigned int)current_process->p_parent;
+		
+		SYSCALL(SENDMESSAGE, exst->reg_a1, exst->reg_a2, 0);
 
-		pcb_PTR dest = exst.reg_a1==PARENT ? current_process->p_parent : (pcb_PTR)exst.reg_a1;
-		ssi_payload_t *payload = (void *)exst.reg_a2;
-
-
-		klog_print("U-send\n");
-		SYSCALL(SENDMESSAGE, (unsigned int)dest, (unsigned int)payload, 0);
-	}else if(exst.reg_a0 == RECEIVEMSG){
+		klog_print("U-sent\n");
+	}else if(exst->reg_a0 == RECEIVEMSG){
 		// USYS2
 		// SYSCALL(RECEIVEMSG, (unsigned int)sender, (unsigned int)payload, 0);
 		
-		klog_print("U-recv\n");
-		SYSCALL(RECEIVEMESSAGE, exst.reg_a1, exst.reg_a2, 0);
+		SYSCALL(RECEIVEMESSAGE, exst->reg_a1, exst->reg_a2, 0);
+		
+		klog_print("U-rcvd\n");
 	}else{
-		klog_print("ERR strange Usyscall\n");
+		klog_print("ERR: strange Usyscall\n");
 	}
+	
+	exst->pc_epc += WORDLEN;
+	LDST(exst);
 }
 
 void programTrapsHandler(){
+	#ifdef DEBUG
+	klog_print("program trap\n");
+	#endif
+
 	SYSCALL(SENDMESSAGE, (unsigned int)swap_pcb, RELEASEMUTEX, 0);
 
 	ssi_payload_t payload = {
