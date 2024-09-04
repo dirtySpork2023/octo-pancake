@@ -23,6 +23,6 @@ void cleanSwapTable(unsigned int asid);
 void swapMutex();
 void pageFaultExceptionHandler();
 void flashDev(unsigned int cmd, unsigned int pageNo, unsigned int frameNo, unsigned int asid);
-
+void updateTLB(pteEntry_t *e);
 
 #endif

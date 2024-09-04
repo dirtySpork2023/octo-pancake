@@ -90,7 +90,7 @@ void pageFaultExceptionHandler() {
         /* TODO after all other aspects of the Support Level are completed/debugged).
         Probe the TLB (TLBP) to see if the newly updated TLB entry is indeed cached in the TLB. If so (Index.P is 0), 
         rewrite (update) that entry (TLBWI) to match the entry in the Page Table */
-        TLBCLR(); // invalidates all contents of TLB cache
+		updateTLB(swap_table[f].sw_pte);
 
 		enableInterrupts();
 		
@@ -161,4 +161,8 @@ void flashDev(unsigned int cmd, unsigned int pageNo, unsigned int frameNo, unsig
 		klog_print("\n");
 		programTrapsHandler();
 	}
+}
+
+void updateTLB(pteEntry_t *e){
+	TLBCLR();
 }
