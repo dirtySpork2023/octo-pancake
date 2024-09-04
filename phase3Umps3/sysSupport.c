@@ -14,25 +14,17 @@ void generalExceptionHandler(){
 }
 
 void usyscallHandler(state_t *exst){
-	#ifdef DEBUG
-	klog_print("usyscall\n");
-	#endif
-	
 	if(exst->reg_a0 == SENDMSG){
 		// USYS1
 		// SYSCALL(SENDMSG, (unsigned int)destination, (unsigned int)payload, 0);
 		if(exst->reg_a1 == PARENT) exst->reg_a1 = (unsigned int)current_process->p_parent;
 		
 		SYSCALL(SENDMESSAGE, exst->reg_a1, exst->reg_a2, 0);
-
-		klog_print("U-sent\n");
 	}else if(exst->reg_a0 == RECEIVEMSG){
 		// USYS2
 		// SYSCALL(RECEIVEMSG, (unsigned int)sender, (unsigned int)payload, 0);
 		
 		SYSCALL(RECEIVEMESSAGE, exst->reg_a1, exst->reg_a2, 0);
-		
-		klog_print("U-rcvd\n");
 	}else{
 		klog_print("ERR: strange Usyscall\n");
 	}

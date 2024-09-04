@@ -1,8 +1,6 @@
 current tweaks to make debug easier
 -TLBCLR
 -only one test process
--16 tlb entries
--timeslice increased 10x
 
 Memory:
 

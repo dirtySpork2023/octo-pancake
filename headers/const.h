@@ -158,7 +158,7 @@
 #define BYTELENGTH 8
 
 #define PSECOND    100000
-#define TIMESLICE  50000 /* length of proc's time slice	*/
+#define TIMESLICE  5000 /* length of proc's time slice	*/
 #define NEVER      0x7FFFFFFF
 #define SECOND     1000000
 #define STATESIZE  0x8C
@@ -201,7 +201,7 @@
 #define BACKINGSTORE FLASHBACK
 
 #define UPROCMAX 1
-#define POOLSIZE 16 //(UPROCMAX * 2)
+#define POOLSIZE (UPROCMAX * 2)
 /* End of Mikeyg constants */
 
 #define CHARRECV			5		/* Character received*/
@@ -222,11 +222,11 @@
 #define PRNT0ADDR 0x100001D4
 
 #define DEBUG
-#define DEBUG_SCHEDULER
-#define DEBUG_SSI
+//#define DEBUG_SCHEDULER
+//#define DEBUG_SSI
 //#define DEBUG_IO
 //#define DEBUG_EXEP
 #define DEBUG_SST
-//#define DEBUG_TLB
+#define DEBUG_TLB
 
 #endif

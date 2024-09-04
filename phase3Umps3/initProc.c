@@ -46,6 +46,8 @@ void test(){
 	// terminate after all SST have terminated
 	int uProcCount = UPROCMAX;
 	while(uProcCount > 0){
+		klog_print_dec(uProcCount);
+		klog_print(" uProc left\n");
 		SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
 		uProcCount--;
 	}

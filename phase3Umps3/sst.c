@@ -16,13 +16,12 @@ static unsigned int getTOD(){
 // SYSCALL(SENDMSG, PARENT, (unsigned int)&sst_payload, 0);
 static void terminate(unsigned int asid){
 	// notify test process
-	SYSCALL(SENDMESSAGE, PARENT, 0, 0);
+	SYSCALL(SENDMESSAGE, (unsigned int)current_process->p_parent, 0, 0);
 	
 	// TODO clear tlb entries
 	cleanSwapTable(asid);
 	
 	suicide();
-	klog_print("I should be dead\n");
 }
 
 // write string to printer (or terminal) of same number as child ASID

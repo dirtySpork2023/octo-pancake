@@ -24,7 +24,9 @@ void scheduler(){
 	if(emptyProcQ(&readyQueue)){
 		if(process_count == 1){
 			/* the SSI is the only process in the system */
+			#ifdef DEBUG
 			klog_print("HALT STATE\n");
+			#endif
 			HALT(); /* HALT BIOS service/instruction */
 		}else if(process_count > 1 && softBlockCount > 0){
 			/* all pcbs are waiting for an I/O operation to complete */
@@ -34,7 +36,9 @@ void scheduler(){
 			WAIT(); /* enter a Wait State */
 		}else if(process_count > 0 && softBlockCount == 0){
 			/* deadlock */
+			#ifdef DEBUG
 			klog_print("DEADLOCK PANIC STATE\n");
+			#endif
 			PANIC(); /* PANIC BIOS service/instruction*/
 		}else{
 			klog_print("ERR: empty ready queue\n");
