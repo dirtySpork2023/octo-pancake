@@ -17,9 +17,6 @@ void cleanSwapTable(unsigned int asid){
 }
 
 void swapMutex(){
-	#ifdef DEBUG	
-	klog_print("swap pcb started\n");
-	#endif
 	unsigned int msg;
 	pcb_PTR sender;
 	while(TRUE){
@@ -62,18 +59,14 @@ void pageFaultExceptionHandler() {
 	unsigned int p = (excState->entry_hi & GETPAGENO) >> VPNSHIFT;
 	if(p >= MAXPAGES) p = MAXPAGES-1;
 
-	#ifdef DEBUG_TLB
-	klog_print("page fault = ");
-	klog_print_dec(p);
-	klog_print("\n");
-	#endif
-
 	// page replacement algorithm
 	static int f = 0;
 	f = (f + 1) % POOLSIZE;
 
 	#ifdef DEBUG_TLB
-	klog_print("selected frame = ");
+	klog_print("page fault = ");
+	klog_print_dec(p);
+	klog_print("\nselected frame = ");
 	klog_print_dec(f);
 	klog_print("\n");
 	#endif

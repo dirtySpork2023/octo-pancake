@@ -29,10 +29,10 @@ void uTLB_RefillHandler(void){
 	klog_print("\nrefill page = ");
 	klog_print_dec(p);
 	klog_print("\n");
-	klog_print_hex(getENTRYHI());
-	klog_print("\n");
-	klog_print_hex(getENTRYLO());
-	klog_print("\n");
+	//klog_print_hex(getENTRYHI());
+	//klog_print(" ");
+	//klog_print_hex(getENTRYLO());
+	//klog_print("\n");
 	#endif
 
 	pteEntry_t pageTableEntry = current_process->p_supportStruct->sup_privatePgTbl[p];

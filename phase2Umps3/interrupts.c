@@ -2,6 +2,7 @@
 
 void klog_print();
 void klog_print_dec();
+void klog_print_hex();
 void breakPoint();
 extern int softBlockCount;
 extern pcb_PTR current_process;

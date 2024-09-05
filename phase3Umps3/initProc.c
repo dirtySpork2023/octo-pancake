@@ -25,11 +25,11 @@ void test(){
     state.reg_t9 = (memaddr)SST;
     state.status = IEPON | IMON | TEBITON;
 
-	for(unsigned int asid=1; asid<=UPROCMAX; asid++){
+	for(unsigned int asid=1; asid<=UPROCMAX; asid++){ // asid 0 is reserved for kernel processes
 		initSupportStruct(&support, asid, state.reg_sp - PAGESIZE);
 		state.reg_sp = state.reg_sp - 3*PAGESIZE; 
-		state.entry_hi = (asid) << ASIDSHIFT; // ASID starts from 1
-		sst_pcb[asid] = newProc(&state, &support);
+		state.entry_hi = asid << ASIDSHIFT;
+		sst_pcb[asid-1] = newProc(&state, &support);
 	}
 
 	#ifdef DEBUG
