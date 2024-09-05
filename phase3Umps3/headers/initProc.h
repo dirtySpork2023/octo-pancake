@@ -24,7 +24,7 @@ pcb_PTR newProc(state_t *procState, support_t *procSupport);
 // SSI kill self
 void suicide(void);
 
-void initSupportStruct(support_t *supportStruct, unsigned int asid);
+void initSupportStruct(support_t *supportStruct, unsigned int asid, unsigned int stack);
 
 support_t *getSupportStruct();
 

@@ -4,40 +4,37 @@
 pcb_PTR swap_pcb, sst_pcb[UPROCMAX];
 
 void test(){
-	state_t swapState, sstState;
+	state_t state;
+	support_t support;
 	unsigned int ramtop;
 	RAMTOP(ramtop);
 
 	// create swap process
 	initSwapStructs();
 	
-	STST(&swapState);
-	swapState.reg_sp = ramtop - 4*PAGESIZE; 
-	swapState.pc_epc = (memaddr)swapMutex;
-    swapState.reg_t9 = (memaddr)swapMutex;
-    swapState.status = IEPON | IMON | TEBITON; // interrupts enabled?
-	swap_pcb = newProc(&swapState, NULL);
+	STST(&state);
+	state.reg_sp = ramtop - 2*PAGESIZE; 
+	state.pc_epc = (memaddr)swapMutex;
+    state.reg_t9 = (memaddr)swapMutex;
+    state.status = IEPON | IMON | TEBITON; // interrupts enabled?
+	swap_pcb = newProc(&state, NULL);
 	
 	// create SST processes
-	STST(&sstState);
-	sstState.reg_sp = swapState.reg_sp; 
-	sstState.pc_epc = (memaddr)SST;
-    sstState.reg_t9 = (memaddr)SST;
-    sstState.status = IEPON | IMON | TEBITON;
+	state.reg_sp = state.reg_sp; 
+	state.pc_epc = (memaddr)SST;
+    state.reg_t9 = (memaddr)SST;
+    state.status = IEPON | IMON | TEBITON;
 
-	//temprorary for debug
-	support_t supportSST;
-	initSupportStruct(&supportSST, 1);
-
-	for(unsigned int asid=0; asid<UPROCMAX; asid++){
-		sstState.reg_sp = sstState.reg_sp - PAGESIZE; 
-		sstState.entry_hi = (asid+1) << ASIDSHIFT; // ASID starts from 1
-		sst_pcb[asid] = newProc(&sstState, &supportSST);
+	for(unsigned int asid=1; asid<=UPROCMAX; asid++){
+		initSupportStruct(&support, asid, state.reg_sp - PAGESIZE);
+		state.reg_sp = state.reg_sp - 3*PAGESIZE; 
+		state.entry_hi = (asid) << ASIDSHIFT; // ASID starts from 1
+		sst_pcb[asid] = newProc(&state, &support);
 	}
 
 	#ifdef DEBUG
 	extern unsigned int swapPoolStart;
-	unsigned int lastStackPage = sstState.reg_sp - PAGESIZE;
+	unsigned int lastStackPage = state.reg_sp - PAGESIZE;
 	unsigned int swapPoolEnd = swapPoolStart + sizeof(swap_t) * POOLSIZE;
 	if(lastStackPage < swapPoolEnd){
 		klog_print("ERR: ram insufficient\n");
@@ -83,16 +80,14 @@ void suicide(void){
     SYSCALL(RECEIVEMESSAGE, (unsigned int)SSIADDRESS, 0, 0);
 }
 
-void initSupportStruct(support_t *supportStruct, unsigned int asid){ 
-	unsigned int ramtop;
-	RAMTOP(ramtop);
+void initSupportStruct(support_t *supportStruct, unsigned int asid, unsigned int stack){ 
 	supportStruct->sup_asid = asid;
 	supportStruct->sup_exceptContext[GENERALEXCEPT].pc = (memaddr) generalExceptionHandler;
 	supportStruct->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pageFaultExceptionHandler;
 	supportStruct->sup_exceptContext[GENERALEXCEPT].status = IEPON | IMON | TEBITON;
 	supportStruct->sup_exceptContext[PGFAULTEXCEPT].status = IEPON | IMON | TEBITON;
-	supportStruct->sup_exceptContext[GENERALEXCEPT].stackPtr = ramtop - 2 * PAGESIZE; // &(supportStruct->sup_stackGen[499]);
-	supportStruct->sup_exceptContext[PGFAULTEXCEPT].stackPtr = ramtop - 3 * PAGESIZE; // &(supportStruct->sup_stackGen[499]);
+	supportStruct->sup_exceptContext[GENERALEXCEPT].stackPtr = stack; // &(supportStruct->sup_stackGen[499]);
+	supportStruct->sup_exceptContext[PGFAULTEXCEPT].stackPtr = stack - PAGESIZE; // &(supportStruct->sup_stackGen[499]);
 	
 	int i;
 	for(i=0; i<USERPGTBLSIZE-1; i++){

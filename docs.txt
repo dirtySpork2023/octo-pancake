@@ -11,15 +11,17 @@ each cell is a frame (PAGESIZE)
 + RAMTOP - PAGESIZE
 |	test stack
 + RAMTOP - 2*PAGESIZE
-|	support stack for general exceptions
-+ RAMTOP - 3*PAGESIZE
-|	support stack for page fault exeptions
-+ RAMTOP - 4*PAGESIZE
 |	mutex process stack
++ RAMTOP - 3*PAGESIZE
+|	uProc 1 general support stack
++ RAMTOP - 4*PAGESIZE
+|	uProc 1 tlb support stack
 + RAMTOP - 5*PAGESIZE
-|	first sst stack
-+
-
+|	uProc 1 sst stack
++ RAMTOP - 6*PAGESIZE
+|	second sst and 2 support stacks
++ RAMTOP - 9*PAGESIZE
+|
 
 	unused
 |

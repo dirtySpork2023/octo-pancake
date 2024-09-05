@@ -87,10 +87,7 @@ static pcb_PTR initChild(unsigned int asid){
 	childState.reg_t9 = UPROCSTARTADDR;
 	childState.status |= USERPON | IEPON | IMON | TEBITON;
 	childState.entry_hi = asid << ASIDSHIFT;
-
-	initSupportStruct(&childSupport, asid);
-
-	return newProc(&childState, &childSupport);
+	return newProc(&childState, current_process->p_supportStruct);
 }
 
 static unsigned int SSTrequest(unsigned int asid, unsigned int service, void *arg){

@@ -20,26 +20,27 @@ void uTLB_RefillHandler(void){
 	// prendo solo i primi 20 bit (VPN)
 	// required Page number
 	unsigned int p = (EXST->entry_hi & GETPAGENO) >> VPNSHIFT;
+	unsigned int asid = (EXST->entry_hi & GETASID) >> ASIDSHIFT;
 	if(p >= MAXPAGES) p = MAXPAGES-1; // stack page
 	
 	#ifdef DEBUG_TLB
-	klog_print("refill page = ");
+	klog_print("asid = ");
+	klog_print_dec(asid);
+	klog_print("\nrefill page = ");
 	klog_print_dec(p);
-	klog_print("\non index = ");
-	klog_print_dec(getRANDOM());
+	klog_print("\n");
+	klog_print_hex(getENTRYHI());
+	klog_print("\n");
+	klog_print_hex(getENTRYLO());
 	klog_print("\n");
 	#endif
-	
+
 	pteEntry_t pageTableEntry = current_process->p_supportStruct->sup_privatePgTbl[p];
 	
 	// write this page table entry to the TLB
 	setENTRYHI(pageTableEntry.pte_entryHI);
 	setENTRYLO(pageTableEntry.pte_entryLO);
 
-	TLBP();
-	if((getINDEX() & PRESENTFLAG) == 0){
-		klog_print("NO REFILL\n");
-	}
 	TLBWR(); // random index
 
 	// return control to the current process
