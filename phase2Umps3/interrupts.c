@@ -60,11 +60,10 @@ void intervalTimer(){
 }
 
 static unsigned int getDeviceNumber (unsigned int interruptLine) {
-    unsigned int intdevBitMap = 0x10000040; // Interrupt Line ? Interrupting Devices Bit Map
-
-    intdevBitMap = intdevBitMap + ((interruptLine - 3) * 0x04);
+	unsigned int* intdevBitMap = (unsigned int *)0x10000040 + ((interruptLine - 3) * 0x04);
+	
     //find the device number
-	switch(intdevBitMap & 0x000000FF) { // the last 8 bits represent the device number
+	switch(*intdevBitMap & 0x000000FF) { // the last 8 bits represent the device number
         case DEV0ON: return 0;
         case DEV1ON: return 1;
         case DEV2ON: return 2;
@@ -73,7 +72,9 @@ static unsigned int getDeviceNumber (unsigned int interruptLine) {
 		case DEV5ON: return 5;
 		case DEV6ON: return 6;
 		case DEV7ON: return 7;
-		default: return 0;
+		default:
+			klog_print("ERR: getDeviceNumber\n");
+			return 0;
 	}
 }
 
@@ -98,7 +99,7 @@ unsigned int getDeviceNumber (unsigned int interruptLine) {
 
 void deviceInterrupt(int cause){
 	#ifdef DEBUG_EXEP
-	klog_print("deviceInterrupt exeption\n");
+	klog_print("deviceInterrupt exception\n");
 	#endif
 
 	// TODO priority within same interrupt line ?
@@ -184,7 +185,7 @@ void deviceInterrupt(int cause){
 		
 		insertProcQ(&readyQueue, requester);
 	}else{
-		klog_print("ERR: requester NULL");
+		klog_print("ERR: requester NULL\n");
 		breakPoint();
 	}
 

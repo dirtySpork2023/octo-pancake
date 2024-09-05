@@ -25,6 +25,8 @@ void uTLB_RefillHandler(void){
 	#ifdef DEBUG_TLB
 	klog_print("refill page = ");
 	klog_print_dec(p);
+	klog_print("\non index = ");
+	klog_print_dec(getRANDOM());
 	klog_print("\n");
 	#endif
 	
@@ -33,6 +35,11 @@ void uTLB_RefillHandler(void){
 	// write this page table entry to the TLB
 	setENTRYHI(pageTableEntry.pte_entryHI);
 	setENTRYLO(pageTableEntry.pte_entryLO);
+
+	TLBP();
+	if((getINDEX() & PRESENTFLAG) == 0){
+		klog_print("NO REFILL\n");
+	}
 	TLBWR(); // random index
 
 	// return control to the current process
@@ -69,6 +76,8 @@ void syscallHandler(void){
 	if((int)EXST->reg_a0 >= 1)
 		passUpOrDie(GENERALEXCEPT, EXST);
 
+	enforceKernelMode();
+
 	if(EXST->reg_a0 == SENDMESSAGE){
 		EXST->reg_v0 = sendMessage((pcb_PTR)EXST->reg_a1, &EXST->reg_a2, current_process);
 	}else if(EXST->reg_a0 == RECEIVEMESSAGE){
@@ -96,8 +105,6 @@ void enforceKernelMode(void){
 SYSCALL(SENDMESSAGE, (unsigned int)destination, (unsigned int)payload, 0);
 */
 int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
-	enforceKernelMode();
-	
 	if(dest == (pcb_PTR)SSIADDRESS) dest = ssi_pcb;
 
 	msg_PTR msg = allocMsg();
@@ -130,8 +137,6 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 SYSCALL(RECEIVEMESSAGE, (unsigned int)sender, (unsigned int)payload, 0);
 */
 pcb_PTR receiveMessage(pcb_PTR sender, unsigned int *payload){
-	enforceKernelMode();
-
 	if(sender == (pcb_PTR)SSIADDRESS) sender = ssi_pcb;
 	
 	/* assuming ANYMESSAGE == NULL */

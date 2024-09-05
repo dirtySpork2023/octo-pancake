@@ -36,9 +36,13 @@ void test(){
 	}
 
 	#ifdef DEBUG
-	klog_print("last stack page = ");
-	klog_print_hex(sstState.reg_sp - PAGESIZE);
-	klog_print("\n");
+	extern unsigned int swapPoolStart;
+	unsigned int lastStackPage = sstState.reg_sp - PAGESIZE;
+	unsigned int swapPoolEnd = swapPoolStart + sizeof(swap_t) * POOLSIZE;
+	if(lastStackPage < swapPoolEnd){
+		klog_print("ERR: ram insufficient\n");
+		breakPoint();
+	}
 	#endif
 
 	// TODO init each peripheral device ?

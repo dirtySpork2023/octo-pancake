@@ -222,9 +222,9 @@
 #define PRNT0ADDR 0x100001D4
 
 #define DEBUG
-//#define DEBUG_SCHEDULER
+#define DEBUG_SCHEDULER
 //#define DEBUG_SSI
-//#define DEBUG_IO
+#define DEBUG_IO
 //#define DEBUG_EXEP
 #define DEBUG_SST
 #define DEBUG_TLB
