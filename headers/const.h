@@ -200,7 +200,7 @@
 #define FLASHBACK    0
 #define BACKINGSTORE FLASHBACK
 
-#define UPROCMAX 2
+#define UPROCMAX 8
 #define POOLSIZE (UPROCMAX * 2)
 /* End of Mikeyg constants */
 
@@ -221,12 +221,12 @@
 #define TERM0ADDR 0x10000254
 #define PRNT0ADDR 0x100001D4
 
-#define DEBUG
-#define DEBUG_SCHEDULER
+//#define DEBUG
+//#define DEBUG_SCHEDULER
 //#define DEBUG_SSI
-#define DEBUG_IO
+//#define DEBUG_IO
 //#define DEBUG_EXEP
-#define DEBUG_SST
-#define DEBUG_TLB
+//#define DEBUG_SST
+//#define DEBUG_TLB
 
 #endif

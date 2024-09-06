@@ -20,10 +20,10 @@ void uTLB_RefillHandler(void){
 	// prendo solo i primi 20 bit (VPN)
 	// required Page number
 	unsigned int p = (EXST->entry_hi & GETPAGENO) >> VPNSHIFT;
-	unsigned int asid = (EXST->entry_hi & GETASID) >> ASIDSHIFT;
 	if(p >= MAXPAGES) p = MAXPAGES-1; // stack page
 	
 	#ifdef DEBUG_TLB
+	unsigned int asid = (EXST->entry_hi & GETASID) >> ASIDSHIFT;
 	klog_print("asid = ");
 	klog_print_dec(asid);
 	klog_print("\nrefill page = ");

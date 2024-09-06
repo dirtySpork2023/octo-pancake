@@ -65,12 +65,18 @@ static unsigned int writeString(sst_print_t* s, devreg_t* dev){
     	unsigned int status;
 		SYSCALL(SENDMESSAGE, SSIADDRESS, (unsigned int)(&payload), 0);
 		SYSCALL(RECEIVEMESSAGE, SSIADDRESS, (unsigned int)(&status), 0);
-	
-		if((isPrinter && status!=1) || (status&TERMSTATMASK) != RECVD){
-			klog_print("ERR: doIo status\n");
+
+		#ifdef DEBUG
+		if(isPrinter && status!=1){
+			klog_print("ERR: printer status");
 			klog_print_dec(status);
-			breakPoint();
+			klog_print("\n");
+		}else if((status&TERMSTATMASK) != RECVD){
+			klog_print("ERR: terminal status");
+			klog_print_dec(status);
+			klog_print("\n");
 		}
+		#endif
 
 		s->string++;
 	}
@@ -111,7 +117,7 @@ static unsigned int SSTrequest(unsigned int asid, unsigned int service, void *ar
 void SST(){
 	unsigned int asid = (current_process->p_s.entry_hi & GETASID) >> ASIDSHIFT;
 	pcb_PTR child_pcb = initChild(asid);
-	
+
 	// wait for service requests and manage them
 	ssi_payload_PTR payload = NULL;
 	unsigned int answer;

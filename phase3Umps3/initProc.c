@@ -3,9 +3,10 @@
 // phase 3 global variables
 pcb_PTR swap_pcb, sst_pcb[UPROCMAX];
 
+support_t supStruct[UPROCMAX];
+
 void test(){
 	state_t state;
-	support_t support;
 	unsigned int ramtop;
 	RAMTOP(ramtop);
 
@@ -26,10 +27,10 @@ void test(){
     state.status = IEPON | IMON | TEBITON;
 
 	for(unsigned int asid=1; asid<=UPROCMAX; asid++){ // asid 0 is reserved for kernel processes
-		initSupportStruct(&support, asid, state.reg_sp - PAGESIZE);
+		initSupportStruct(&supStruct[asid-1], asid, state.reg_sp - PAGESIZE);
 		state.reg_sp = state.reg_sp - 3*PAGESIZE; 
 		state.entry_hi = asid << ASIDSHIFT;
-		sst_pcb[asid-1] = newProc(&state, &support);
+		sst_pcb[asid-1] = newProc(&state, &supStruct[asid-1]);
 	}
 
 	#ifdef DEBUG
@@ -47,12 +48,16 @@ void test(){
 	// terminate after all SST have terminated
 	int uProcCount = UPROCMAX;
 	while(uProcCount > 0){
+		#ifdef DEBUG
 		klog_print_dec(uProcCount);
 		klog_print(" uProc left\n");
+		#endif
 		SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
 		uProcCount--;
 	}
+	#ifdef DEBUG
 	klog_print("test terminated\n");
+	#endif
 	suicide();
 }
 

@@ -55,6 +55,15 @@ void scheduler(){
 	klog_print("_p");
 	klog_print_dec(current_process->p_pid);
 	klog_print("] ");
+	if(current_process->p_supportStruct != NULL){
+		unsigned int asameid = current_process->p_supportStruct->sup_asid;
+		if(asid != asameid){
+			klog_print("ERR: asid inconsistent\n");
+			klog_print("supAsid = ");
+			klog_print_dec(asameid);
+			breakPoint();
+		}
+	}
 	#endif
 
 
