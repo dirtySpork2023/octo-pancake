@@ -1,7 +1,7 @@
 #include "./headers/vmSupport.h"
 
 struct swap_t swap_table[POOLSIZE];
-const unsigned int swapPoolStart = 0x20020000; // RAMSTART + (32 * PAGESIZE) // should be #define
+const unsigned int swapPoolStart = 0x20020000; // RAMSTART + (32 * PAGESIZE)
 
 void initSwapStructs() {
 	for (int i = 0; i < POOLSIZE; i++) {
@@ -26,7 +26,7 @@ void swapMutex(){
 		SYSCALL(SENDMESSAGE, (unsigned int)sender, 0, 0);
 		// mutex is given here
 		SYSCALL(RECEIVEMESSAGE, (unsigned int)sender, (unsigned int)&msg, 0);
-		if(msg != RELEASEMUTEX) klog_print("mutex usage error\n");
+		//if(msg != RELEASEMUTEX) klog_print("mutex usage error\n");
 	}
 }
 
@@ -47,7 +47,7 @@ void pageFaultExceptionHandler() {
 	
 	// if it's a TLB-Modification we treat it as a program trap
 	if (excState->cause == TLBMOD) {
-		SYSCALL(SENDMESSAGE, (unsigned int)swap_pcb, RELEASEMUTEX, 0); // probably useless
+		//SYSCALL(SENDMESSAGE, (unsigned int)swap_pcb, RELEASEMUTEX, 0);
         programTrapsHandler();
 	}
 	
@@ -60,16 +60,15 @@ void pageFaultExceptionHandler() {
 	if(p >= MAXPAGES) p = MAXPAGES-1;
 
 	// page replacement algorithm
-	static int f = 0;
-	f = (f + 1) % POOLSIZE;
+	unsigned int f = selectFrame();
 
-	#ifdef DEBUG_TLB
+/*	#ifdef DEBUG_TLB
 	klog_print("page fault = ");
 	klog_print_dec(p);
 	klog_print("\nselected frame = ");
 	klog_print_dec(f);
 	klog_print("\n");
-	#endif
+	#endif*/
 	
 	// if frame f is occupied
 	if (swap_table[f].sw_asid != NOPROC) {
@@ -80,18 +79,16 @@ void pageFaultExceptionHandler() {
 		// mark it as non valid means V bit is off
 		swap_table[f].sw_pte->pte_entryLO &= ~VALIDON; // valid off
 		//update the TLB
-        /* TODO after all other aspects of the Support Level are completed/debugged).
-        Probe the TLB (TLBP) to see if the newly updated TLB entry is indeed cached in the TLB. If so (Index.P is 0), 
-        rewrite (update) that entry (TLBWI) to match the entry in the Page Table */
+		unsigned int tmp = getENTRYHI();
 		updateTLB(swap_table[f].sw_pte);
+		setENTRYHI(tmp);
 
 		enableInterrupts();
 		
 		//update flash drive
-		
 		flashDev(FLASHWRITE, swap_table[f].sw_pageNo, f, swap_table[f].sw_asid);
 	}
-    // read the content of cp backing store
+    // read the content of backing store
 	flashDev(FLASHREAD, p, f, supStruct->sup_asid);
 
     // update the swap pool table's entry i
@@ -149,13 +146,15 @@ void flashDev(unsigned int cmd, unsigned int pageNo, unsigned int frameNo, unsig
 	
 	// if errors, treat as program trap
 	if (response == 2 || response >= 4){
-		klog_print("ERR: flashRead ");
+		klog_print("ERR: flash ");
 		klog_print_dec(response);
 		klog_print("\n");
 		programTrapsHandler();
 	}
 }
 
+/* Probe the TLB (TLBP) to see if the newly updated TLB entry is indeed cached in the TLB. If so (Index.P is 0), 
+rewrite (update) that entry (TLBWI) to match the entry in the Page Table */
 void updateTLB(pteEntry_t *e){
 	setENTRYHI(e->pte_entryHI);
 	TLBP();
@@ -164,4 +163,13 @@ void updateTLB(pteEntry_t *e){
 		setENTRYLO(e->pte_entryLO);
 		TLBWI();
 	}
+}
+
+unsigned int selectFrame(){
+	static unsigned int f = 0;
+	for(int i=0; i<POOLSIZE; i++){
+		if(swap_table[i].sw_asid == NOPROC)
+			return i;
+	}
+	return f++ % POOLSIZE;
 }

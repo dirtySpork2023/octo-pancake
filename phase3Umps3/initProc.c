@@ -17,7 +17,7 @@ void test(){
 	state.reg_sp = ramtop - 2*PAGESIZE; 
 	state.pc_epc = (memaddr)swapMutex;
     state.reg_t9 = (memaddr)swapMutex;
-    state.status = IEPON | IMON | TEBITON; // interrupts enabled?
+    state.status = IEPON | IMON | TEBITON;
 	swap_pcb = newProc(&state, NULL);
 	
 	// create SST processes
@@ -42,8 +42,6 @@ void test(){
 		breakPoint();
 	}
 	#endif
-
-	// TODO init each peripheral device ?
 
 	// terminate after all SST have terminated
 	int uProcCount = UPROCMAX;

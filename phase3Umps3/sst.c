@@ -102,13 +102,15 @@ static unsigned int SSTrequest(unsigned int asid, unsigned int service, void *ar
 	klog_print_dec(service);
 	klog_print("\n");
 	#endif
-
+	
 	if(		service == GET_TOD) return getTOD();
 	else if(service == TERMINATE) terminate(asid);
 	else if(service == WRITEPRINTER) return writeString(arg, (devreg_t *)(PRNT0ADDR + (asid-1) * 0x10 ));
 	else if(service == WRITETERMINAL) return writeString(arg, (devreg_t *)(TERM0ADDR + (asid-1) * 0x10 ));
 	else{
-		klog_print("ERR: invalid SST service\n");
+		klog_print("ERR: invalid SST service");
+		klog_print_hex(service);
+		klog_print("\n");
 		breakPoint();
 	}
 	return 0;

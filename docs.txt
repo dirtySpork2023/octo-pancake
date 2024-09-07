@@ -1,8 +1,6 @@
-Memory:
+Memory allocation:
 
-RAMTOP will range from 0x2000.8000 to 0x2020.0000
 
-each cell is a frame (PAGESIZE)
 + RAMTOP
 |	SSI stack
 + RAMTOP - PAGESIZE
@@ -12,7 +10,7 @@ each cell is a frame (PAGESIZE)
 + RAMTOP - 3*PAGESIZE
 |	uProc 1 general support stack
 + RAMTOP - 4*PAGESIZE
-|	uProc 1 tlb support stack
+|	uProc 1 pager support stack
 + RAMTOP - 5*PAGESIZE
 |	uProc 1 sst stack
 + RAMTOP - 6*PAGESIZE

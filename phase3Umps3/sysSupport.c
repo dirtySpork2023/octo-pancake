@@ -27,6 +27,7 @@ void usyscallHandler(state_t *exst){
 		SYSCALL(RECEIVEMESSAGE, exst->reg_a1, exst->reg_a2, 0);
 	}else{
 		klog_print("ERR: strange Usyscall\n");
+		breakPoint();
 	}
 	
 	exst->pc_epc += WORDLEN;

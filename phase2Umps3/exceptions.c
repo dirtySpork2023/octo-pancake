@@ -23,9 +23,9 @@ void uTLB_RefillHandler(void){
 	if(p >= MAXPAGES) p = MAXPAGES-1; // stack page
 	
 	#ifdef DEBUG_TLB
-	unsigned int asid = (EXST->entry_hi & GETASID) >> ASIDSHIFT;
-	klog_print("asid = ");
-	klog_print_dec(asid);
+	//unsigned int asid = (EXST->entry_hi & GETASID) >> ASIDSHIFT;
+	//klog_print("asid = ");
+	//klog_print_dec(asid);
 	klog_print("\nrefill page = ");
 	klog_print_dec(p);
 	klog_print("\n");
@@ -118,7 +118,7 @@ int sendMessage(pcb_PTR dest, unsigned int *payload, pcb_PTR sender){
 	msg->m_payload = *payload;
 	
 	if(searchProcQ(&pcbFree_h, dest) == dest){
-		klog_print("ERR: dest pcb dead\n");
+		//klog_print("ERR: dest pcb dead\n");
 		return DEST_NOT_EXIST;
 	}
 	/*if(dest != ssi_pcb && sender != ssi_pcb)
